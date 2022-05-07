@@ -75,8 +75,15 @@ public class VisitCommand extends SubcommandAbstract {
     }
 
     public void visit(ServerPlayerEntity player, PlotID plotId) {
-        player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
-        MessageUtils.sendChatMessage(player, this.getSuccessfulMsg(plotId).get());
+        Plot plot = Plot.getPlot(plotId);
+        MessageUtils messageUtils = this.getSuccessfulMsg(plotId);
+
+        if (plot != null && !plot.visit(player))
+            messageUtils = this.getDenyMessage();
+        else
+            player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
+
+        MessageUtils.sendChatMessage(player, messageUtils.get());
     }
 
     public void visit(ServerPlayerEntity player, String playerToVisit) {
@@ -94,10 +101,11 @@ public class VisitCommand extends SubcommandAbstract {
         } else if (plotList.size() < index) {
             message = this.getOutBoundsErrorMsg(plotList.size());
         } else {
-            message = this.getSuccessfulMsg(playerToVisit, index, plotList.size());
-            PlotID plotId = plotList.get(--index).getPlotID();
+            // Load the plot with the necessary data, the getAllPlots method only gives the PlotID
+            Plot plot = Plot.getPlot(plotList.get(index - 1).getPlotID());
+            assert plot != null;
 
-            player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
+            message = plot.visit(player) ? this.getSuccessfulMsg(playerToVisit, index, plotList.size()) : this.getDenyMessage();
         }
 
         MessageUtils.sendChatMessage(player, message.get());
@@ -119,6 +127,10 @@ public class VisitCommand extends SubcommandAbstract {
         return MessageUtils.getError("This player has ")
                 .append(String.valueOf(plotCount), CommandColors.HIGHLIGHT)
                 .append(" plots", CommandColors.ERROR);
+    }
+
+    public MessageUtils getDenyMessage() {
+        return new MessageUtils("You have deny of this plot");
     }
 
     public MessageUtils getThereAreNoPlotsMsg() {

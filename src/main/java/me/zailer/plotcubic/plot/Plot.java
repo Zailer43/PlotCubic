@@ -231,4 +231,23 @@ public class Plot {
         return false;
     }
 
+    @Nullable
+    public static Plot getPlot(PlotID plotId) {
+        for (var plot : loadedPlots) {
+            if (plot.plotID.equals(plotId))
+                return plot;
+        }
+
+        return PlotCubic.getDatabaseManager().getPlot(plotId);
+    }
+
+    public boolean visit(ServerPlayerEntity player) {
+        if (this.hasDeny(player))
+            return false;
+
+        PlotID plotId = this.getPlotID();
+        player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
+        return true;
+    }
+
 }
