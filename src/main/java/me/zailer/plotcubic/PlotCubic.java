@@ -1,0 +1,148 @@
+package me.zailer.plotcubic;
+
+import com.google.common.collect.ImmutableList;
+import com.mojang.logging.LogUtils;
+import me.zailer.plotcubic.commands.PlotCommand;
+import me.zailer.plotcubic.config.ConfigManager;
+import me.zailer.plotcubic.database.DatabaseManager;
+import me.zailer.plotcubic.events.PlayerPlotEvent;
+import me.zailer.plotcubic.events.PlotEvents;
+import me.zailer.plotcubic.events.PlotPermissionsEvents;
+import me.zailer.plotcubic.generator.PlotworldGenerator;
+import me.zailer.plotcubic.plot.PlotID;
+import me.zailer.plotcubic.registry.DimensionRegistry;
+import me.zailer.plotcubic.utils.TickTracker;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.entity.EntityType;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
+import net.minecraft.world.Difficulty;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.dimension.DimensionType;
+import org.slf4j.Logger;
+import xyz.nucleoid.fantasy.Fantasy;
+import xyz.nucleoid.fantasy.RuntimeWorldConfig;
+import xyz.nucleoid.fantasy.RuntimeWorldHandle;
+import xyz.nucleoid.stimuli.Stimuli;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class PlotCubic implements ModInitializer {
+    public static final String MOD_ID = "plotcubic";
+    public static final ImmutableList<EntityType<?>> ENTITY_IN_ROAD_BLACKLIST = ImmutableList.of(
+            EntityType.ARMOR_STAND,
+            EntityType.BOAT,
+            EntityType.CHEST_MINECART,
+            EntityType.END_CRYSTAL,
+            EntityType.FURNACE_MINECART,
+            EntityType.GLOW_ITEM_FRAME,
+            EntityType.ITEM_FRAME,
+            EntityType.MINECART,
+            EntityType.PAINTING,
+            EntityType.TNT
+    );
+    public static final ImmutableList<Item> ITEM_USE_BLACKLIST = ImmutableList.of(
+            Items.FLINT_AND_STEEL,
+            Items.FIRE_CHARGE
+    );
+    public static RuntimeWorldHandle plotWorldHandle;
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static boolean modReady = false;
+    private static MinecraftServer server;
+    private static DatabaseManager databaseManager;
+    private static ConfigManager configManager;
+
+    public static RuntimeWorldHandle getPlotWorldHandle() {
+        return plotWorldHandle;
+    }
+
+    public static MinecraftServer getServer() {
+        return server;
+    }
+
+    public static boolean isModReady() {
+        return modReady;
+    }
+
+    public static ConfigManager getConfigManager() {return configManager;}
+    public static DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    @Override
+    public void onInitialize() {
+        PlotCommand.register();
+        DimensionRegistry.register();
+
+        configManager = new ConfigManager();
+
+        ServerLifecycleEvents.SERVER_STARTING.register((server) -> {
+            PlotCubic.server = server;
+            if (configManager.getConfig() == null) {
+                LOGGER.info("[PlotCubic] Configuration is null due to an error, the server will shutdown.");
+                server.shutdown();
+                return;
+            }
+
+            databaseManager = new DatabaseManager(configManager.getConfig(), server);
+        });
+
+        ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
+            PlotEvents.register();
+            PlotPermissionsEvents.register();
+
+            setupPlotWorld();
+
+            modReady = true;
+        });
+
+
+        ServerLifecycleEvents.SERVER_STARTED.register((server) -> server.addServerGuiTickable(TickTracker::start));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+            try (var invokers = Stimuli.select().forEntityAt(player, player.getBlockPos())) {
+                invokers.get(PlayerPlotEvent.LEFT).onPlayerLeft(player, PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ()), null);
+            }
+        });
+    }
+
+    private void setupPlotWorld() {
+        PlotworldGenerator generator = PlotworldGenerator.createPlotGenerator(server);
+
+        RuntimeWorldConfig worldConfig = new RuntimeWorldConfig()
+                .setDimensionType(DimensionType.OVERWORLD_REGISTRY_KEY)
+                .setDifficulty(Difficulty.PEACEFUL)
+                .setGameRule(GameRules.DO_WEATHER_CYCLE, false)
+                .setGenerator(generator);
+        Fantasy fantasy = Fantasy.get(server);
+        plotWorldHandle = fantasy.getOrOpenPersistentWorld(new Identifier(MOD_ID, "plot"), worldConfig);
+    }
+
+    public static ImmutableList<EntityType<?>> getEntityWhitelist() {
+        List<EntityType<?>> entityList = new ArrayList<>(List.of(
+                EntityType.ARROW,
+                EntityType.EGG,
+                EntityType.ENDER_PEARL,
+                EntityType.EXPERIENCE_BOTTLE,
+                EntityType.EYE_OF_ENDER,
+                EntityType.FIREWORK_ROCKET,
+                EntityType.FISHING_BOBBER,
+                EntityType.ITEM,
+                EntityType.POTION,
+                EntityType.SNOWBALL,
+                EntityType.SPECTRAL_ARROW,
+                EntityType.TRIDENT
+        ));
+
+        entityList.addAll(ENTITY_IN_ROAD_BLACKLIST);
+
+        return entityList.stream().collect(ImmutableList.toImmutableList());
+    }
+
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "plotcubic",
+  "version": "${version}",
+  "name": "PlotCubic",
+  "description": "",
+  "authors": [
+    "Zailer43"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/PlotCubic/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "me.zailer.plotcubic.PlotCubic"
+    ]
+  },
+  "mixins": [
+    "plotcubic.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.13.3",
+    "fabric": "*",
+    "fantasy": "*",
+    "stimuli": ">=0.2.8",
+    "sgui": ">=1.0.2",
+    "minecraft": "1.18.2"
+  }
+}
