@@ -45,11 +45,11 @@ public record PlotID(int x, int z) {
     }
 
     public int getXPos() {
-        return this.getPos(this.x);
+        return this.getPos(this.x) - 2;
     }
 
     public int getZPos() {
-        return this.getPos(this.z);
+        return this.getPos(this.z) - 1;
     }
 
     private int getPos(int id) {

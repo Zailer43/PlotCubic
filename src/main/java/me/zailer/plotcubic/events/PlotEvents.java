@@ -9,8 +9,14 @@ import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemFrameItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -24,6 +30,7 @@ import net.minecraft.world.explosion.Explosion;
 import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.block.BlockBreakEvent;
 import xyz.nucleoid.stimuli.event.block.BlockPlaceEvent;
+import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.block.FluidPlaceEvent;
 import xyz.nucleoid.stimuli.event.entity.EntitySpawnEvent;
 import xyz.nucleoid.stimuli.event.item.ItemUseEvent;
@@ -163,4 +170,75 @@ public class PlotEvents {
         }
     }
 
+
+    public static void fixEntitySpawnBypass() {
+        Stimuli.global().listen(BlockUseEvent.EVENT, (player, hand, hitResult) -> fixEntitySpawnBypass(player.getStackInHand(hand), hitResult.getBlockPos()));
+        //TODO: when release of stimuli comes out with dispenser event use it here
+    }
+
+    public static ActionResult fixEntitySpawnBypass(ItemStack stack, BlockPos placePos) {
+        Item item = stack.getItem();
+
+        if (!stack.hasNbt()) {
+            return ActionResult.PASS;
+        }
+        NbtCompound nbt = stack.getNbt();
+        assert nbt != null;
+
+        if (!nbt.contains(EntityType.ENTITY_TAG_KEY, NbtElement.COMPOUND_TYPE))
+            return ActionResult.PASS;
+
+        NbtCompound entityTag = nbt.getCompound(EntityType.ENTITY_TAG_KEY);
+        PlotID placePlotId = PlotID.ofBlockPos(placePos.getX(), placePos.getZ());
+
+        if (placePlotId == null)
+            return ActionResult.FAIL;
+
+        if (item.equals(Items.ARMOR_STAND))
+            return fixArmorStandSpawnBypass(entityTag, placePlotId);
+
+        if (item instanceof ItemFrameItem)
+            return fixItemFrameSpawnBypass(entityTag, placePlotId);
+
+        return ActionResult.PASS;
+    }
+
+    private static ActionResult fixArmorStandSpawnBypass(NbtCompound entityTag, PlotID placePlotId) {
+        if (!entityTag.contains("Pos", NbtElement.LIST_TYPE))
+            return ActionResult.PASS;
+
+        NbtList pos = entityTag.getList("Pos", NbtElement.DOUBLE_TYPE);
+
+        if (pos.size() < 3)
+            return ActionResult.PASS;
+
+        PlotID armorStandPlotId = PlotID.ofBlockPos((int) pos.getDouble(0), (int) pos.getDouble(2));
+
+        boolean isDifferentPlot = armorStandPlotId == null || !placePlotId.equals(armorStandPlotId);
+        return isDifferentPlot ? ActionResult.FAIL : ActionResult.PASS;
+    }
+
+    private static ActionResult fixItemFrameSpawnBypass(NbtCompound entityTag, PlotID placePlotId) {
+        int x = placePlotId.getXPos();
+        int z = placePlotId.getZPos();
+        boolean hasTileTag = false;
+
+        if (entityTag.contains("TileX", NbtElement.INT_TYPE)) {
+            hasTileTag = true;
+            x = entityTag.getInt("TileX");
+        }
+
+        if (entityTag.contains("TileZ", NbtElement.INT_TYPE)) {
+            hasTileTag = true;
+            z = entityTag.getInt("TileZ");
+        }
+
+        if (!hasTileTag)
+            return ActionResult.PASS;
+
+        PlotID itemFramePlotId = PlotID.ofBlockPos(x, z);
+
+        boolean isDifferentPlot = itemFramePlotId == null || !placePlotId.equals(itemFramePlotId);
+        return isDifferentPlot ? ActionResult.FAIL : ActionResult.PASS;
+    }
 }

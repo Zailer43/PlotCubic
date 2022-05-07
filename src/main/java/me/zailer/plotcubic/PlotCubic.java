@@ -70,7 +70,10 @@ public class PlotCubic implements ModInitializer {
         return modReady;
     }
 
-    public static ConfigManager getConfigManager() {return configManager;}
+    public static ConfigManager getConfigManager() {
+        return configManager;
+    }
+
     public static DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
@@ -96,6 +99,7 @@ public class PlotCubic implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
             PlotEvents.register();
             PlotPermissionsEvents.register();
+            PlotEvents.fixEntitySpawnBypass();
 
             setupPlotWorld();
 
