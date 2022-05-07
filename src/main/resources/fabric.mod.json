@@ -8,7 +8,7 @@
     "Zailer43"
   ],
   "contact": {},
-  "license": "MIT",
+  "license": "LGPLv3",
   "icon": "assets/PlotCubic/icon.png",
   "environment": "*",
   "entrypoints": {
