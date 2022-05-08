@@ -34,6 +34,12 @@ public class ClearCommand extends SubcommandAbstract {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+
+            if (plotId == null) {
+                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                return 1;
+            }
+
             if (!Plot.isOwner(player, plotId)) {
                 MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
                 return 1;
