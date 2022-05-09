@@ -10,6 +10,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class PlotCommand {
     public static final String[] COMMAND_ALIAS = {"plot", "p", "p3"};
     public static final SubcommandAbstract[] SUB_COMMANDS = {
+            new AdminCommand(),
             new ClaimCommand(),
             new ClearCommand(),
             new DeleteCommand(),
@@ -18,6 +19,7 @@ public class PlotCommand {
             new HomeCommand(),
             new InfoCommand(),
             new RemoveCommand(),
+            new ReportCommand(),
             new TrustedCommand(),
             new VisitCommand(),
             new TeleportCommand()

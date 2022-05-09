@@ -1,9 +1,12 @@
 package me.zailer.plotcubic.enums;
 
+import me.zailer.plotcubic.gui.IBooleanOption;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
-public enum PlotPermission {
+import javax.annotation.Nullable;
+
+public enum PlotPermission implements IBooleanOption {
     BREAK_BLOCKS("Break blocks", Items.IRON_PICKAXE, true),
     DAMAGE_ENTITIES("Damage entities", Items.IRON_SWORD, true),
     DESTROY_CONTAINER("Destroy container", Items.CHEST),
@@ -36,15 +39,34 @@ public enum PlotPermission {
         this.hideAttributes = hideAttributes;
     }
 
+    @Override
     public String getName() {
         return this.name;
     }
 
+    @Override
     public Item getItem() {
         return this.item;
     }
 
+    @Override
+    public int getCount() {
+        return 1;
+    }
+
+    @Override
     public boolean isHideAttributes() {
         return this.hideAttributes;
+    }
+
+    @Override
+    public boolean hasHeadValue() {
+        return false;
+    }
+
+    @Override
+    @Nullable
+    public String getHeadValue() {
+        return null;
     }
 }

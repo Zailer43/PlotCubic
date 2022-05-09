@@ -3,16 +3,16 @@ package me.zailer.plotcubic.database;
 import com.mojang.logging.LogUtils;
 import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.enums.PlotPermission;
-import me.zailer.plotcubic.plot.DeniedPlayer;
-import me.zailer.plotcubic.plot.Plot;
-import me.zailer.plotcubic.plot.PlotID;
-import me.zailer.plotcubic.plot.TrustedPlayer;
+import me.zailer.plotcubic.enums.ReportReason;
+import me.zailer.plotcubic.plot.*;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 
 public class DatabaseManager {
@@ -415,6 +415,123 @@ public class DatabaseManager {
         }
     }
 
+    public boolean addReport(PlotID plotId, String reportingUser, Set<ReportReason> reportReasonSet) {
+        try (Connection conn = database.getConnection()) {
+
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO `reports`(`plot_id_x`, `plot_id_z`, `reporting_user`) VALUES (?, ?, ?);");
+
+            statement.setInt(1, plotId.x());
+            statement.setInt(2, plotId.z());
+            statement.setString(3, reportingUser);
+
+            statement.execute();
+
+            statement = conn.prepareStatement("SELECT `id` FROM `reports` WHERE `plot_id_x` = ? AND `plot_id_z` = ? AND `reporting_user` = ? ORDER BY `date_reported` DESC;");
+
+            statement.setInt(1, plotId.x());
+            statement.setInt(2, plotId.z());
+            statement.setString(3, reportingUser);
+
+            ResultSet rs = statement.executeQuery();
+
+            if (!rs.next())
+                return false;
+
+            long id = rs.getLong("id");
+
+            for (var reportReason : reportReasonSet) {
+                PreparedStatement insertReasonStatement = conn.prepareStatement("INSERT INTO `reportreasons`(`reason_index`, `report_id`) VALUES (?, ?);");
+
+                insertReasonStatement.setInt(1, reportReason.ordinal());
+                insertReasonStatement.setLong(2, id);
+
+                insertReasonStatement.execute();
+            }
+
+            return true;
+        } catch (SQLException e) {
+            handleException(e);
+            return false;
+        }
+    }
+
+    public boolean updateReport(ReportedPlot report, ServerPlayerEntity admin) {
+        try (Connection conn = database.getConnection()) {
+
+            PreparedStatement statement = conn.prepareStatement("UPDATE `reports` SET `is_moderated` = TRUE, `admin_username` = ?, `date_moderated` = CURRENT_TIMESTAMP WHERE id = ?;");
+
+            statement.setString(1, admin.getName().getString());
+            statement.setLong(2, report.id());
+
+            statement.execute();
+
+            return true;
+        } catch (SQLException e) {
+            handleException(e);
+            return false;
+        }
+    }
+
+    public boolean hasPendingReport(PlotID plotId, String reportingUser) {
+        try (Connection conn = database.getConnection()) {
+
+            PreparedStatement statement = conn.prepareStatement("SELECT * FROM `reports` WHERE `plot_id_x` = ? AND `plot_id_z` = ? AND `reporting_user` = ? AND `is_moderated` = FALSE;");
+
+            statement.setInt(1, plotId.x());
+            statement.setInt(2, plotId.z());
+            statement.setString(3, reportingUser);
+
+            ResultSet rs = statement.executeQuery();
+
+            return rs.next();
+        } catch (SQLException e) {
+            handleException(e);
+            return false;
+        }
+    }
+
+    @Nullable
+    public List<ReportedPlot> getAllReports(boolean isModerated) {
+        List<ReportedPlot> reportedPlotList = new ArrayList<>();
+        try (Connection conn = database.getConnection()) {
+
+            PreparedStatement statement = conn.prepareStatement("SELECT plots.owner_username, plots.id_x, plots.id_z, reports.id, reports.date_reported, reports.reporting_user FROM `reports` INNER JOIN `plots` ON reports.plot_id_x = plots.id_x AND reports.plot_id_z = plots.id_z WHERE `is_moderated` = ? ORDER BY reports.date_reported ASC;");
+
+            statement.setBoolean(1, isModerated);
+
+            ResultSet resultSetReports = statement.executeQuery();
+
+            while(resultSetReports.next()) {
+                String plotOwnerUsername = resultSetReports.getString("owner_username");
+                int plot_id_x = resultSetReports.getInt("id_x");
+                int plot_id_z = resultSetReports.getInt("id_z");
+                long id = resultSetReports.getLong("id");
+                Date dateReported = resultSetReports.getDate("date_reported");
+                String reportingUser = resultSetReports.getString("reporting_user");
+                ReportedPlot reportedPlot = new ReportedPlot(id, new PlotID(plot_id_x, plot_id_z), plotOwnerUsername, reportingUser, null, dateReported, null, isModerated, new HashSet<>());
+
+                PreparedStatement reasonStatement;
+
+                reasonStatement = conn.prepareStatement("SELECT * from `reportreasons` WHERE report_id = ?;");
+
+                reasonStatement.setLong(1, id);
+
+                ResultSet resultSetReasons = reasonStatement.executeQuery();
+                ReportReason[] reportReasons = ReportReason.values();
+
+                while (resultSetReasons.next())
+                    reportedPlot.addReason(reportReasons[resultSetReasons.getInt("reason_index")]);
+
+                reportedPlotList.add(reportedPlot);
+            }
+
+            return reportedPlotList;
+        } catch (SQLException e) {
+            handleException(e);
+            return null;
+        }
+    }
+
     private void handleException(SQLException e) {
         LOGGER.error("[PlotCubic] An error occured while executing a SQLQuery, to prevent a hell door from opening, your server will shutdown.", e);
         server.shutdown();
@@ -426,6 +543,8 @@ public class DatabaseManager {
 
             // Janky ass solution to prevent table alteration after table creation.
             // TODO: This is a temporary solution, don't leave this as is.
+
+            //TODO: implement transactions
 
             ResultSet rs = conn.prepareStatement("SHOW TABLES;").executeQuery();
             if (rs.next()) return;
@@ -468,22 +587,28 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
+                    CREATE TABLE IF NOT EXISTS `reportreasontype` (
+                      `index` int(11) NOT NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """).execute();
+
+            conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS `reportreasons` (
-                      `name` varchar(255) NOT NULL
+                      `reason_index` int(11) NOT NULL,
+                      `report_id` bigint(20) NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
 
             conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS `reports` (
-                      `id` int(11) NOT NULL,
-                      `details` varchar(255) DEFAULT NULL,
-                      `report_reason` varchar(255) DEFAULT NULL,
-                      `plot_id_x` int(11) DEFAULT NULL,
-                      `plot_id_z` int(11) DEFAULT NULL,
-                      `reporting_user` varchar(16) DEFAULT NULL,
+                      `id` bigint(20) NOT NULL,
+                      `plot_id_x` int(11) NOT NULL,
+                      `plot_id_z` int(11) NOT NULL,
+                      `reporting_user` varchar(16) NOT NULL,
                       `admin_username` varchar(16) DEFAULT NULL,
-                      `punishment_type` enum('clear','delete','warning','ban','temporal_ban','ban_ip', 'invalid') DEFAULT NULL,
-                      `date_reported` timestamp NOT NULL
+                      `date_reported` timestamp DEFAULT CURRENT_TIMESTAMP,
+                      `date_moderated` timestamp DEFAULT CURRENT_TIMESTAMP,
+                      `is_moderated` boolean DEFAULT 0
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
 
@@ -541,17 +666,22 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
+                    ALTER TABLE `reportreasontype`
+                      ADD PRIMARY KEY (`index`);
+            """).execute();
+
+            conn.prepareStatement("""
                     ALTER TABLE `reportreasons`
-                      ADD PRIMARY KEY (`name`);
+                      ADD PRIMARY KEY (`reason_index`, `report_id`),
+                      ADD KEY `fk_reportreasons_reports` (`report_id`),
+                      ADD KEY `fk_reportreasons_reportreasontype` (`reason_index`);
             """).execute();
 
             conn.prepareStatement("""
                     ALTER TABLE `reports`
-                      ADD PRIMARY KEY (`id`),
-                      ADD KEY `fk_reports_plots` (`plot_id_x`,`plot_id_z`),
-                      ADD KEY `fk_reports_reportreasons` (`report_reason`),
-                      ADD KEY `fk_reports_users_1` (`reporting_user`),
-                      ADD KEY `fk_reports_users_2` (`admin_username`);
+                      ADD PRIMARY KEY (`id`, `plot_id_x`, `plot_id_z`),
+                      ADD KEY `fk_reported_plot` (`plot_id_x`,`plot_id_z`),
+                      ADD KEY `fk_reporting_user` (`reporting_user`);
             """).execute();
 
             conn.prepareStatement("""
@@ -579,7 +709,7 @@ public class DatabaseManager {
 
             conn.prepareStatement("""
                     ALTER TABLE `reports`
-                      MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+                      MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
             """).execute();
 
             conn.prepareStatement("""
@@ -597,11 +727,15 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
+                    ALTER TABLE `reportreasons`
+                      ADD CONSTRAINT `fk_reportreasons_reports` FOREIGN KEY (`report_id`) REFERENCES `reports` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+                      ADD CONSTRAINT `fk_reportreasons_reportreasontype` FOREIGN KEY (`reason_index`) REFERENCES `reportreasontype` (`index`) ON DELETE CASCADE ON UPDATE CASCADE;
+            """).execute();
+
+            conn.prepareStatement("""
                     ALTER TABLE `reports`
-                      ADD CONSTRAINT `fk_reports_plots` FOREIGN KEY (`plot_id_x`,`plot_id_z`) REFERENCES `plots` (`id_x`, `id_z`) ON DELETE CASCADE ON UPDATE CASCADE,
-                      ADD CONSTRAINT `fk_reports_reportreasons` FOREIGN KEY (`report_reason`) REFERENCES `reportreasons` (`name`) ON DELETE CASCADE ON UPDATE CASCADE,
-                      ADD CONSTRAINT `fk_reports_users_1` FOREIGN KEY (`reporting_user`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE,
-                      ADD CONSTRAINT `fk_reports_users_2` FOREIGN KEY (`admin_username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE;
+                      ADD CONSTRAINT `fk_reported_plot` FOREIGN KEY (`plot_id_x`,`plot_id_z`) REFERENCES `plots` (`id_x`, `id_z`) ON DELETE CASCADE ON UPDATE CASCADE,
+                      ADD CONSTRAINT `fk_reporting_user` FOREIGN KEY (`reporting_user`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE;
             """).execute();
 
             conn.prepareStatement("""
@@ -621,9 +755,15 @@ public class DatabaseManager {
                 statement.execute();
             }
 
-            conn.prepareStatement("""
-                    COMMIT;
-            """).execute();
+            for (var reportReason : ReportReason.values()) {
+                PreparedStatement statement = conn.prepareStatement("""
+                        INSERT INTO `reportreasontype` (`index`) VALUES (?)
+                """);
+
+                statement.setInt(1, reportReason.ordinal());
+
+                statement.execute();
+            }
 
         } catch (SQLException e) {
             handleException(e);

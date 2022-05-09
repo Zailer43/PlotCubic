@@ -19,16 +19,8 @@ public record TrustedPlayer(String username, Set<PlotPermission> permissions, Pl
         return this.permissions.contains(permission);
     }
 
-//    public boolean isPlotId(PlotID plotId) {
-//        return this.plotId.equals(plotId);
-//    }
-
     public void addPermission(PlotPermission permission) {
         this.permissions.add(permission);
-    }
-
-    public void removePermission(PlotPermission permission) {
-        this.permissions.remove(permission);
     }
 
 }

@@ -10,8 +10,8 @@ import me.zailer.plotcubic.plot.DeniedPlayer;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.TrustedPlayer;
 import me.zailer.plotcubic.utils.GuiColors;
+import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
-import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.MinecraftServer;
@@ -82,7 +82,7 @@ public class PlotInfoGui {
         mainLayer.setSlot(30, deniedItem);
 
         mainLayer.setSlot(45, viewInChatItem);
-        Utils.setGlass(mainLayer, 46, 7);
+        GuiUtils.setGlass(mainLayer, 46, 7);
         mainLayer.setSlot(53, closeItem);
         gui.addLayer(mainLayer, 0, 0);
 
@@ -132,7 +132,7 @@ public class PlotInfoGui {
             layer.setSlot(i, permissionItem);
         }
 
-        Utils.setGlass(layer, 45, 8);
+        GuiUtils.setGlass(layer, 45, 8);
         layer.setSlot(53, backItem);
     }
 
@@ -207,7 +207,7 @@ public class PlotInfoGui {
             layer.setSlot(i, deniedHeadItem);
         }
 
-        Utils.setGlass(layer, 45, 8);
+        GuiUtils.setGlass(layer, 45, 8);
         layer.setSlot(53, backItem);
     }
 }

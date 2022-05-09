@@ -50,14 +50,4 @@ public class Utils {
 
         fillWithPos(block, x, y, z, x + width, y + height, z + depth);
     }
-
-    public static void setGlass(SlotHolder gui, int index, int count) {
-        int finalSlot = index + count;
-        for (int i = index; i != finalSlot; i++) {
-            gui.setSlot(i, new GuiElementBuilder()
-                    .setItem(Items.GRAY_STAINED_GLASS_PANE)
-                    .setName(LiteralText.EMPTY.copy())
-            );
-        }
-    }
 }

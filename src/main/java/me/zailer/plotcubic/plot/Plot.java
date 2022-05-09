@@ -104,7 +104,7 @@ public class Plot {
     }
 
     public static boolean isOwner(ServerPlayerEntity player, PlotID plotId) {
-        Plot plot = PlotCubic.getDatabaseManager().getPlot(plotId);
+        Plot plot = getPlot(plotId);
 
         if (plot == null)
             return false;
