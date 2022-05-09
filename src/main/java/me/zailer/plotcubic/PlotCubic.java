@@ -45,7 +45,9 @@ public class PlotCubic implements ModInitializer {
             EntityType.ITEM_FRAME,
             EntityType.MINECART,
             EntityType.PAINTING,
-            EntityType.TNT
+            EntityType.TNT,
+            EntityType.ARROW,
+            EntityType.SPECTRAL_ARROW
     );
     public static final ImmutableList<Item> ITEM_USE_BLACKLIST = ImmutableList.of(
             Items.FLINT_AND_STEEL,
