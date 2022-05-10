@@ -5,6 +5,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
+import me.zailer.plotcubic.commands.plot.admin.AdminClearCommand;
+import me.zailer.plotcubic.commands.plot.admin.AdminDeleteCommand;
 import me.zailer.plotcubic.commands.plot.admin.ViewReportsCommand;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
@@ -14,6 +16,8 @@ import net.minecraft.text.LiteralText;
 
 public class AdminCommand extends SubcommandAbstract {
     public static final SubcommandAbstract[] SUB_COMMANDS = {
+            new AdminClearCommand(),
+            new AdminDeleteCommand(),
             new ViewReportsCommand()
     };
 
