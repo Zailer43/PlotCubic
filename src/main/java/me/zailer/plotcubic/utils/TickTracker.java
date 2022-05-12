@@ -68,6 +68,7 @@ public class TickTracker {
                     invokers.get(PlayerPlotEvent.LEFT).onPlayerLeft(player, previousPlotId, previousPlot);
             }
             playerPlotHashMap.put(player, currentPlotId);
+            plotHashMap.put(currentPlotId, currentPlot);
         }
     }
 
