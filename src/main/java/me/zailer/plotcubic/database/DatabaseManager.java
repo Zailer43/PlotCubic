@@ -7,6 +7,7 @@ import me.zailer.plotcubic.enums.ReportReason;
 import me.zailer.plotcubic.plot.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.GameMode;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
@@ -66,7 +67,7 @@ public class DatabaseManager {
                 return false;
 
 
-            PreparedStatement statement = conn.prepareStatement("INSERT INTO `plots` (`id_x`, `id_z`, `greeting`, `farewall`, `biome`, `music`, `team`, `owner_username`, `gamemode`, `date_claimed`) VALUES (?, ?, NULL, NULL, NULL, NULL, NULL, ?, NULL, ?);");
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO `plots` (`id_x`, `id_z`, `greeting`, `farewall`, `biome`, `music`, `team`, `owner_username`, `date_claimed`) VALUES (?, ?, NULL, NULL, NULL, NULL, NULL, ?, ?);");
 
             statement.setInt(1, plot_id_x);
             statement.setInt(2, plot_id_z);
@@ -239,17 +240,51 @@ public class DatabaseManager {
             ResultSet rs = statement.executeQuery();
             rs.next();
 
-            String username = rs.getString("owner_username");
-            Plot plot = new Plot(username, new PlotID(plot_id_x, plot_id_z));
-
-            plot.addTrusted(this.getAllTrusted(plot_id_x, plot_id_z));
-            plot.addDenied(this.getDenied(plot_id_x, plot_id_z));
-            plot.setClaimedDate(rs.getDate("date_claimed"));
-            return plot;
+            return new Plot(
+                    rs.getString("owner_username"),
+                    new PlotID(plot_id_x, plot_id_z),
+                    this.getAllTrusted(plot_id_x, plot_id_z),
+                    this.getDenied(plot_id_x, plot_id_z),
+                    rs.getDate("date_claimed"),
+                    GameMode.byId(rs.getByte("gamemode_id"), null)
+            );
 
         } catch (SQLException e) {
             handleException(e);
             return null;
+        }
+    }
+
+    public void updateGameMode(GameMode gameMode, PlotID plotId) {
+        this.updateGameMode(gameMode, plotId.x(), plotId.z());
+    }
+
+    public void updateGameMode(GameMode gameMode, int plot_id_x, int plot_id_z) {
+        try (Connection conn = database.getConnection()) {
+            PreparedStatement statement = conn.prepareStatement("UPDATE `plots` SET `gamemode_id` = ? WHERE `id_x` = ? AND `id_z` = ?;");
+
+            statement.setByte(1, (byte) gameMode.getId());
+            statement.setInt(2, plot_id_x);
+            statement.setInt(3, plot_id_z);
+
+            statement.execute();
+
+        } catch (SQLException e) {
+            handleException(e);
+        }
+    }
+
+    private void addGameMode(byte id) {
+        try (Connection conn = database.getConnection()) {
+            PreparedStatement statement = conn.prepareStatement("""
+                        INSERT INTO `gamemodes` (`id`) VALUES (?)
+                """);
+
+            statement.setByte(1, id);
+
+            statement.execute();
+        } catch (SQLException e) {
+            handleException(e);
         }
     }
 
@@ -290,10 +325,10 @@ public class DatabaseManager {
         return true;
     }
 
-    public boolean newUser(String username) {
+    public void newUser(String username) {
         try (Connection conn = database.getConnection()) {
             if (this.existPlayer(username))
-                return false;
+                return;
 
             PreparedStatement statement = conn.prepareStatement("INSERT INTO `users` (`username`) VALUES (?)");
 
@@ -301,10 +336,8 @@ public class DatabaseManager {
 
             statement.execute();
 
-            return true;
         } catch (SQLException e) {
             handleException(e);
-            return false;
         }
     }
 
@@ -371,7 +404,7 @@ public class DatabaseManager {
         }
     }
 
-    public boolean removeDenied(PlotID plotId, String username) {
+    public void removeDenied(PlotID plotId, String username) {
         try (Connection conn = database.getConnection()) {
 
             PreparedStatement statement;
@@ -384,10 +417,8 @@ public class DatabaseManager {
 
             statement.execute();
 
-            return true;
         } catch (SQLException e) {
             handleException(e);
-            return false;
         }
     }
 
@@ -415,7 +446,7 @@ public class DatabaseManager {
         }
     }
 
-    public boolean addReport(PlotID plotId, String reportingUser, Set<ReportReason> reportReasonSet) {
+    public void addReport(PlotID plotId, String reportingUser, Set<ReportReason> reportReasonSet) {
         try (Connection conn = database.getConnection()) {
 
             PreparedStatement statement = conn.prepareStatement("INSERT INTO `reports`(`plot_id_x`, `plot_id_z`, `reporting_user`) VALUES (?, ?, ?);");
@@ -435,7 +466,7 @@ public class DatabaseManager {
             ResultSet rs = statement.executeQuery();
 
             if (!rs.next())
-                return false;
+                return;
 
             long id = rs.getLong("id");
 
@@ -448,14 +479,12 @@ public class DatabaseManager {
                 insertReasonStatement.execute();
             }
 
-            return true;
         } catch (SQLException e) {
             handleException(e);
-            return false;
         }
     }
 
-    public boolean updateReport(ReportedPlot report, ServerPlayerEntity admin) {
+    public void updateReport(ReportedPlot report, ServerPlayerEntity admin) {
         try (Connection conn = database.getConnection()) {
 
             PreparedStatement statement = conn.prepareStatement("UPDATE `reports` SET `is_moderated` = TRUE, `admin_username` = ?, `date_moderated` = CURRENT_TIMESTAMP WHERE id = ?;");
@@ -465,10 +494,8 @@ public class DatabaseManager {
 
             statement.execute();
 
-            return true;
         } catch (SQLException e) {
             handleException(e);
-            return false;
         }
     }
 
@@ -572,6 +599,12 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
+                    CREATE TABLE IF NOT EXISTS `gamemodes` (
+                      `id` tinyint NOT NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """).execute();
+
+            conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS `plots` (
                       `id_x` int(11) NOT NULL,
                       `id_z` int(11) NOT NULL,
@@ -581,7 +614,7 @@ public class DatabaseManager {
                       `music` varchar(32) DEFAULT NULL,
                       `team` varchar(32) DEFAULT NULL,
                       `owner_username` varchar(32) DEFAULT NULL,
-                      `gamemode` enum('creative','survival','adventure') DEFAULT NULL,
+                      `gamemode_id` tinyint DEFAULT -1,
                       `date_claimed` timestamp NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
@@ -657,12 +690,18 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
+                    ALTER TABLE `gamemodes`
+                      ADD PRIMARY KEY (`id`);
+            """).execute();
+
+            conn.prepareStatement("""
                     ALTER TABLE `plots`
                       ADD PRIMARY KEY (`id_x`,`id_z`),
                       ADD KEY `fk_plots_biome` (`biome`),
                       ADD KEY `fk_plots_music` (`music`),
                       ADD KEY `fk_plots_team` (`team`),
-                      ADD KEY `fk_plots_users` (`owner_username`);
+                      ADD KEY `fk_plots_users` (`owner_username`),
+                      ADD KEY `fk_plots_gamemode` (`gamemode_id`);
             """).execute();
 
             conn.prepareStatement("""
@@ -723,7 +762,8 @@ public class DatabaseManager {
                       ADD CONSTRAINT `fk_plots_biome` FOREIGN KEY (`biome`) REFERENCES `biomes` (`name`),
                       ADD CONSTRAINT `fk_plots_music` FOREIGN KEY (`music`) REFERENCES `music` (`name`),
                       ADD CONSTRAINT `fk_plots_team` FOREIGN KEY (`team`) REFERENCES `teams` (`name`),
-                      ADD CONSTRAINT `fk_plots_users` FOREIGN KEY (`owner_username`) REFERENCES `users` (`username`);
+                      ADD CONSTRAINT `fk_plots_users` FOREIGN KEY (`owner_username`) REFERENCES `users` (`username`),
+                      ADD CONSTRAINT `fk_plots_gamemode` FOREIGN KEY (`gamemode_id`) REFERENCES `gamemodes` (`id`);
             """).execute();
 
             conn.prepareStatement("""
@@ -763,6 +803,12 @@ public class DatabaseManager {
                 statement.setInt(1, reportReason.ordinal());
 
                 statement.execute();
+            }
+
+            this.addGameMode((byte) -1); //default
+
+            for (var gameMode : GameMode.values()) {
+                this.addGameMode((byte) gameMode.getId());
             }
 
         } catch (SQLException e) {

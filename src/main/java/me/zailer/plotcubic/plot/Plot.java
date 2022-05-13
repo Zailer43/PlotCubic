@@ -7,6 +7,7 @@ import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
 import org.jetbrains.annotations.NotNull;
@@ -22,16 +23,18 @@ public class Plot {
     private final PlotID plotID;
     private final List<TrustedPlayer> trustedPlayers;
     private final List<DeniedPlayer> deniedPlayers;
-    private Date claimedDate;
-    private int playerCount;
+    private final List<ServerPlayerEntity> players;
+    private final Date claimedDate;
+    private GameMode gameMode;
 
-    public Plot(String username, PlotID plotID, List<TrustedPlayer> trustedPlayers, List<DeniedPlayer> deniedPlayers) {
+    public Plot(String username, PlotID plotID, List<TrustedPlayer> trustedPlayers, List<DeniedPlayer> deniedPlayers, Date claimedDate, GameMode gameMode) {
         this.ownerUsername = username;
         this.plotID = plotID;
         this.trustedPlayers = trustedPlayers;
         this.deniedPlayers = deniedPlayers;
-        this.playerCount = 0;
-        this.claimedDate = null;
+        this.players = new ArrayList<>();
+        this.claimedDate = claimedDate;
+        this.gameMode = gameMode;
     }
 
     public Plot(ServerPlayerEntity player, PlotID plotID) {
@@ -39,7 +42,7 @@ public class Plot {
     }
 
     public Plot(String ownerUsername, PlotID plotID) {
-        this(ownerUsername, plotID, new ArrayList<>(), new ArrayList<>());
+        this(ownerUsername, plotID, new ArrayList<>(), new ArrayList<>(), null, null);
     }
 
     public static void claim(ServerPlayerEntity player, PlotID plotID) {
@@ -143,23 +146,23 @@ public class Plot {
         return null;
     }
 
-    public static void loadPlot(@Nullable Plot plot) {
+    public static void loadPlot(ServerPlayerEntity player, @Nullable Plot plot) {
         if (plot == null)
             return;
 
-        plot.playerCount++;
+        plot.addPlayer(player);
         if (Plot.loadedPlotsContains(plot))
             return;
 
         Plot.loadedPlots.add(plot);
     }
 
-    public static void unloadPlot(@Nullable Plot plot) {
+    public static void unloadPlot(ServerPlayerEntity player, @Nullable Plot plot) {
         if (plot == null)
             return;
 
-        if (plot.playerCount > 1)
-            plot.playerCount--;
+        if (plot.getPlayersCount() > 1)
+            plot.removePlayer(player);
         else
             loadedPlots.remove(plot);
     }
@@ -176,10 +179,6 @@ public class Plot {
         }
 
         return null;
-    }
-
-    public void setClaimedDate(Date claimedDate) {
-        this.claimedDate = claimedDate;
     }
 
     public Date getClaimedDate() {
@@ -248,6 +247,30 @@ public class Plot {
         PlotID plotId = this.getPlotID();
         player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
         return true;
+    }
+
+    @Nullable
+    public GameMode getGameMode() {
+        return this.gameMode;
+    }
+
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+
+        for (var player : this.players)
+            player.changeGameMode(gameMode);
+    }
+
+    public void removePlayer(ServerPlayerEntity player) {
+        this.players.remove(player);
+    }
+
+    public void addPlayer(ServerPlayerEntity player) {
+        this.players.add(player);
+    }
+
+    public int getPlayersCount() {
+        return this.players.size();
     }
 
 }

@@ -8,6 +8,7 @@ import me.zailer.plotcubic.plot.TrustedPlayer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.world.GameMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,21 @@ public class CommandSuggestions {
         for (String username : usernamesList) {
             if (username.toLowerCase().contains(usernameInput))
                 builder.suggest(username);
+        }
+
+        return CompletableFuture.completedFuture(builder.build());
+    });
+
+    public static final SuggestionProvider<ServerCommandSource> GAME_MODE_SUGGESTION = ((context, builder) -> {
+        List<String> gameModeList = new ArrayList<>();
+        String usernameInput = builder.getRemainingLowerCase();
+
+        for (var gameMode : GameMode.values())
+            gameModeList.add(gameMode.getName());
+
+        for (String gameMode : gameModeList) {
+            if (gameMode.toLowerCase().contains(usernameInput))
+                builder.suggest(gameMode);
         }
 
         return CompletableFuture.completedFuture(builder.build());

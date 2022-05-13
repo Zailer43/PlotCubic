@@ -9,6 +9,7 @@ import me.zailer.plotcubic.events.PlayerPlotEvent;
 import me.zailer.plotcubic.events.PlotEvents;
 import me.zailer.plotcubic.events.PlotPermissionsEvents;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
+import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.registry.DimensionRegistry;
 import me.zailer.plotcubic.utils.TickTracker;
@@ -113,7 +114,8 @@ public class PlotCubic implements ModInitializer {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
             try (var invokers = Stimuli.select().forEntityAt(player, player.getBlockPos())) {
-                invokers.get(PlayerPlotEvent.LEFT).onPlayerLeft(player, PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ()), null);
+                PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+                invokers.get(PlayerPlotEvent.LEFT).onPlayerLeft(player, plotId, plotId == null ? null : Plot.getLoadedPlot(plotId));
             }
         });
     }

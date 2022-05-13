@@ -17,6 +17,9 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.world.GameMode;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -62,6 +65,13 @@ public class PlotInfoGui {
                 .addLoreLine(new MessageUtils(deniedPlayerCountFormatted, GuiColors.GREEN).get())
                 .setCallback((index, type, action) -> this.addDeniedLayer(gui, plot.getDeniedPlayers(), player.getServer()));
 
+        GameMode gameMode = plot.getGameMode();
+        Text gameModeMsg = gameMode == null ? new MessageUtils("Default", GuiColors.GREEN).get() : gameMode.getTranslatableName().copy().setStyle(Style.EMPTY.withColor(GuiColors.GREEN.getColor()));
+        GuiElementBuilder gameModeItem = new GuiElementBuilder()
+                .setItem(Items.CRAFTING_TABLE)
+                .setName(new MessageUtils("Game mode", GuiColors.BLUE).get())
+                .addLoreLine(gameModeMsg);
+
         GuiElementBuilder closeItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
                 .setName(new MessageUtils("Cancel", GuiColors.RED).get())
@@ -80,6 +90,7 @@ public class PlotInfoGui {
         mainLayer.setSlot(15, claimedDateItem);
         mainLayer.setSlot(28, trustedItem);
         mainLayer.setSlot(30, deniedItem);
+        mainLayer.setSlot(32, gameModeItem);
 
         mainLayer.setSlot(45, viewInChatItem);
         GuiUtils.setGlass(mainLayer, 46, 7);
@@ -90,12 +101,14 @@ public class PlotInfoGui {
     }
 
     public void viewInChat(ServerPlayerEntity player, Plot plot) {
+        GameMode gameMode = plot.getGameMode();
         MessageUtils messageUtils = MessageUtils.getInfo("Plot info")
                 .append("Plot ID", plot.getPlotID().toString())
                 .append("Claimed date", this.getDateFormatted(plot))
                 .append("Owner", plot.getOwnerUsername())
                 .append("Trusted", String.join(", ", plot.getTrusted().stream().map(TrustedPlayer::username).toList()))
-                .append("Denied", String.join(", ", plot.getDeniedPlayers().stream().map(DeniedPlayer::username).toList()));
+                .append("Denied", String.join(", ", plot.getDeniedPlayers().stream().map(DeniedPlayer::username).toList()))
+                .append("Game mode", gameMode == null ? "Default" : gameMode.getName());
 
         MessageUtils.sendChatMessage(player, messageUtils.get());
     }

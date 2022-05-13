@@ -20,4 +20,8 @@ public enum GuiColors implements ColorBranch{
     public MutableText set(String message) {
         return new LiteralText(message).setStyle(Style.EMPTY.withColor(this.color));
     }
+
+    public int getColor() {
+        return this.color;
+    }
 }

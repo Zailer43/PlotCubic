@@ -48,7 +48,7 @@ public class PlotEvents {
         registerProtectBlocks();
         registerAvoidEntitiesSpawn();
         registerNewUsers();
-        registerPlotEvents();
+        registerPlayersEvents();
     }
 
     private static void registerProtectBlocks() {
@@ -90,10 +90,12 @@ public class PlotEvents {
         ServerPlayConnectionEvents.INIT.register(PlotEvents::onPlayerJoinInit);
     }
 
-    private static void registerPlotEvents() {
-        Stimuli.global().listen(PlayerPlotEvent.ARRIVED, (player, plotId, plot) -> Plot.loadPlot(plot));
+    private static void registerPlayersEvents() {
+        Stimuli.global().listen(PlayerPlotEvent.ARRIVED, (player, plotId, plot) -> Plot.loadPlot(player, plot));
         Stimuli.global().listen(PlayerPlotEvent.ARRIVED, PlotEvents::denyEvent);
-        Stimuli.global().listen(PlayerPlotEvent.LEFT, (player, plotId, plot) -> Plot.unloadPlot(plot));
+        Stimuli.global().listen(PlayerPlotEvent.ARRIVED, PlotEvents::setArrivedGameMode);
+        Stimuli.global().listen(PlayerPlotEvent.LEFT, (player, plotId, plot) -> Plot.unloadPlot(player, plot));
+        Stimuli.global().listen(PlayerPlotEvent.LEFT, PlotEvents::setLeftGameMode);
     }
 
     private static ActionResult allowAdmin(ServerPlayerEntity player) {
@@ -252,5 +254,19 @@ public class PlotEvents {
 
         boolean isDifferentPlot = itemFramePlotId == null || !placePlotId.equals(itemFramePlotId);
         return isDifferentPlot ? ActionResult.FAIL : ActionResult.PASS;
+    }
+
+    private static void setArrivedGameMode(ServerPlayerEntity player, PlotID plotID, Plot plot) {
+        if (plot != null && plot.getGameMode() != null)
+            player.changeGameMode(plot.getGameMode());
+    }
+
+    private static void setLeftGameMode(ServerPlayerEntity player, PlotID plotID, Plot plot) {
+        MinecraftServer server = player.getServer();
+
+        if (server == null)
+            return;
+        if (plot != null && plot.getGameMode() != null)
+            player.changeGameMode(server.getDefaultGameMode());
     }
 }

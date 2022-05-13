@@ -15,6 +15,7 @@ public class PlotCommand {
             new ClearCommand(),
             new DeleteCommand(),
             new DenyCommand(),
+            new GameModeCommand(),
             new HelpCommand(),
             new HomeCommand(),
             new InfoCommand(),
