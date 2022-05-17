@@ -2,9 +2,7 @@ package me.zailer.plotcubic.utils;
 
 import net.minecraft.network.MessageType;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 
 public class MessageUtils {
     private final MutableText message;
@@ -22,13 +20,27 @@ public class MessageUtils {
         this.append(message, color);
     }
 
+    public MessageUtils(String message, int color) {
+        this();
+        this.append(message, color);
+    }
+
     public MessageUtils append(String message) {
         return this.append(message, CommandColors.NORMAL);
+    }
+
+    public MessageUtils append(Text text) {
+        this.message.append(text);
+        return this;
     }
 
     public MessageUtils append(String message, ColorBranch color) {
         this.message.append(color.set(message));
         return this;
+    }
+
+    public MessageUtils append(String message, int color) {
+        return this.append(new LiteralText(message).setStyle(Style.EMPTY.withColor(color)));
     }
 
     public MessageUtils appendWarningIcon() {
@@ -64,6 +76,10 @@ public class MessageUtils {
         return this.message;
     }
 
+    public MessageUtils setTooltipMessage(Text text) {
+        this.message.setStyle(Style.EMPTY.withHoverEvent(HoverEvent.Action.SHOW_TEXT.buildHoverEvent(text)));
+        return this;
+    }
     public static MessageUtils getError(String message) {
         return new MessageUtils().appendError(message);
     }
@@ -74,9 +90,5 @@ public class MessageUtils {
 
     public static void sendChatMessage(ServerPlayerEntity player, Text message) {
         player.sendMessage(message, MessageType.CHAT, player.getUuid());
-    }
-
-    public static boolean isNumber(String str){
-        return str != null && str.matches("[0-9.]+");
     }
 }

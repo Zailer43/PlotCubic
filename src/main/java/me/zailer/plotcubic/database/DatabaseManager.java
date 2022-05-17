@@ -1,6 +1,7 @@
 package me.zailer.plotcubic.database;
 
 import com.mojang.logging.LogUtils;
+import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.enums.PlotPermission;
 import me.zailer.plotcubic.enums.ReportReason;
@@ -67,7 +68,7 @@ public class DatabaseManager {
                 return false;
 
 
-            PreparedStatement statement = conn.prepareStatement("INSERT INTO `plots` (`id_x`, `id_z`, `greeting`, `farewall`, `biome`, `music`, `team`, `owner_username`, `date_claimed`) VALUES (?, ?, NULL, NULL, NULL, NULL, NULL, ?, ?);");
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO `plots` (`id_x`, `id_z`, `greeting`, `farewall`, `biome`, `music`, `team`, `owner_username`, `date_claimed`, `chat_style_id`) VALUES (?, ?, NULL, NULL, NULL, NULL, NULL, ?, ?, ?);");
 
             statement.setInt(1, plot_id_x);
             statement.setInt(2, plot_id_z);
@@ -76,6 +77,7 @@ public class DatabaseManager {
             Calendar calendar = Calendar.getInstance();
             Timestamp time = new Timestamp(calendar.getTimeInMillis());
             statement.setTimestamp(4, time);
+            statement.setString(5, PlotCubic.getConfig().plotChatStyles()[0].id());
 
             statement.execute();
 
@@ -246,7 +248,8 @@ public class DatabaseManager {
                     this.getAllTrusted(plot_id_x, plot_id_z),
                     this.getDenied(plot_id_x, plot_id_z),
                     rs.getDate("date_claimed"),
-                    GameMode.byId(rs.getByte("gamemode_id"), null)
+                    GameMode.byId(rs.getByte("gamemode_id"), null),
+                    PlotChatStyle.byId(rs.getString("chat_style_id"))
             );
 
         } catch (SQLException e) {
@@ -283,6 +286,25 @@ public class DatabaseManager {
             statement.setByte(1, id);
 
             statement.execute();
+        } catch (SQLException e) {
+            handleException(e);
+        }
+    }
+
+    public void updateChatStyle(PlotChatStyle chatStyle, PlotID plotId) {
+        this.updateChatStyle(chatStyle, plotId.x(), plotId.z());
+    }
+
+    public void updateChatStyle(PlotChatStyle chatStyle, int plot_id_x, int plot_id_z) {
+        try (Connection conn = database.getConnection()) {
+            PreparedStatement statement = conn.prepareStatement("UPDATE `plots` SET `chat_style_id` = ? WHERE `id_x` = ? AND `id_z` = ?;");
+
+            statement.setString(1, chatStyle.id());
+            statement.setInt(2, plot_id_x);
+            statement.setInt(3, plot_id_z);
+
+            statement.execute();
+
         } catch (SQLException e) {
             handleException(e);
         }
@@ -330,7 +352,7 @@ public class DatabaseManager {
             if (this.existPlayer(username))
                 return;
 
-            PreparedStatement statement = conn.prepareStatement("INSERT INTO `users` (`username`) VALUES (?)");
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO `users` (`username`, `plot_chat_enabled`) VALUES (?, FALSE)");
 
             statement.setString(1, username);
 
@@ -357,6 +379,40 @@ public class DatabaseManager {
             handleException(e);
         }
         return false;
+    }
+
+    @Nullable
+    public User getPlayer(String username) {
+        try (Connection conn = database.getConnection()) {
+            {
+                PreparedStatement statement = conn.prepareStatement("SELECT * FROM `users` WHERE `username` = ?");
+
+                statement.setString(1, username);
+
+                ResultSet rs = statement.executeQuery();
+
+                if (rs.next())
+                    return new User(username, rs.getBoolean("plot_chat_enabled"));
+            }
+        } catch (SQLException e) {
+            handleException(e);
+        }
+        return null;
+    }
+
+    public void updatePlotChat(String username, boolean plotChatEnabled) {
+        try (Connection conn = database.getConnection()) {
+
+            PreparedStatement statement = conn.prepareStatement("UPDATE `users` SET `plot_chat_enabled` = ? WHERE `username` = ?;");
+
+            statement.setBoolean(1, plotChatEnabled);
+            statement.setString(2, username);
+
+            statement.execute();
+
+        } catch (SQLException e) {
+            handleException(e);
+        }
     }
 
     public boolean isDenied(PlotID plotId, String denied_player) {
@@ -487,7 +543,7 @@ public class DatabaseManager {
     public void updateReport(ReportedPlot report, ServerPlayerEntity admin) {
         try (Connection conn = database.getConnection()) {
 
-            PreparedStatement statement = conn.prepareStatement("UPDATE `reports` SET `is_moderated` = TRUE, `admin_username` = ?, `date_moderated` = CURRENT_TIMESTAMP WHERE id = ?;");
+            PreparedStatement statement = conn.prepareStatement("UPDATE `reports` SET `is_moderated` = TRUE, `admin_username` = ?, `date_moderated` = CURRENT_TIMESTAMP WHERE `id` = ?;");
 
             statement.setString(1, admin.getName().getString());
             statement.setLong(2, report.id());
@@ -615,7 +671,8 @@ public class DatabaseManager {
                       `team` varchar(32) DEFAULT NULL,
                       `owner_username` varchar(32) DEFAULT NULL,
                       `gamemode_id` tinyint DEFAULT -1,
-                      `date_claimed` timestamp NOT NULL
+                      `date_claimed` timestamp NOT NULL,
+                      `chat_style_id` varchar(32) NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
 
@@ -668,7 +725,8 @@ public class DatabaseManager {
 
             conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS `users` (
-                      `username` varchar(16) NOT NULL
+                      `username` varchar(16) NOT NULL,
+                      `plot_chat_enabled` boolean NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
 

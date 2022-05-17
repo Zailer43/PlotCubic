@@ -5,6 +5,7 @@ import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.mixin.ExplosionAccessor;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
+import me.zailer.plotcubic.plot.User;
 import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -36,6 +37,7 @@ import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.block.FluidPlaceEvent;
 import xyz.nucleoid.stimuli.event.entity.EntitySpawnEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerC2SPacketEvent;
+import xyz.nucleoid.stimuli.event.player.PlayerChatContentEvent;
 import xyz.nucleoid.stimuli.event.world.ExplosionDetonatedEvent;
 import xyz.nucleoid.stimuli.event.world.FluidFlowEvent;
 
@@ -49,6 +51,7 @@ public class PlotEvents {
         registerAvoidEntitiesSpawn();
         registerNewUsers();
         registerPlayersEvents();
+        registerChatEvents();
     }
 
     private static void registerProtectBlocks() {
@@ -96,6 +99,10 @@ public class PlotEvents {
         Stimuli.global().listen(PlayerPlotEvent.ARRIVED, PlotEvents::setArrivedGameMode);
         Stimuli.global().listen(PlayerPlotEvent.LEFT, (player, plotId, plot) -> Plot.unloadPlot(player, plot));
         Stimuli.global().listen(PlayerPlotEvent.LEFT, PlotEvents::setLeftGameMode);
+    }
+
+    private static void registerChatEvents() {
+        Stimuli.global().listen(PlayerChatContentEvent.EVENT, PlotEvents::sendChatMessage);
     }
 
     private static ActionResult allowAdmin(ServerPlayerEntity player) {
@@ -268,5 +275,26 @@ public class PlotEvents {
             return;
         if (plot != null && plot.getGameMode() != null)
             player.changeGameMode(server.getDefaultGameMode());
+    }
+
+    private static ActionResult sendChatMessage(ServerPlayerEntity sender, PlayerChatContentEvent.MutableMessage message) {
+        PlotID plotId = PlotID.ofBlockPos(sender.getBlockX(), sender.getBlockZ());
+
+        if (plotId == null)
+            return ActionResult.PASS;
+
+        Plot plot = Plot.getLoadedPlot(plotId);
+
+        if (plot == null)
+            return ActionResult.PASS;
+
+        User user = PlotCubic.getUser(sender);
+
+        if (user == null || !user.getPlotChatEnabled())
+            return ActionResult.PASS;
+
+        plot.sendPlotChatMessage(sender, message.getRaw());
+
+        return ActionResult.FAIL;
     }
 }

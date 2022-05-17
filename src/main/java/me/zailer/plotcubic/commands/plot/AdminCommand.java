@@ -7,6 +7,7 @@ import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
 import me.zailer.plotcubic.commands.plot.admin.AdminClearCommand;
 import me.zailer.plotcubic.commands.plot.admin.AdminDeleteCommand;
+import me.zailer.plotcubic.commands.plot.admin.ReloadCommand;
 import me.zailer.plotcubic.commands.plot.admin.ViewReportsCommand;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
@@ -18,6 +19,7 @@ public class AdminCommand extends SubcommandAbstract {
     public static final SubcommandAbstract[] SUB_COMMANDS = {
             new AdminClearCommand(),
             new AdminDeleteCommand(),
+            new ReloadCommand(),
             new ViewReportsCommand()
     };
 

@@ -11,6 +11,8 @@ public class PlotCommand {
     public static final String[] COMMAND_ALIAS = {"plot", "p", "p3"};
     public static final SubcommandAbstract[] SUB_COMMANDS = {
             new AdminCommand(),
+            new ChatCommand(),
+            new ChatStyleCommand(),
             new ClaimCommand(),
             new ClearCommand(),
             new DeleteCommand(),

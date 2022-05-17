@@ -34,7 +34,7 @@ public class GuiUtils {
                 .setCount(option.getCount());
 
         if (option.isHideAttributes())
-            builder.hideFlags((byte) 2);
+            builder.hideFlags((byte) ItemStack.TooltipSection.MODIFIERS.getFlag());
 
         if (option.hasHeadValue())
             builder.setSkullOwner(option.getHeadValue());

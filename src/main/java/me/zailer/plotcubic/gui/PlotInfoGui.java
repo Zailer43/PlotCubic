@@ -12,6 +12,7 @@ import me.zailer.plotcubic.plot.TrustedPlayer;
 import me.zailer.plotcubic.utils.GuiColors;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.MinecraftServer;
@@ -139,7 +140,7 @@ public class PlotInfoGui {
                     .setName(new MessageUtils(permission.getName(), GuiColors.BLUE).get());
 
             if (permission.isHideAttributes())
-                permissionItem.hideFlags((byte) 2);
+                permissionItem.hideFlags((byte) ItemStack.TooltipSection.MODIFIERS.getFlag());
 
             this.addTrustedPlayersToLore(permissionItem, trustedByPermissionHashMap.get(permission));
             layer.setSlot(i, permissionItem);

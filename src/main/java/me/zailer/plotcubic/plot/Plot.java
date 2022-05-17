@@ -2,11 +2,16 @@ package me.zailer.plotcubic.plot;
 
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
+import me.zailer.plotcubic.commands.PlotCommand;
+import me.zailer.plotcubic.commands.plot.ChatCommand;
 import me.zailer.plotcubic.generator.PlotworldSettings;
+import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
@@ -26,8 +31,9 @@ public class Plot {
     private final List<ServerPlayerEntity> players;
     private final Date claimedDate;
     private GameMode gameMode;
+    private PlotChatStyle chatStyle;
 
-    public Plot(String username, PlotID plotID, List<TrustedPlayer> trustedPlayers, List<DeniedPlayer> deniedPlayers, Date claimedDate, GameMode gameMode) {
+    public Plot(String username, PlotID plotID, List<TrustedPlayer> trustedPlayers, List<DeniedPlayer> deniedPlayers, Date claimedDate, GameMode gameMode, PlotChatStyle chatStyle) {
         this.ownerUsername = username;
         this.plotID = plotID;
         this.trustedPlayers = trustedPlayers;
@@ -35,6 +41,7 @@ public class Plot {
         this.players = new ArrayList<>();
         this.claimedDate = claimedDate;
         this.gameMode = gameMode;
+        this.chatStyle = chatStyle;
     }
 
     public Plot(ServerPlayerEntity player, PlotID plotID) {
@@ -42,13 +49,13 @@ public class Plot {
     }
 
     public Plot(String ownerUsername, PlotID plotID) {
-        this(ownerUsername, plotID, new ArrayList<>(), new ArrayList<>(), null, null);
+        this(ownerUsername, plotID, new ArrayList<>(), new ArrayList<>(), null, null, PlotCubic.getConfig().plotChatStyles()[0]);
     }
 
     public static void claim(ServerPlayerEntity player, PlotID plotID) {
         Plot plot = new Plot(player, plotID);
         plot.setBorder(PlotManager.getInstance().getSettings().getClaimedBorderBlock());
-        loadedPlots.add(plot);
+        Plot.loadPlot(player, plot);
     }
 
     public void delete() {
@@ -271,6 +278,41 @@ public class Plot {
 
     public int getPlayersCount() {
         return this.players.size();
+    }
+
+    public void sendPlotChatMessage(ServerPlayerEntity sender, String message) {
+        boolean isPlotEmpty = this.players.size() <= 1;
+        Text messageText = this.chatStyle.getMessage(this.plotID, sender, message);
+
+        if (isPlotEmpty) {
+            String tooltipMessage = String.format(
+                    """
+                            The plot is currently empty
+                            No one else can read the message you sent
+                            If you want everyone to read you, you can use /%s %s""",
+                    PlotCommand.COMMAND_ALIAS[0],
+                    new ChatCommand().getAlias()[0]
+            );
+
+            messageText = new MessageUtils().appendWarningIcon()
+                    .append(" [Cursor here] ")
+                    .append(messageText)
+                    .setTooltipMessage(new LiteralText(tooltipMessage))
+                    .get();
+        }
+
+        for (var player : this.players)
+            MessageUtils.sendChatMessage(player, messageText);
+
+        PlotCubic.log(messageText.getString());
+    }
+
+    public void setChatStyle(PlotChatStyle chatStyle) {
+        this.chatStyle = chatStyle;
+    }
+
+    public PlotChatStyle getChatStyle() {
+        return this.chatStyle;
     }
 
 }

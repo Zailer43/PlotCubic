@@ -1,7 +1,6 @@
 package me.zailer.plotcubic.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.mojang.logging.LogUtils;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import me.zailer.plotcubic.PlotCubic;
@@ -18,7 +17,6 @@ public class ConfigManager {
 
     public static final String CONFIG_FILE = PlotCubic.class.getSimpleName() + ".json";
 
-    @Nullable
     public Config getConfig() {
         return config;
     }
@@ -28,27 +26,29 @@ public class ConfigManager {
 
     public ConfigManager() {
         try {
-            file = Files.createDirectories(FabricLoader.getInstance().getConfigDir()).resolve(CONFIG_FILE).toFile();
+            this.file = Files.createDirectories(FabricLoader.getInstance().getConfigDir()).resolve(CONFIG_FILE).toFile();
 
-            if (!file.exists()) {
-                config = loadDefault();
+            if (!this.file.exists()) {
+                this.config = loadDefault();
                 return;
             }
 
-            Gson gson = new GsonBuilder().registerTypeAdapterFactory(RecordTypeAdapterFactory.DEFAULT).create();
-
-            config = gson.fromJson(Files.readString(file.toPath()), Config.class);
+            try {
+                this.config = this.getGson().fromJson(Files.readString(this.file.toPath()), Config.class);
+            } catch (JsonParseException e) {
+                this.config = this.updateJson();
+            }
         } catch (IOException e) {
             LOGGER.error("[PlotCubic] An error occurred while loading the configuration file.", e);
         }
     }
 
     private Config loadDefault() throws IOException {
-        Gson gson = new GsonBuilder().registerTypeAdapterFactory(RecordTypeAdapterFactory.DEFAULT).setPrettyPrinting().create();
+        Gson gson = this.getGson();
 
         Config cfg = Config.DEFAULT;
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(this.file));
         writer.write(gson.toJson(cfg, Config.class));
         writer.close();
 
@@ -56,12 +56,33 @@ public class ConfigManager {
     }
 
     public void reload() throws IOException {
-        if (!file.exists()) {
-            config = loadDefault();
+        if (!this.file.exists()) {
+            this.config = loadDefault();
             return;
         }
+        this.config = this.getGson().fromJson(Files.readString(this.file.toPath()), Config.class);
+    }
 
-        Gson gson = new Gson();
-        config = gson.fromJson(Files.readString(file.toPath()), Config.class);
+    private Config updateJson() throws IOException {
+        Gson gson = this.getGson();
+        JsonObject configJson = JsonParser.parseReader(new FileReader(file.getAbsolutePath())).getAsJsonObject();
+        Config cfg = Config.DEFAULT;
+        JsonObject defaultValues = gson.toJsonTree(cfg, Config.class).getAsJsonObject();
+
+        for (var key : defaultValues.keySet()) {
+            if (!configJson.has(key))
+                configJson.add(key, defaultValues.get(key));
+        }
+
+        Config updatedConfig = gson.fromJson(configJson, Config.class);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(this.file));
+        writer.write(gson.toJson(updatedConfig, Config.class));
+        writer.close();
+
+        return updatedConfig;
+    }
+
+    private Gson getGson() {
+        return new GsonBuilder().registerTypeAdapterFactory(RecordTypeAdapterFactory.DEFAULT).setPrettyPrinting().create();
     }
 }

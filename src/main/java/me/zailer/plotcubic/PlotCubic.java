@@ -3,6 +3,7 @@ package me.zailer.plotcubic;
 import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 import me.zailer.plotcubic.commands.PlotCommand;
+import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.config.ConfigManager;
 import me.zailer.plotcubic.database.DatabaseManager;
 import me.zailer.plotcubic.events.PlayerPlotEvent;
@@ -11,6 +12,7 @@ import me.zailer.plotcubic.events.PlotPermissionsEvents;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
+import me.zailer.plotcubic.plot.User;
 import me.zailer.plotcubic.registry.DimensionRegistry;
 import me.zailer.plotcubic.utils.TickTracker;
 import net.fabricmc.api.ModInitializer;
@@ -32,6 +34,7 @@ import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 import xyz.nucleoid.stimuli.Stimuli;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class PlotCubic implements ModInitializer {
@@ -54,6 +57,7 @@ public class PlotCubic implements ModInitializer {
             Items.FLINT_AND_STEEL,
             Items.FIRE_CHARGE
     );
+    private static final HashMap<ServerPlayerEntity, User> playersSet = new HashMap<>();
     public static RuntimeWorldHandle plotWorldHandle;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static boolean modReady = false;
@@ -75,6 +79,9 @@ public class PlotCubic implements ModInitializer {
 
     public static ConfigManager getConfigManager() {
         return configManager;
+    }
+    public static Config getConfig() {
+        return configManager.getConfig();
     }
 
     public static DatabaseManager getDatabaseManager() {
@@ -118,6 +125,13 @@ public class PlotCubic implements ModInitializer {
                 invokers.get(PlayerPlotEvent.LEFT).onPlayerLeft(player, plotId, plotId == null ? null : Plot.getLoadedPlot(plotId));
             }
         });
+
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            String username = handler.player.getName().getString();
+            User user = databaseManager.getPlayer(username);
+            playersSet.put(handler.player, user == null ? new User(username, false) : databaseManager.getPlayer(username));
+        });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> playersSet.remove(handler.player));
     }
 
     private void setupPlotWorld() {
@@ -153,4 +167,11 @@ public class PlotCubic implements ModInitializer {
         return entityList.stream().collect(ImmutableList.toImmutableList());
     }
 
+    public static void log(String message) {
+        LOGGER.info(message);
+    }
+
+    public static User getUser(ServerPlayerEntity player) {
+        return playersSet.get(player);
+    }
 }
