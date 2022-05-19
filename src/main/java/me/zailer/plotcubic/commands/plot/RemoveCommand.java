@@ -19,6 +19,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 import java.util.Set;
 
@@ -48,17 +49,18 @@ public class RemoveCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot_owner"));
                 return 1;
             }
+
             Plot plot = Plot.getLoadedPlot(plotId);
             if (plot == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The plot is not loaded, you should not be seeing this error").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.not_loaded"));
                 return 1;
             }
 

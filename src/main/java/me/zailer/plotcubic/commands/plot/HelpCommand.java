@@ -15,6 +15,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -73,7 +74,7 @@ public class HelpCommand extends SubcommandAbstract {
                 }
             }
 
-            MessageUtils.sendChatMessage(player, MessageUtils.getError("Invalid subcommand").get());
+            MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.invalid_subcommand"));
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }

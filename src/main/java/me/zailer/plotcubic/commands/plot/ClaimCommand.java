@@ -13,6 +13,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 public class ClaimCommand extends SubcommandAbstract {
 
@@ -40,12 +41,12 @@ public class ClaimCommand extends SubcommandAbstract {
             PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotID == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
                 return 1;
             }
 
             if (!PlotCubic.getDatabaseManager().claimPlot(plotID.x(), plotID.z(), player.getEntityName())) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("This plot is already claimed").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.claimed"));
                 return 1;
             }
 

@@ -32,6 +32,8 @@ dependencies {
     modImplementation include("xyz.nucleoid:fantasy:${project.fantasy_version}")
     modImplementation include("xyz.nucleoid:stimuli:${project.stimuli_version}")
     modImplementation include("eu.pb4:sgui:${project.sgui_version}")
+    modImplementation include("fr.catcore:server-translations-api:${project.server_translations_api_version}")
+    modImplementation include("eu.pb4:placeholder-api:${project.placeholder_api_version}")
 
     implementation "com.zaxxer:HikariCP:${project.hikaricp_version}"
     implementation "mysql:mysql-connector-java:${project.mysql_connector_version}"

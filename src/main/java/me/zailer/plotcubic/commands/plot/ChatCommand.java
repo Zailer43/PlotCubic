@@ -6,12 +6,13 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
-import me.zailer.plotcubic.plot.User;
+import me.zailer.plotcubic.plot.UserConfig;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 
 public class ChatCommand extends SubcommandAbstract {
@@ -33,13 +34,13 @@ public class ChatCommand extends SubcommandAbstract {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
 
-            User user = PlotCubic.getUser(player);
+            UserConfig userConfig = PlotCubic.getUser(player);
 
-            if (user == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("you are null :(").get());
+            if (userConfig == null) {
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.null_user_config"));
                 return 1;
             }
-            boolean plotChatEnabled = user.togglePlotChat();
+            boolean plotChatEnabled = userConfig.togglePlotChat();
             MessageUtils.sendChatMessage(player, this.getToggleMessage(plotChatEnabled));
 
         } catch (CommandSyntaxException ignored) {

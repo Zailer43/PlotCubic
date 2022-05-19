@@ -12,6 +12,7 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.TranslatableText;
 
 public class ChatStyleCommand extends SubcommandAbstract {
     @Override
@@ -34,13 +35,13 @@ public class ChatStyleCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
                 return 1;
             }
             Plot plot = Plot.getPlot(plotId);
 
             if (plot == null || !plot.isOwner(player)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot_owner"));
                 return 1;
             }
 

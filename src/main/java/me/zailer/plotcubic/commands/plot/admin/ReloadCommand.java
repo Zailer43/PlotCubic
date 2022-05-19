@@ -12,6 +12,8 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 import java.io.IOException;
 
@@ -33,15 +35,15 @@ public class ReloadCommand extends SubcommandAbstract {
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            MessageUtils messageUtils;
+            Text message;
             try {
                 PlotCubic.getConfigManager().reload();
-                messageUtils = new MessageUtils("Reloaded config");
+                message = new MessageUtils("Reloaded config").get();
             } catch (IOException e) {
                 e.printStackTrace();
-                messageUtils = MessageUtils.getError("Error reloading config");
+                message = new TranslatableText("error.plotcubic.reloading_config");
             }
-            MessageUtils.sendChatMessage(player, messageUtils.get());
+            MessageUtils.sendChatMessage(player, message);
         } catch (CommandSyntaxException ignored) {
         }
         return 1;

@@ -1,8 +1,13 @@
 package me.zailer.plotcubic.utils;
 
+import eu.pb4.placeholders.TextParser;
+import eu.pb4.placeholders.util.GeneralUtils;
+import eu.pb4.placeholders.util.TextParserUtils;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
+
+import java.util.Arrays;
 
 public class MessageUtils {
     private final MutableText message;
@@ -23,6 +28,25 @@ public class MessageUtils {
     public MessageUtils(String message, int color) {
         this();
         this.append(message, color);
+    }
+
+    public static void registerPlaceHolderColors() {
+        registerColor("normal", 0x61C2A2);
+        registerColor("icon", 0xCCE0D2);
+        registerColor("error", 0x1D617A);
+//        registerColor("highlight", 0x2C8395);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private static void registerColor(String identifier, int color) {
+        TextParser.register(
+                identifier,
+                (tag, data, input, handlers, endAt) -> {
+                    GeneralUtils.TextLengthPair out = TextParserUtils.recursiveParsing(input, handlers, endAt);
+                    out.text().fillStyle(Style.EMPTY.withColor(color));
+                    return out;
+                }
+        );
     }
 
     public MessageUtils append(String message) {
@@ -80,9 +104,6 @@ public class MessageUtils {
         this.message.setStyle(Style.EMPTY.withHoverEvent(HoverEvent.Action.SHOW_TEXT.buildHoverEvent(text)));
         return this;
     }
-    public static MessageUtils getError(String message) {
-        return new MessageUtils().appendError(message);
-    }
 
     public static MessageUtils getInfo(String message) {
         return new MessageUtils().appendDoubleInfo(message);
@@ -90,5 +111,14 @@ public class MessageUtils {
 
     public static void sendChatMessage(ServerPlayerEntity player, Text message) {
         player.sendMessage(message, MessageType.CHAT, player.getUuid());
+    }
+
+    public static void sendChatMessage(ServerPlayerEntity player, String key, String... args) {
+        Object[] textArgs = new Text[args.length];
+
+        for (int i = 0; i != args.length; i++)
+            textArgs[i] = new LiteralText(args[i]).setStyle(Style.EMPTY.withColor(0x2C8395));
+
+        player.sendMessage(new TranslatableText(key, textArgs), MessageType.CHAT, player.getUuid());
     }
 }

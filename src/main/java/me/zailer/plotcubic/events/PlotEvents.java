@@ -5,7 +5,7 @@ import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.mixin.ExplosionAccessor;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
-import me.zailer.plotcubic.plot.User;
+import me.zailer.plotcubic.plot.UserConfig;
 import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -288,9 +288,9 @@ public class PlotEvents {
         if (plot == null)
             return ActionResult.PASS;
 
-        User user = PlotCubic.getUser(sender);
+        UserConfig userConfig = PlotCubic.getUser(sender);
 
-        if (user == null || !user.getPlotChatEnabled())
+        if (userConfig == null || !userConfig.getPlotChatEnabled())
             return ActionResult.PASS;
 
         plot.sendPlotChatMessage(sender, message.getRaw());

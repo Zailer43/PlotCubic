@@ -15,6 +15,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 
@@ -76,14 +77,14 @@ public class VisitCommand extends SubcommandAbstract {
 
     public void visit(ServerPlayerEntity player, PlotID plotId) {
         Plot plot = Plot.getPlot(plotId);
-        MessageUtils messageUtils = this.getSuccessfulMsg(plotId);
+        Text message = this.getSuccessfulMsg(plotId);
 
         if (plot != null && !plot.visit(player))
-            messageUtils = this.getDenyMessage();
+            message = this.getDenyMessage();
         else
             player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
 
-        MessageUtils.sendChatMessage(player, messageUtils.get());
+        MessageUtils.sendChatMessage(player, message);
     }
 
     public void visit(ServerPlayerEntity player, String playerToVisit) {
@@ -92,10 +93,10 @@ public class VisitCommand extends SubcommandAbstract {
 
     public void visit(ServerPlayerEntity player, String playerToVisit, int index) {
         List<Plot> plotList = PlotCubic.getDatabaseManager().getAllPlots(playerToVisit, true);
-        MessageUtils message;
+        Text message;
 
         if (plotList == null) {
-            message = MessageUtils.getError("An error has occurred executing the command");
+            message = new TranslatableText("error.plotcubic.plot.visit.unexpected");
         } else if (plotList.isEmpty()) {
             message = this.getThereAreNoPlotsMsg();
         } else if (plotList.size() < index) {
@@ -108,33 +109,31 @@ public class VisitCommand extends SubcommandAbstract {
             message = plot.visit(player) ? this.getSuccessfulMsg(playerToVisit, index, plotList.size()) : this.getDenyMessage();
         }
 
-        MessageUtils.sendChatMessage(player, message.get());
+        MessageUtils.sendChatMessage(player, message);
     }
 
-    public MessageUtils getSuccessfulMsg(PlotID plotId) {
+    public Text getSuccessfulMsg(PlotID plotId) {
         return new MessageUtils("Successfully teleported to ")
-                .append(plotId.toString(), CommandColors.HIGHLIGHT);
+                .append(plotId.toString(), CommandColors.HIGHLIGHT).get();
     }
 
-    public MessageUtils getSuccessfulMsg(String player, int index, int plotAmount) {
+    public Text getSuccessfulMsg(String player, int index, int plotAmount) {
         return new MessageUtils("Successfully teleported to plot ")
                 .append(index + "/" + plotAmount, CommandColors.HIGHLIGHT)
                 .append(" of ")
-                .append(player, CommandColors.HIGHLIGHT);
+                .append(player, CommandColors.HIGHLIGHT).get();
     }
 
-    public MessageUtils getOutBoundsErrorMsg(int plotCount) {
-        return MessageUtils.getError("This player has ")
-                .append(String.valueOf(plotCount), CommandColors.HIGHLIGHT)
-                .append(" plots", CommandColors.ERROR);
+    public Text getOutBoundsErrorMsg(int plotCount) {
+        return new TranslatableText("error.plotcubic.plot.visit.out_bounds");
     }
 
-    public MessageUtils getDenyMessage() {
-        return new MessageUtils("You have deny of this plot");
+    public Text getDenyMessage() {
+        return new MessageUtils("You have deny of this plot").get();
     }
 
-    public MessageUtils getThereAreNoPlotsMsg() {
-        return MessageUtils.getError("This player has no plots");
+    public Text getThereAreNoPlotsMsg() {
+        return new TranslatableText("error.plotcubic.plot.visit.has_no_plots");
     }
 
     @Override

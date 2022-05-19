@@ -14,6 +14,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 public class TeleportCommand extends SubcommandAbstract {
     @Override
@@ -41,7 +42,7 @@ public class TeleportCommand extends SubcommandAbstract {
                 return 0;
             }
 
-            MessageUtils.sendChatMessage(player, getTeleportMsg());
+            MessageUtils.sendChatMessage(player, this.getTeleportMsg());
 
             player.teleport(plotWorld, 0, 52, 0, 0f, 0f);
         } catch (CommandSyntaxException e) {
@@ -51,7 +52,7 @@ public class TeleportCommand extends SubcommandAbstract {
     }
 
     private Text getFetchErrorMsg() {
-        return CommandColors.ERROR.set("You are already in the Plot World.");
+        return new TranslatableText("error.plotcubic.teleport.already_teleported");
     }
 
     private MutableText getTeleportMsg() {

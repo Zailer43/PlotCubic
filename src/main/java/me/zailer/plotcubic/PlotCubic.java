@@ -12,8 +12,9 @@ import me.zailer.plotcubic.events.PlotPermissionsEvents;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
-import me.zailer.plotcubic.plot.User;
+import me.zailer.plotcubic.plot.UserConfig;
 import me.zailer.plotcubic.registry.DimensionRegistry;
+import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.TickTracker;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -57,7 +58,7 @@ public class PlotCubic implements ModInitializer {
             Items.FLINT_AND_STEEL,
             Items.FIRE_CHARGE
     );
-    private static final HashMap<ServerPlayerEntity, User> playersSet = new HashMap<>();
+    private static final HashMap<ServerPlayerEntity, UserConfig> playersSet = new HashMap<>();
     public static RuntimeWorldHandle plotWorldHandle;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static boolean modReady = false;
@@ -92,6 +93,7 @@ public class PlotCubic implements ModInitializer {
     public void onInitialize() {
         PlotCommand.register();
         DimensionRegistry.register();
+        MessageUtils.registerPlaceHolderColors();
 
         configManager = new ConfigManager();
 
@@ -128,8 +130,8 @@ public class PlotCubic implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             String username = handler.player.getName().getString();
-            User user = databaseManager.getPlayer(username);
-            playersSet.put(handler.player, user == null ? new User(username, false) : databaseManager.getPlayer(username));
+            UserConfig userConfig = databaseManager.getPlayer(username);
+            playersSet.put(handler.player, userConfig == null ? new UserConfig(username, false) : databaseManager.getPlayer(username));
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> playersSet.remove(handler.player));
     }
@@ -171,7 +173,7 @@ public class PlotCubic implements ModInitializer {
         LOGGER.info(message);
     }
 
-    public static User getUser(ServerPlayerEntity player) {
+    public static UserConfig getUser(ServerPlayerEntity player) {
         return playersSet.get(player);
     }
 }

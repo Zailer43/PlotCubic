@@ -16,6 +16,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.world.GameMode;
 
 import java.util.Arrays;
@@ -47,25 +48,25 @@ public class GameModeCommand extends SubcommandAbstract {
             GameMode gameMode = GameMode.byName(serverCommandSource.getArgument("GAMEMODE", String.class), null);
 
             if (gameMode == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The game mode is invalid").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.invalid_game_mode"));
                 return 1;
             }
 
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot_owner"));
                 return 1;
             }
 
             Plot plot = Plot.getLoadedPlot(plotId);
             if (plot == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The plot is not loaded, you should not be seeing this error").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.not_loaded"));
                 return 1;
             }
 

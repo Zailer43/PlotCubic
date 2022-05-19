@@ -14,6 +14,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 public class InfoCommand extends SubcommandAbstract {
 
@@ -56,7 +57,7 @@ public class InfoCommand extends SubcommandAbstract {
         PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
         if (plotID == null) {
-            MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+            MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
             return;
         }
 

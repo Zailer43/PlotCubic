@@ -382,7 +382,7 @@ public class DatabaseManager {
     }
 
     @Nullable
-    public User getPlayer(String username) {
+    public UserConfig getPlayer(String username) {
         try (Connection conn = database.getConnection()) {
             {
                 PreparedStatement statement = conn.prepareStatement("SELECT * FROM `users` WHERE `username` = ?");
@@ -392,7 +392,7 @@ public class DatabaseManager {
                 ResultSet rs = statement.executeQuery();
 
                 if (rs.next())
-                    return new User(username, rs.getBoolean("plot_chat_enabled"));
+                    return new UserConfig(username, rs.getBoolean("plot_chat_enabled"));
             }
         } catch (SQLException e) {
             handleException(e);

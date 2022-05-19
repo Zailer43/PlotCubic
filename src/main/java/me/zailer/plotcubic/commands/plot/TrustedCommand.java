@@ -20,6 +20,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 public class TrustedCommand extends SubcommandAbstract {
     @Override
@@ -46,34 +47,31 @@ public class TrustedCommand extends SubcommandAbstract {
             String trustedUsername = serverCommandSource.getArgument("PLAYER", String.class);
 
             if (trustedUsername.equalsIgnoreCase(player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You cannot modify your own permissions").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.trust.yourself"));
                 return 1;
             }
 
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot_owner"));
                 return 1;
             }
 
             DatabaseManager databaseManager = PlotCubic.getDatabaseManager();
 
             if (!databaseManager.existPlayer(trustedUsername)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The player ")
-                        .append(trustedUsername, CommandColors.HIGHLIGHT)
-                        .append(" does not exist", CommandColors.ERROR).get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", trustedUsername);
                 return 1;
             }
 
             if (databaseManager.isDenied(plotId, trustedUsername)) {
-                String removeCommand = String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], trustedUsername);
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The player has deny, to give them trust first you have to use ")
-                        .append(removeCommand, CommandColors.HIGHLIGHT).get());
+                String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], trustedUsername);
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.trust.has_deny", removeCommand);
                 return 1;
             }
 
