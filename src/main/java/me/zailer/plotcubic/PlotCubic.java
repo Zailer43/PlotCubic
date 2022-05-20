@@ -91,10 +91,6 @@ public class PlotCubic implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        PlotCommand.register();
-        DimensionRegistry.register();
-        MessageUtils.registerPlaceHolderColors();
-
         configManager = new ConfigManager();
 
         ServerLifecycleEvents.SERVER_STARTING.register((server) -> {
@@ -107,6 +103,10 @@ public class PlotCubic implements ModInitializer {
 
             databaseManager = new DatabaseManager(configManager.getConfig(), server);
         });
+
+        PlotCommand.register();
+        DimensionRegistry.register();
+        MessageUtils.reloadColors();
 
         ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
             PlotEvents.register();
@@ -171,6 +171,10 @@ public class PlotCubic implements ModInitializer {
 
     public static void log(String message) {
         LOGGER.info(message);
+    }
+
+    public static void error(String message) {
+        LOGGER.error(message);
     }
 
     public static UserConfig getUser(ServerPlayerEntity player) {

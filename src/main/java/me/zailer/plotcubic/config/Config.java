@@ -2,7 +2,7 @@ package me.zailer.plotcubic.config;
 
 import me.zailer.plotcubic.plot.PlotChatStyle;
 
-public record Config(Database database, PlotChatStyle[] plotChatStyles) {
+public record Config(Database database, PlotChatStyle[] plotChatStyles, CustomColors customColors) {
 
     public static final Config DEFAULT = new Config(
             new Database(
@@ -32,11 +32,44 @@ public record Config(Database database, PlotChatStyle[] plotChatStyles) {
                             0xF2E8CF, "★", 0xBC4749, 0xF2E8CF),
                     new PlotChatStyle("valentines_day", "Valentine's Day", "bow", "❤", "❤", 0xED4545, 0xFBC6CC,
                             0xCAB5C8, "\uD83C\uDFF9", 0xED4545, 0xCAB5C8)
-            }
+            },
+            new CustomColors(
+                    "2C8395",
+                    new Color[]{
+                            new Color("p3_normal", "61C2A2"),
+                            new Color("p3_icon", "CCE0D2"),
+                            new Color("p3_error", "1D617A")
+                    }
+            )
     );
 
     public record Database(String type, String host, Integer port, String user, String password,
                            String database, String table_name) {
+    }
+
+    public static final class CustomColors {
+        private String highlight;
+        private final Color[] others;
+
+        public CustomColors(String highlight, Color[] others) {
+            this.highlight = highlight;
+            this.others = others;
+        }
+
+        public void setDefaultHighlight() {
+            this.highlight = "2C8395";
+        }
+
+        public String highlight() {
+            return highlight;
+        }
+
+        public Color[] others() {
+            return others;
+        }
+    }
+
+    public record Color(String name, String color) {
     }
 }
 

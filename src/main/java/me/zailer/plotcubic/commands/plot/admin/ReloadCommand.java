@@ -1,13 +1,11 @@
 package me.zailer.plotcubic.commands.plot.admin;
 
-import com.mojang.brigadier.Message;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
-import me.zailer.plotcubic.gui.ReportGui;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -38,6 +36,7 @@ public class ReloadCommand extends SubcommandAbstract {
             Text message;
             try {
                 PlotCubic.getConfigManager().reload();
+                MessageUtils.reloadColors();
                 message = new MessageUtils("Reloaded config").get();
             } catch (IOException e) {
                 e.printStackTrace();

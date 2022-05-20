@@ -7,7 +7,6 @@ import me.zailer.plotcubic.PlotCubic;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.file.Files;
 
@@ -18,7 +17,7 @@ public class ConfigManager {
     public static final String CONFIG_FILE = PlotCubic.class.getSimpleName() + ".json";
 
     public Config getConfig() {
-        return config;
+        return this.config;
     }
 
     private File file;

@@ -3,11 +3,11 @@ package me.zailer.plotcubic.utils;
 import eu.pb4.placeholders.TextParser;
 import eu.pb4.placeholders.util.GeneralUtils;
 import eu.pb4.placeholders.util.TextParserUtils;
+import me.zailer.plotcubic.PlotCubic;
+import me.zailer.plotcubic.config.Config;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
-
-import java.util.Arrays;
 
 public class MessageUtils {
     private final MutableText message;
@@ -30,11 +30,22 @@ public class MessageUtils {
         this.append(message, color);
     }
 
-    public static void registerPlaceHolderColors() {
-        registerColor("normal", 0x61C2A2);
-        registerColor("icon", 0xCCE0D2);
-        registerColor("error", 0x1D617A);
-//        registerColor("highlight", 0x2C8395);
+    public static void reloadColors() {
+        String hexColorRegex = "^[A-Fa-f\\d]{6}$";
+        Config.CustomColors customColors = PlotCubic.getConfig().customColors();
+        for (var color : customColors.others()) {
+            String colorValue = color.color();
+            if (colorValue.matches(hexColorRegex))
+                registerColor(color.name(), Integer.valueOf(colorValue, 16));
+            else
+                PlotCubic.error(String.format("[Config] Color \"%s\" does not have a valid hexadecimal value", color.name()));
+        }
+
+        String highlight = customColors.highlight();
+        if (!highlight.matches(hexColorRegex)) {
+            PlotCubic.error("[Config] Highlight color does not have a valid hexadecimal value");
+            customColors.setDefaultHighlight();
+        }
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -115,9 +126,10 @@ public class MessageUtils {
 
     public static void sendChatMessage(ServerPlayerEntity player, String key, String... args) {
         Object[] textArgs = new Text[args.length];
+        int highlight = Integer.valueOf(PlotCubic.getConfig().customColors().highlight(), 16);
 
         for (int i = 0; i != args.length; i++)
-            textArgs[i] = new LiteralText(args[i]).setStyle(Style.EMPTY.withColor(0x2C8395));
+            textArgs[i] = new LiteralText(args[i]).setStyle(Style.EMPTY.withColor(highlight));
 
         player.sendMessage(new TranslatableText(key, textArgs), MessageType.CHAT, player.getUuid());
     }
