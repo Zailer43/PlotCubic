@@ -88,8 +88,8 @@ public class RemoveCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Remove deny or trust of a user from your plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.remove";
     }
 
     @Override

@@ -1,34 +1,19 @@
 package me.zailer.plotcubic.commands.plot.admin;
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.commands.CommandCategory;
-import me.zailer.plotcubic.commands.SubcommandAbstract;
+import me.zailer.plotcubic.commands.plot.ClearCommand;
 import me.zailer.plotcubic.gui.ConfirmationGui;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.utils.MessageUtils;
-import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 
-public class AdminClearCommand extends SubcommandAbstract {
-    @Override
-    public String[] getAlias() {
-        return new String[]{"clear"};
-    }
-
-    @Override
-    public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
-        command.then(
-                CommandManager.literal(alias)
-                        .executes(this::execute)
-        );
-    }
+public class AdminClearCommand extends ClearCommand {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
@@ -53,11 +38,6 @@ public class AdminClearCommand extends SubcommandAbstract {
             Plot plot = new Plot(player, plotId);
             plot.clearPlot();
         });
-    }
-
-    @Override
-    protected String getHelpDetails() {
-        return "Clean the plot and leave it as new";
     }
 
     @Override

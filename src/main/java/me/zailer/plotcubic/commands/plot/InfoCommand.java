@@ -43,8 +43,8 @@ public class InfoCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Used to get information about the plot you are on";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.info";
     }
 
     @Override

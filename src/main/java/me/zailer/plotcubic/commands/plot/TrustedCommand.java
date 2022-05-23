@@ -82,8 +82,8 @@ public class TrustedCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Give some permissions on the plot to a player";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.trust";
     }
 
     @Override

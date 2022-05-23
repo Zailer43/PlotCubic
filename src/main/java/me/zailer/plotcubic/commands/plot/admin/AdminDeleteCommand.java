@@ -27,8 +27,8 @@ public class AdminDeleteCommand extends AdminClearCommand {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Delete the plot and you are no longer the owner";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.delete";
     }
 
     @Override

@@ -61,8 +61,8 @@ public class ClearCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Clean the plot and leave it as new";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.clear";
     }
 
     @Override

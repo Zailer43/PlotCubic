@@ -58,7 +58,7 @@ public class HomeCommand extends VisitCommand {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Teleport to a plot that belongs to you.";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.home";
     }
 }

@@ -46,8 +46,8 @@ public class ChatCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Toggle plot chat";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.chat";
     }
 
     @Override

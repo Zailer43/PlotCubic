@@ -57,8 +57,8 @@ public class ChatStyleCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Change the style of messages in plot chat";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.chat_style";
     }
 
     @Override

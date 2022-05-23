@@ -52,8 +52,8 @@ public class AdminCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Staff commands :)";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.admin";
     }
 
     @Override

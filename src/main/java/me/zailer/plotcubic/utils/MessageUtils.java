@@ -78,6 +78,13 @@ public class MessageUtils {
         return this;
     }
 
+    public MessageUtils appendTranslations(String key, String key2) {
+        MutableText translation = new TranslatableText(key).append(new TranslatableText(key2)
+                .setStyle(Style.EMPTY.withColor(getHighlight())));
+        this.message.append("\n").append(translation);
+        return this;
+    }
+
     public MutableText get() {
         return this.message;
     }
@@ -105,11 +112,14 @@ public class MessageUtils {
 
     public static TranslatableText formatArgs(String key, Object... args) {
         Object[] textArgs = new Text[args.length];
-        int highlight = Integer.valueOf(PlotCubic.getConfig().customColors().highlight(), 16);
 
         for (int i = 0; i != args.length; i++)
-            textArgs[i] = new LiteralText(args[i].toString()).setStyle(Style.EMPTY.withColor(highlight));
+            textArgs[i] = new LiteralText(args[i].toString()).setStyle(Style.EMPTY.withColor(getHighlight()));
 
         return new TranslatableText(key, textArgs);
+    }
+
+    public static int getHighlight() {
+        return Integer.valueOf(PlotCubic.getConfig().customColors().highlight(), 16);
     }
 }

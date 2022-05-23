@@ -23,7 +23,7 @@ public abstract class SubcommandAbstract {
         return MessageUtils.getTranslation("text.plotcubic.help.subcommand.help_title")
                 .append("text.plotcubic.help.subcommand.alias", alias)
                 .append("text.plotcubic.help.subcommand.category", this.getCategory().getName())
-                .append("text.plotcubic.help.subcommand.details", this.getHelpDetails())
+                .appendTranslations("text.plotcubic.help.subcommand.details", this.getHelpTranslationKey())
                 .get();
     }
 
@@ -31,7 +31,7 @@ public abstract class SubcommandAbstract {
 
     public abstract int execute(CommandContext<ServerCommandSource> serverCommandSource);
 
-    protected abstract String getHelpDetails();
+    protected abstract String getHelpTranslationKey();
 
     public abstract CommandCategory getCategory();
 

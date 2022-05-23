@@ -65,8 +65,8 @@ public class ReportCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Report a plot that breaks the rules for a staff to moderate it";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.report";
     }
 
     @Override

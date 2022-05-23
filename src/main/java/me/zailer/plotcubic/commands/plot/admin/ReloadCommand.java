@@ -47,8 +47,8 @@ public class ReloadCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Reload config";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.admin.reload";
     }
 
     @Override

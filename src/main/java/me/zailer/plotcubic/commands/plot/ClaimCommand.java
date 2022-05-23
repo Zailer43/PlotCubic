@@ -58,12 +58,8 @@ public class ClaimCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return """
-                Used to claim parcels
-                "this" to get where you are standing
-                "auto" to get the closest available to 0;0
-                "near" to get the closest available to where you are""";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.claim";
     }
 
     @Override

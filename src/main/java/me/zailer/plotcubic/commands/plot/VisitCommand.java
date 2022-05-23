@@ -132,8 +132,8 @@ public class VisitCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Used to visit the specified plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.visit";
     }
 
     @Override

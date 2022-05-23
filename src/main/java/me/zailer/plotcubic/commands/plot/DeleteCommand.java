@@ -26,7 +26,7 @@ public class DeleteCommand extends ClearCommand {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Delete the plot and you are no longer the owner";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.delete";
     }
 }

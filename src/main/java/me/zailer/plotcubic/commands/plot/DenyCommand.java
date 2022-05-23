@@ -121,8 +121,8 @@ public class DenyCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Ban a player from entering your plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.deny";
     }
 
     @Override

@@ -51,8 +51,8 @@ public class HelpCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Used to get information about commands, if you don't specify the subcommand it opens GUI with all subcommands";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.help";
     }
 
     @Override

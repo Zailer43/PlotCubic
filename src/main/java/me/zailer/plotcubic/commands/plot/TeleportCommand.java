@@ -56,8 +56,8 @@ public class TeleportCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Teleports you to the Plot World dimension.";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.teleport";
     }
 
     @Override

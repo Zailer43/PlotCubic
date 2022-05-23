@@ -90,8 +90,8 @@ public class GameModeCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Change the game mode of the players on the plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.game_mode";
     }
 
     @Override
