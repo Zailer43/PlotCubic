@@ -37,7 +37,7 @@ public class AdminClearCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
@@ -49,7 +49,7 @@ public class AdminClearCommand extends SubcommandAbstract {
 
     public void execute(ServerPlayerEntity player, PlotID plotId) {
         new ConfirmationGui().open(player, "Clear plot", List.of("If you accept the user's plot it will be cleaned", "This action can not be undone"), () -> {
-            MessageUtils.sendChatMessage(player, new MessageUtils("Cleaning plot...").get());
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.cleaning");
             Plot plot = new Plot(player, plotId);
             plot.clearPlot();
         });

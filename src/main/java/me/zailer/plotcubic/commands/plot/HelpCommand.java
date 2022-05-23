@@ -43,7 +43,7 @@ public class HelpCommand extends SubcommandAbstract {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
 
-            MessageUtils.sendChatMessage(player, new LiteralText("W I P"));
+            MessageUtils.sendChatMessage(player, this.getValidUsage());
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }
@@ -74,7 +74,7 @@ public class HelpCommand extends SubcommandAbstract {
                 }
             }
 
-            MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.invalid_subcommand"));
+            MessageUtils.sendChatMessage(player, "error.plotcubic.invalid_subcommand");
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }

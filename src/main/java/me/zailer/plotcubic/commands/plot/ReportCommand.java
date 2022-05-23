@@ -13,7 +13,6 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
 
 public class ReportCommand extends SubcommandAbstract {
     @Override
@@ -36,24 +35,24 @@ public class ReportCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             Plot plot = Plot.getPlot(plotId);
 
             if (plot == null) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.report.unclaimed"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.report.unclaimed");
                 return 1;
             }
 
             if (plot.isOwner(player)) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.report.yourself"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.report.yourself");
                 return 1;
             }
 
             if (PlotCubic.getDatabaseManager().hasPendingReport(plotId, player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.report.pending"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.report.pending");
                 return 1;
             }
 

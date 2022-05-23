@@ -59,12 +59,12 @@ public class ReportGui {
 
     private void saveReport(ServerPlayerEntity reportingPlayer, Plot reportedPlot, Set<ReportReason> reportReasonSet) {
         if (reportReasonSet.isEmpty()) {
-            MessageUtils.sendChatMessage(reportingPlayer, new MessageUtils("You must specify a reason for reporting").get());
+            MessageUtils.sendChatMessage(reportingPlayer, "error.plotcubic.plot.report.no_reason");
             return;
         }
 
         PlotCubic.getDatabaseManager().addReport(reportedPlot.getPlotID(), reportingPlayer.getName().getString(), reportReasonSet);
-        MessageUtils.sendChatMessage(reportingPlayer, new MessageUtils("Plot successfully reported").get());
+        MessageUtils.sendChatMessage(reportingPlayer, "text.plotcubic.plot.report.successful");
     }
 
     public void openViewReports(ServerPlayerEntity player) {

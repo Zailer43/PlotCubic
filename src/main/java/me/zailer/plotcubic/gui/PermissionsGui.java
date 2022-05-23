@@ -13,8 +13,6 @@ import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 
@@ -104,7 +102,7 @@ public class PermissionsGui {
             plot.addTrusted(trustedPlayerList);
         }
 
-        Text message = successful ? new MessageUtils("Player permissions saved").get() : new TranslatableText("error.plotcubic.permission_gui.saving");
-        MessageUtils.sendChatMessage(this.ownerPlayer, message);
+        String translationKey = successful ? "text.plotcubic.plot.permission.successful" : "error.plotcubic.permission_gui.saving";
+        MessageUtils.sendChatMessage(this.ownerPlayer, translationKey);
     }
 }

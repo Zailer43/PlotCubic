@@ -12,8 +12,6 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 public class ClaimCommand extends SubcommandAbstract {
 
@@ -41,17 +39,17 @@ public class ClaimCommand extends SubcommandAbstract {
             PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotID == null) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!PlotCubic.getDatabaseManager().claimPlot(plotID.x(), plotID.z(), player.getEntityName())) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.claimed"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.claimed");
                 return 1;
             }
 
             Plot.claim(player, plotID);
-            MessageUtils.sendChatMessage(player, this.getClaimedMessage());
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.claimed");
 
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
@@ -71,10 +69,6 @@ public class ClaimCommand extends SubcommandAbstract {
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.GENERAL;
-    }
-
-    public Text getClaimedMessage() {
-        return new MessageUtils("Successfully claimed").get();
     }
 
 }

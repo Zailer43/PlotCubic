@@ -103,13 +103,13 @@ public class PlotInfoGui {
 
     public void viewInChat(ServerPlayerEntity player, Plot plot) {
         GameMode gameMode = plot.getGameMode();
-        MessageUtils messageUtils = MessageUtils.getInfo("Plot info")
-                .append("Plot ID", plot.getPlotID().toString())
-                .append("Claimed date", this.getDateFormatted(plot))
-                .append("Owner", plot.getOwnerUsername())
-                .append("Trusted", String.join(", ", plot.getTrusted().stream().map(TrustedPlayer::username).toList()))
-                .append("Denied", String.join(", ", plot.getDeniedPlayers().stream().map(DeniedPlayer::username).toList()))
-                .append("Game mode", gameMode == null ? "Default" : gameMode.getName());
+        MessageUtils messageUtils = MessageUtils.getTranslation("text.plotcubic.info.claimed_title")
+                .append("text.plotcubic.info.plot_id", plot.getPlotID().toString())
+                .append("text.plotcubic.info.claimed_date", this.getDateFormatted(plot))
+                .append("text.plotcubic.info.owner", plot.getOwnerUsername())
+                .append("text.plotcubic.info.trusted", String.join(", ", plot.getTrusted().stream().map(TrustedPlayer::username).toList()))
+                .append("text.plotcubic.info.denied", String.join(", ", plot.getDeniedPlayers().stream().map(DeniedPlayer::username).toList()))
+                .append("text.plotcubic.info.game_mode", gameMode == null ? "Default" : gameMode.getName());
 
         MessageUtils.sendChatMessage(player, messageUtils.get());
     }

@@ -14,15 +14,11 @@ import me.zailer.plotcubic.plot.DeniedPlayer;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.TrustedPlayer;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.MutableText;
 
 import java.util.Set;
 
@@ -60,23 +56,23 @@ public class DenyCommand extends SubcommandAbstract {
             }
 
             if (deniedUsername.equalsIgnoreCase(player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.deny.yourself"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.yourself");
                 return 1;
             }
 
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot_owner"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
                 return 1;
             }
 
             if (reason != null && reason.length() > 64) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.deny.reason_length"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.reason_length");
                 return 1;
             }
 
@@ -99,7 +95,7 @@ public class DenyCommand extends SubcommandAbstract {
             if (removeTrustedSuccessful && deniedSuccessful) {
                 MessageUtils.sendChatMessage(player, "text.plotcubic.plot.deny_successful", deniedUsername, reason);
             } else {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.deny.unexpected"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.unexpected");
             }
             Plot plot = Plot.getLoadedPlot(plotId);
 
@@ -112,15 +108,16 @@ public class DenyCommand extends SubcommandAbstract {
     }
 
     @Override
-    public Text getValidUsage() {
+    public MutableText getValidUsage() {
         //Command usage: /plot deny <player>
         //Command usage: /plot deny <player> <reason>
 
-        MessageUtils messageUtils = new MessageUtils().appendInfo("Command usage: ")
-                .append(String.format("/%s %s <%s>\n", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player"))
-                .appendInfo("Command usage: ")
-                .append(String.format("/%s %s <%s> <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player", "reason"));
-        return messageUtils.get();
+        String denyCommand = String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player");
+        String denyCommandWithReason = String.format("/%s %s <%s> <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player", "reason");
+
+        return MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", denyCommand)
+                .append("\n")
+                .append(MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", denyCommandWithReason));
     }
 
     @Override

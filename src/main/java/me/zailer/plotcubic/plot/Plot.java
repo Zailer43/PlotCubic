@@ -11,7 +11,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
@@ -282,7 +284,7 @@ public class Plot {
 
     public void sendPlotChatMessage(ServerPlayerEntity sender, String message) {
         boolean isPlotEmpty = this.players.size() <= 1;
-        Text messageText = this.chatStyle.getMessage(this.plotID, sender, message);
+        MutableText messageText = this.chatStyle.getMessage(this.plotID, sender, message);
 
         if (isPlotEmpty) {
             String tooltipMessage = String.format(
@@ -294,8 +296,7 @@ public class Plot {
                     new ChatCommand().getAlias()[0]
             );
 
-            messageText = new MessageUtils().appendWarningIcon()
-                    .append(" [Cursor here] ")
+            messageText = MessageUtils.getTranslation("text.plotcubic.chat_style.warning_empty_plot")
                     .append(messageText)
                     .setTooltipMessage(new LiteralText(tooltipMessage))
                     .get();

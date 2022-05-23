@@ -5,7 +5,6 @@ import eu.pb4.sgui.api.gui.SimpleGui;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotChatStyle;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.GuiColors;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -80,10 +79,7 @@ public class ChatStylesGui {
     private void save(ServerPlayerEntity player, Plot plot) {
         plot.setChatStyle(this.chatStyleSelected);
         PlotCubic.getDatabaseManager().updateChatStyle(this.chatStyleSelected, plot.getPlotID());
-        MessageUtils.sendChatMessage(player, new MessageUtils("Chat style changed to ")
-                .append(this.chatStyleSelected.name(), CommandColors.HIGHLIGHT)
-                .get()
-        );
+        MessageUtils.sendChatMessage(player,"text.plotcubic.plot.chat_style.successful", this.chatStyleSelected.name());
     }
 
     private void setCallback(int index, PlotChatStyle chatStyle) {

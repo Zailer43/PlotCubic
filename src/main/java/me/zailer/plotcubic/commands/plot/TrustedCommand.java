@@ -14,13 +14,11 @@ import me.zailer.plotcubic.gui.PermissionsGui;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.TrustedPlayer;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.MutableText;
 
 public class TrustedCommand extends SubcommandAbstract {
     @Override
@@ -47,18 +45,18 @@ public class TrustedCommand extends SubcommandAbstract {
             String trustedUsername = serverCommandSource.getArgument("PLAYER", String.class);
 
             if (trustedUsername.equalsIgnoreCase(player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.plot.trust.yourself"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.trust.yourself");
                 return 1;
             }
 
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, new TranslatableText("error.plotcubic.requires.plot_owner"));
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
                 return 1;
             }
 
@@ -94,11 +92,10 @@ public class TrustedCommand extends SubcommandAbstract {
     }
 
     @Override
-    public Text getValidUsage() {
+    public MutableText getValidUsage() {
         //Command usage: /plot trust <player>
 
-        MessageUtils messageUtils = new MessageUtils().appendInfo("Command usage: ")
-                .append(String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player"));
-        return messageUtils.get();
+        String command = String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player");
+        return MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", command);
     }
 }

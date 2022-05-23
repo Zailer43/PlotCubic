@@ -8,7 +8,6 @@ import me.zailer.plotcubic.commands.PlotCommand;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 
 public class HomeCommand extends VisitCommand {
@@ -49,12 +48,12 @@ public class HomeCommand extends VisitCommand {
     }
 
     @Override
-    public Text getOutBoundsErrorMsg(int plotCount) {
+    public TranslatableText getOutBoundsErrorMsg(int plotCount) {
             return new TranslatableText("error.plotcubic.plot.home.out_bounds", plotCount);
     }
 
     @Override
-    public Text getThereAreNoPlotsMsg() {
+    public TranslatableText getThereAreNoPlotsMsg() {
         return new TranslatableText("error.plotcubic.plot.home.there_are_no_plots", PlotCommand.COMMAND_ALIAS[0], new ClaimCommand().getAlias()[0]);
     }
 

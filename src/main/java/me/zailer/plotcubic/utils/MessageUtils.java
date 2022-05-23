@@ -16,8 +16,8 @@ public class MessageUtils {
         this.message = LiteralText.EMPTY.copy();
     }
 
-    public MessageUtils(String message) {
-        this(message, CommandColors.NORMAL);
+    private MessageUtils(TranslatableText translation) {
+        this.message = translation;
     }
 
     public MessageUtils(String message, ColorBranch color) {
@@ -60,51 +60,22 @@ public class MessageUtils {
         );
     }
 
-    public MessageUtils append(String message) {
-        return this.append(message, CommandColors.NORMAL);
-    }
-
     public MessageUtils append(Text text) {
         this.message.append(text);
         return this;
     }
 
-    public MessageUtils append(String message, ColorBranch color) {
+    public void append(String message, ColorBranch color) {
         this.message.append(color.set(message));
-        return this;
     }
 
     public MessageUtils append(String message, int color) {
         return this.append(new LiteralText(message).setStyle(Style.EMPTY.withColor(color)));
     }
 
-    public MessageUtils appendWarningIcon() {
-        return this.appendIcon("⚠");
-    }
-
-    public MessageUtils appendInfoIcon() {
-        return this.appendIcon("ℹ");
-    }
-
-    private MessageUtils appendIcon(String icon) {
-        this.message.append(CommandColors.ICON.set(icon));
-        return this;
-    }
-
-    public MessageUtils appendError(String message) {
-        return this.appendWarningIcon().append(" " + message, CommandColors.ERROR);
-    }
-
-    public MessageUtils appendInfo(String message) {
-        return this.appendInfoIcon().append(" " + message + " ", CommandColors.HIGHLIGHT);
-    }
-
-    public MessageUtils appendDoubleInfo(String message) {
-        return this.appendInfoIcon().append(" " + message + " ", CommandColors.HIGHLIGHT).appendInfoIcon();
-    }
-
     public MessageUtils append(String key, String info) {
-        return this.append("\n▎ " + key + ": ", CommandColors.HIGHLIGHT).append(info);
+        this.message.append("\n").append(formatArgs(key, info));
+        return this;
     }
 
     public MutableText get() {
@@ -116,21 +87,29 @@ public class MessageUtils {
         return this;
     }
 
-    public static MessageUtils getInfo(String message) {
-        return new MessageUtils().appendDoubleInfo(message);
+    public static MessageUtils getTranslation(String key) {
+        return new MessageUtils(new TranslatableText(key));
     }
 
-    public static void sendChatMessage(ServerPlayerEntity player, Text message) {
-        player.sendMessage(message, MessageType.CHAT, player.getUuid());
+    public static void sendChatMessage(ServerPlayerEntity player, MutableText text) {
+        player.sendMessage(text, MessageType.CHAT, player.getUuid());
     }
 
-    public static void sendChatMessage(ServerPlayerEntity player, String key, String... args) {
+    public static void sendChatMessage(ServerPlayerEntity player, String translationKey) {
+        player.sendMessage(new TranslatableText(translationKey), MessageType.CHAT, player.getUuid());
+    }
+
+    public static void sendChatMessage(ServerPlayerEntity player, String key, Object... args) {
+        player.sendMessage(formatArgs(key, args), MessageType.CHAT, player.getUuid());
+    }
+
+    public static TranslatableText formatArgs(String key, Object... args) {
         Object[] textArgs = new Text[args.length];
         int highlight = Integer.valueOf(PlotCubic.getConfig().customColors().highlight(), 16);
 
         for (int i = 0; i != args.length; i++)
-            textArgs[i] = new LiteralText(args[i]).setStyle(Style.EMPTY.withColor(highlight));
+            textArgs[i] = new LiteralText(args[i].toString()).setStyle(Style.EMPTY.withColor(highlight));
 
-        player.sendMessage(new TranslatableText(key, textArgs), MessageType.CHAT, player.getUuid());
+        return new TranslatableText(key, textArgs);
     }
 }

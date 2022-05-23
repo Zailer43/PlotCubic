@@ -6,7 +6,6 @@ import me.zailer.plotcubic.mixin.ExplosionAccessor;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.UserConfig;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.Entity;
@@ -25,6 +24,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -173,7 +173,7 @@ public class PlotEvents {
 
     private static void onPlayerJoinInit(ServerPlayNetworkHandler handler, MinecraftServer server) {
         if (!PlotCubic.isModReady()) {
-            handler.disconnect(CommandColors.ERROR.set("PlotCubic is generating the Plot World, we can't receive players yet. Please try again in a minute or two."));
+            handler.disconnect(new TranslatableText("error.plotcubic.kick.generating_world"));
             return;
         }
 
@@ -185,7 +185,7 @@ public class PlotEvents {
             return;
 
         if (plot.hasDeny(player)) {
-            MessageUtils.sendChatMessage(player, new MessageUtils("You were denied from the plot").get());
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.you_have_deny");
             BlockPos spawn = PlotManager.getInstance().getPlotworldSpawn();
             player.teleport(player.getWorld(), spawn.getX(), spawn.getY(), spawn.getZ(), 0, 0);
         }
