@@ -12,7 +12,6 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 
@@ -53,7 +52,7 @@ public class ClearCommand extends SubcommandAbstract {
     }
 
     public void execute(ServerPlayerEntity player, PlotID plotId) {
-        new ConfirmationGui().open(player, "Clear plot", List.of("If you accept the plot will be cleaned", "This action can not be undone"), () -> {
+        new ConfirmationGui().open(player, "gui.plotcubic.confirmation.clear.title", List.of("gui.plotcubic.confirmation.clear.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
             MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.cleaning");
             Plot plot = new Plot(player, plotId);
             plot.clearPlot();

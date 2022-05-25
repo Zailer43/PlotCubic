@@ -10,13 +10,14 @@ import me.zailer.plotcubic.enums.ReportReason;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.ReportedPlot;
-import me.zailer.plotcubic.utils.GuiColors;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.TranslatableText;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,11 +29,11 @@ public class ReportGui {
         SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X3, reportingPlayer, false);
         Set<ReportReason> reportReasonSet = new HashSet<>();
 
-        gui.setTitle(new LiteralText("Report to " + reportedPlot.getOwnerUsername()));
+        gui.setTitle(new TranslatableText("gui.plotcubic.report.title", reportedPlot.getOwnerUsername()));
 
         GuiElementBuilder acceptItem = new GuiElementBuilder()
                 .setItem(Items.EMERALD_BLOCK)
-                .setName(new MessageUtils("Accept", GuiColors.GREEN).get())
+                .setName(new TranslatableText("gui.plotcubic.accept"))
                 .setCallback((index, type, action) -> {
                             gui.close();
                             this.saveReport(reportingPlayer, reportedPlot, reportReasonSet);
@@ -41,7 +42,7 @@ public class ReportGui {
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new MessageUtils("Cancel", GuiColors.RED).get())
+                .setName(new TranslatableText("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         ReportReason[] options = ReportReason.values();
@@ -71,11 +72,11 @@ public class ReportGui {
         SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X6, player, false);
 
 
-        gui.setTitle(new LiteralText("Reported plots unmoderated"));
+        gui.setTitle(new TranslatableText("gui.plotcubic.view_reports.title"));
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new MessageUtils("Cancel", GuiColors.RED).get())
+                .setName(new TranslatableText("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         List<ReportedPlot> reportedPlots = PlotCubic.getDatabaseManager().getAllReports(false);
@@ -87,21 +88,21 @@ public class ReportGui {
             ReportedPlot report = reportedPlots.get(i);
             String plotOwner = report.plotOwnerUsername();
             PlotID plotId = report.plotId();
-            String reportingPlayerFormatted = String.format("Reporting player: %s", report.reportingUser());
 
             GuiElementBuilder reportItem = new GuiElementBuilder()
                     .setItem(Items.PLAYER_HEAD)
                     .setSkullOwner(new GameProfile(UUID.randomUUID(), plotOwner), player.getServer())
-                    .setName(new MessageUtils(String.format("%s (%s)", plotOwner, plotId.toString()), GuiColors.BLUE).get())
-                    .addLoreLine(new MessageUtils("Reasons:", GuiColors.BLUE).get())
+                    .setName(new TranslatableText("gui.plotcubic.view_reports.reported", plotOwner, plotId.toString()).setStyle(Style.EMPTY.withColor(MessageUtils.getHighlight())))
+                    .addLoreLine(new TranslatableText("gui.plotcubic.view_reports.reasons"))
                     .setCallback((index, type, action) -> this.reportItemCallback(type, player, plotId, report));
 
             for (var reportReason : report.reasons())
-                reportItem.addLoreLine(new MessageUtils("* " + reportReason.getName(), GuiColors.GREEN).get());
+                reportItem.addLoreLine(reportReason.getDisplayName());
 
             reportItem.addLoreLine(LiteralText.EMPTY.copy())
-                    .addLoreLine(new MessageUtils(reportingPlayerFormatted, GuiColors.GREEN).get())
-                    .addLoreLine(new MessageUtils("Right click to set moderate", GuiColors.BLUE).get());
+                    .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.view_reports.reporting_player", report.reportingUser()))
+                    .addLoreLine(new TranslatableText("gui.plotcubic.view_reports.left_click"))
+                    .addLoreLine(new TranslatableText("gui.plotcubic.view_reports.right_click"));
 
             gui.setSlot(i, reportItem);
         }
@@ -116,8 +117,8 @@ public class ReportGui {
         if (clickType.isLeft) {
             new VisitCommand().visit(player, plotId);
         } else if (clickType.isRight) {
-            List<String> infoList = List.of("By accepting you will mark the plot as moderate");
-            new ConfirmationGui().open(player, "Set report as moderated", infoList, () -> this.updateReport(report, player));
+            List<String> infoList = List.of("gui.plotcubic.confirmation.report_view.info");
+            new ConfirmationGui().open(player, "gui.plotcubic.confirmation.report_view.title", infoList, () -> this.updateReport(report, player));
         }
     }
 

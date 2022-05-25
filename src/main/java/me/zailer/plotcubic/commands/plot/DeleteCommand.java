@@ -17,7 +17,7 @@ public class DeleteCommand extends ClearCommand {
 
     @Override
     public void execute(ServerPlayerEntity player, PlotID plotId) {
-        new ConfirmationGui().open(player, "Delete plot", List.of("If you accept the plot will be deleted", "This action can not be undone"), () -> {
+        new ConfirmationGui().open(player, "gui.plotcubic.confirmation.delete.title", List.of("gui.plotcubic.confirmation.delete.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
             MessageUtils.sendChatMessage(player, "text.plotcubic.plot.delete.deleting");
             Plot plot = new Plot(player, plotId);
             plot.delete();

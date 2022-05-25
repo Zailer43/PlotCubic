@@ -33,7 +33,7 @@ public class AdminClearCommand extends ClearCommand {
     }
 
     public void execute(ServerPlayerEntity player, PlotID plotId) {
-        new ConfirmationGui().open(player, "Clear plot", List.of("If you accept the user's plot it will be cleaned", "This action can not be undone"), () -> {
+        new ConfirmationGui().open(player, "gui.plotcubic.confirmation.clear.title", List.of("gui.plotcubic.confirmation.admin_clear.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
             MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.cleaning");
             Plot plot = new Plot(player, plotId);
             plot.clearPlot();

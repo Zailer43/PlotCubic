@@ -38,7 +38,10 @@ public record Config(Database database, PlotChatStyle[] plotChatStyles, CustomCo
                     new Color[]{
                             new Color("p3_normal", "61C2A2"),
                             new Color("p3_icon", "CCE0D2"),
-                            new Color("p3_error", "1D617A")
+                            new Color("p3_error", "1D617A"),
+                            new Color("p3_red", "A06767"),
+                            new Color("p3_green", "67A067"),
+                            new Color("p3_blue", "6767A0")
                     }
             )
     );

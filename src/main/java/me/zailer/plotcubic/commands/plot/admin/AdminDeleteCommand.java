@@ -7,7 +7,6 @@ import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 
@@ -18,7 +17,7 @@ public class AdminDeleteCommand extends AdminClearCommand {
     }
 
     public void execute(ServerPlayerEntity player, PlotID plotId) {
-        new ConfirmationGui().open(player, "Delete plot", List.of("If you accept the user's plot it will be deleted", "This action can not be undone"), () -> {
+        new ConfirmationGui().open(player, "gui.plotcubic.confirmation.delete.title", List.of("gui.plotcubic.confirmation.admin_delete.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
             MessageUtils.sendChatMessage(player, "text.plotcubic.plot.delete.deleting");
             Plot plot = new Plot("", plotId);
             plot.delete();

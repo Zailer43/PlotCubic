@@ -20,11 +20,6 @@ public class MessageUtils {
         this.message = translation;
     }
 
-    public MessageUtils(String message, ColorBranch color) {
-        this();
-        this.append(message, color);
-    }
-
     public MessageUtils(String message, int color) {
         this();
         this.append(message, color);
@@ -63,10 +58,6 @@ public class MessageUtils {
     public MessageUtils append(Text text) {
         this.message.append(text);
         return this;
-    }
-
-    public void append(String message, ColorBranch color) {
-        this.message.append(color.set(message));
     }
 
     public MessageUtils append(String message, int color) {
