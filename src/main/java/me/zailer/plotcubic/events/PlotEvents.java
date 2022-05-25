@@ -27,10 +27,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import xyz.nucleoid.stimuli.Stimuli;
-import xyz.nucleoid.stimuli.event.block.BlockBreakEvent;
-import xyz.nucleoid.stimuli.event.block.BlockPlaceEvent;
-import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
-import xyz.nucleoid.stimuli.event.block.FluidPlaceEvent;
+import xyz.nucleoid.stimuli.event.block.*;
 import xyz.nucleoid.stimuli.event.entity.EntitySpawnEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerChatContentEvent;
 import xyz.nucleoid.stimuli.event.world.ExplosionDetonatedEvent;
@@ -165,7 +162,7 @@ public class PlotEvents {
 
     public static void fixEntitySpawnBypass() {
         Stimuli.global().listen(BlockUseEvent.EVENT, (player, hand, hitResult) -> fixEntitySpawnBypass(player.getStackInHand(hand), hitResult.getBlockPos()));
-        //TODO: when release of stimuli comes out with dispenser event use it here
+        Stimuli.global().listen(DispenserActivateEvent.EVENT, (world, pos, dispenserBlockEntity, slot, stackToDispense) -> fixEntitySpawnBypass(stackToDispense, pos));
     }
 
     public static ActionResult fixEntitySpawnBypass(ItemStack stack, BlockPos placePos) {
