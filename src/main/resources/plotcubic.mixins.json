@@ -4,6 +4,7 @@
   "package": "me.zailer.plotcubic.mixin",
   "compatibilityLevel": "JAVA_17",
   "server": [
+    "translations.LocalizedTextVisitorMixin",
     "ArgumentTypesMixin",
     "CommandTreeS2CPacketMixin",
     "EndPortalBlockMixin",

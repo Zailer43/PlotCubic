@@ -12,7 +12,6 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 
 public class ClaimCommand extends SubcommandAbstract {
 
@@ -40,17 +39,17 @@ public class ClaimCommand extends SubcommandAbstract {
             PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotID == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!PlotCubic.getDatabaseManager().claimPlot(plotID.x(), plotID.z(), player.getEntityName())) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("This plot is already claimed").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.claimed");
                 return 1;
             }
 
             Plot.claim(player, plotID);
-            MessageUtils.sendChatMessage(player, this.getClaimedMessage());
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.claimed");
 
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
@@ -59,21 +58,13 @@ public class ClaimCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return """
-                Used to claim parcels
-                "this" to get where you are standing
-                "auto" to get the closest available to 0;0
-                "near" to get the closest available to where you are""";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.claim";
     }
 
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.GENERAL;
-    }
-
-    public Text getClaimedMessage() {
-        return new MessageUtils("Successfully claimed").get();
     }
 
 }

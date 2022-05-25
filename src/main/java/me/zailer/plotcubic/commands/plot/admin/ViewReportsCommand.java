@@ -39,8 +39,8 @@ public class ViewReportsCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Allows viewing plot reports without moderating";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.admin.view_reports";
     }
 
     @Override

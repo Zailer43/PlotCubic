@@ -13,7 +13,6 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 
 public class AdminCommand extends SubcommandAbstract {
     public static final SubcommandAbstract[] SUB_COMMANDS = {
@@ -45,7 +44,7 @@ public class AdminCommand extends SubcommandAbstract {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
 
-            MessageUtils.sendChatMessage(player, new LiteralText("W I P"));
+            MessageUtils.sendChatMessage(player, this.getValidUsage());
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }
@@ -53,8 +52,8 @@ public class AdminCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Staff commands :)";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.admin";
     }
 
     @Override

@@ -17,8 +17,8 @@ public class AdminDeleteCommand extends AdminClearCommand {
     }
 
     public void execute(ServerPlayerEntity player, PlotID plotId) {
-        new ConfirmationGui().open(player, "Delete plot", List.of("If you accept the user's plot it will be deleted", "This action can not be undone"), () -> {
-            MessageUtils.sendChatMessage(player, new MessageUtils("Deleting plot...").get());
+        new ConfirmationGui().open(player, "gui.plotcubic.confirmation.delete.title", List.of("gui.plotcubic.confirmation.admin_delete.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.delete.deleting");
             Plot plot = new Plot("", plotId);
             plot.delete();
             PlotCubic.getDatabaseManager().deletePlot(plotId);
@@ -26,8 +26,8 @@ public class AdminDeleteCommand extends AdminClearCommand {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Delete the plot and you are no longer the owner";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.delete";
     }
 
     @Override

@@ -6,14 +6,11 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
 
 public class TeleportCommand extends SubcommandAbstract {
     @Override
@@ -37,11 +34,11 @@ public class TeleportCommand extends SubcommandAbstract {
             ServerWorld plotWorld = PlotCubic.getPlotWorldHandle().asWorld();
 
             if (world == plotWorld) {
-                MessageUtils.sendChatMessage(player, getFetchErrorMsg());
+                MessageUtils.sendChatMessage(player, this.getFetchErrorMsg());
                 return 0;
             }
 
-            MessageUtils.sendChatMessage(player, getTeleportMsg());
+            MessageUtils.sendChatMessage(player, this.getTeleportMsg());
 
             player.teleport(plotWorld, 0, 52, 0, 0f, 0f);
         } catch (CommandSyntaxException e) {
@@ -50,17 +47,17 @@ public class TeleportCommand extends SubcommandAbstract {
         return 0;
     }
 
-    private Text getFetchErrorMsg() {
-        return CommandColors.ERROR.set("You are already in the Plot World.");
+    private String getFetchErrorMsg() {
+        return "error.plotcubic.teleport.already_teleported";
     }
 
-    private MutableText getTeleportMsg() {
-        return CommandColors.NORMAL.set("Teleporting to the Plot World...");
+    private String getTeleportMsg() {
+        return "text.plotcubic.teleport.teleporting";
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Teleports you to the Plot World dimension.";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.teleport";
     }
 
     @Override

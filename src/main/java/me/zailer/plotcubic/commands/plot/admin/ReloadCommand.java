@@ -1,13 +1,11 @@
 package me.zailer.plotcubic.commands.plot.admin;
 
-import com.mojang.brigadier.Message;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
-import me.zailer.plotcubic.gui.ReportGui;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -33,23 +31,24 @@ public class ReloadCommand extends SubcommandAbstract {
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            MessageUtils messageUtils;
+            String translationKey;
             try {
                 PlotCubic.getConfigManager().reload();
-                messageUtils = new MessageUtils("Reloaded config");
+                MessageUtils.reloadColors();
+                translationKey = "text.plotcubic.config.reloaded";
             } catch (IOException e) {
                 e.printStackTrace();
-                messageUtils = MessageUtils.getError("Error reloading config");
+                translationKey = "error.plotcubic.reloading_config";
             }
-            MessageUtils.sendChatMessage(player, messageUtils.get());
+            MessageUtils.sendChatMessage(player, translationKey);
         } catch (CommandSyntaxException ignored) {
         }
         return 1;
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Reload config";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.admin.reload";
     }
 
     @Override

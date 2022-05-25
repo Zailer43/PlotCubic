@@ -36,12 +36,12 @@ public class ClearCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
                 return 1;
             }
 
@@ -52,16 +52,16 @@ public class ClearCommand extends SubcommandAbstract {
     }
 
     public void execute(ServerPlayerEntity player, PlotID plotId) {
-        new ConfirmationGui().open(player, "Clear plot", List.of("If you accept the plot will be cleaned", "This action can not be undone"), () -> {
-            MessageUtils.sendChatMessage(player, new MessageUtils("Cleaning plot...").get());
+        new ConfirmationGui().open(player, "gui.plotcubic.confirmation.clear.title", List.of("gui.plotcubic.confirmation.clear.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.cleaning");
             Plot plot = new Plot(player, plotId);
             plot.clearPlot();
         });
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Clean the plot and leave it as new";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.clear";
     }
 
     @Override

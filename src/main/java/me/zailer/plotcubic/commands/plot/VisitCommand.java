@@ -9,12 +9,12 @@ import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.*;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 
@@ -76,14 +76,14 @@ public class VisitCommand extends SubcommandAbstract {
 
     public void visit(ServerPlayerEntity player, PlotID plotId) {
         Plot plot = Plot.getPlot(plotId);
-        MessageUtils messageUtils = this.getSuccessfulMsg(plotId);
+        TranslatableText message = this.getSuccessfulMsg(plotId);
 
         if (plot != null && !plot.visit(player))
-            messageUtils = this.getDenyMessage();
+            message = this.getDenyMessage();
         else
             player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
 
-        MessageUtils.sendChatMessage(player, messageUtils.get());
+        MessageUtils.sendChatMessage(player, message.getKey(), message.getArgs());
     }
 
     public void visit(ServerPlayerEntity player, String playerToVisit) {
@@ -92,67 +92,62 @@ public class VisitCommand extends SubcommandAbstract {
 
     public void visit(ServerPlayerEntity player, String playerToVisit, int index) {
         List<Plot> plotList = PlotCubic.getDatabaseManager().getAllPlots(playerToVisit, true);
-        MessageUtils message;
+        TranslatableText translation;
 
         if (plotList == null) {
-            message = MessageUtils.getError("An error has occurred executing the command");
+            translation = new TranslatableText("error.plotcubic.plot.visit.unexpected");
         } else if (plotList.isEmpty()) {
-            message = this.getThereAreNoPlotsMsg();
+            translation = this.getThereAreNoPlotsMsg();
         } else if (plotList.size() < index) {
-            message = this.getOutBoundsErrorMsg(plotList.size());
+            translation = this.getOutBoundsErrorMsg(plotList.size());
         } else {
             // Load the plot with the necessary data, the getAllPlots method only gives the PlotID
             Plot plot = Plot.getPlot(plotList.get(index - 1).getPlotID());
             assert plot != null;
 
-            message = plot.visit(player) ? this.getSuccessfulMsg(playerToVisit, index, plotList.size()) : this.getDenyMessage();
+            translation = plot.visit(player) ? this.getSuccessfulMsg(playerToVisit, index, plotList.size()) : this.getDenyMessage();
         }
 
-        MessageUtils.sendChatMessage(player, message.get());
+        MessageUtils.sendChatMessage(player, translation.getKey(), translation.getArgs());
     }
 
-    public MessageUtils getSuccessfulMsg(PlotID plotId) {
-        return new MessageUtils("Successfully teleported to ")
-                .append(plotId.toString(), CommandColors.HIGHLIGHT);
+    public TranslatableText getSuccessfulMsg(PlotID plotId) {
+        return new TranslatableText("text.plotcubic.plot.visit.successful_id", plotId.toString());
     }
 
-    public MessageUtils getSuccessfulMsg(String player, int index, int plotAmount) {
-        return new MessageUtils("Successfully teleported to plot ")
-                .append(index + "/" + plotAmount, CommandColors.HIGHLIGHT)
-                .append(" of ")
-                .append(player, CommandColors.HIGHLIGHT);
+    public TranslatableText getSuccessfulMsg(String player, int index, int plotAmount) {
+        return new TranslatableText("text.plotcubic.plot.visit.successful_player", index + "/" + plotAmount, player);
     }
 
-    public MessageUtils getOutBoundsErrorMsg(int plotCount) {
-        return MessageUtils.getError("This player has ")
-                .append(String.valueOf(plotCount), CommandColors.HIGHLIGHT)
-                .append(" plots", CommandColors.ERROR);
+    public TranslatableText getOutBoundsErrorMsg(int plotCount) {
+        return new TranslatableText("error.plotcubic.plot.visit.out_bounds", plotCount);
     }
 
-    public MessageUtils getDenyMessage() {
-        return new MessageUtils("You have deny of this plot");
+    public TranslatableText getDenyMessage() {
+        return new TranslatableText("text.plotcubic.plot.you_have_deny");
     }
 
-    public MessageUtils getThereAreNoPlotsMsg() {
-        return MessageUtils.getError("This player has no plots");
+    public TranslatableText getThereAreNoPlotsMsg() {
+        return new TranslatableText("error.plotcubic.plot.visit.has_no_plots");
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Used to visit the specified plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.visit";
     }
 
     @Override
-    public Text getValidUsage() {
+    public MutableText getValidUsage() {
+        //Command usage: /plot visit <username> <plot number>
         //Command usage: /plot visit <id>
         //ID examples: 5;10, 0;-4 or -30;10
 
-        MessageUtils messageUtils = new MessageUtils().appendInfo("Command usage: ")
-                .append(String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "id"))
-                .append("\nID examples: ", CommandColors.HIGHLIGHT)
-                .append("5;10, 0;-4 or -30;10");
+        String commandWithUsername = String.format("/%s %s <%s> <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "username", "plot number");
+        String commandWithId = String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "id");
 
-        return messageUtils.get();
+        return MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", commandWithUsername)
+                .append("\n")
+                .append(MessageUtils.formatArgs("text.plotcubic.help.command_usage.with_plot_id", commandWithId, "5;10, 0;-4, -30;10, -15;-25"));
     }
 
     @Override

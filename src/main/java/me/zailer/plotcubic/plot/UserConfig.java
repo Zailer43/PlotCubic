@@ -2,11 +2,11 @@ package me.zailer.plotcubic.plot;
 
 import me.zailer.plotcubic.PlotCubic;
 
-public final class User {
+public final class UserConfig {
     private final String username;
     private boolean plotChatEnabled;
 
-    public User(String username, boolean plotChatEnabled) {
+    public UserConfig(String username, boolean plotChatEnabled) {
         this.username = username;
         this.plotChatEnabled = plotChatEnabled;
     }

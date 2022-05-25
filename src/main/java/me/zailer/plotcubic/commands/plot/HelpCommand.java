@@ -15,6 +15,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -42,7 +43,7 @@ public class HelpCommand extends SubcommandAbstract {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
 
-            MessageUtils.sendChatMessage(player, new LiteralText("W I P"));
+            MessageUtils.sendChatMessage(player, this.getValidUsage());
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }
@@ -50,8 +51,8 @@ public class HelpCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Used to get information about commands, if you don't specify the subcommand it opens GUI with all subcommands";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.help";
     }
 
     @Override
@@ -73,7 +74,7 @@ public class HelpCommand extends SubcommandAbstract {
                 }
             }
 
-            MessageUtils.sendChatMessage(player, MessageUtils.getError("Invalid subcommand").get());
+            MessageUtils.sendChatMessage(player, "error.plotcubic.invalid_subcommand");
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }

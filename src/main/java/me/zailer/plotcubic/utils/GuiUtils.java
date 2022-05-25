@@ -8,6 +8,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.TranslatableText;
 
 import java.util.Set;
 
@@ -30,7 +32,7 @@ public class GuiUtils {
     private static GuiElementBuilder getInfoItem(IBooleanOption option) {
         GuiElementBuilder builder = new GuiElementBuilder()
                 .setItem(option.getItem())
-                .setName(new MessageUtils(option.getName(), GuiColors.BLUE).get())
+                .setName(option.getDisplayName())
                 .setCount(option.getCount());
 
         if (option.isHideAttributes())
@@ -69,7 +71,6 @@ public class GuiUtils {
     }
 
     private static MutableText getBooleanName(boolean value) {
-        MessageUtils message = value ? new MessageUtils("True", GuiColors.GREEN) : new MessageUtils("False", GuiColors.RED);
-        return message.get();
+        return new TranslatableText(value ? "gui.plotcubic.true" : "gui.plotcubic.false").setStyle(Style.EMPTY.withItalic(false));
     }
 }

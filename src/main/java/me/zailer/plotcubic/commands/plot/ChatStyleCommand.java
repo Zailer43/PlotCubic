@@ -34,13 +34,13 @@ public class ChatStyleCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
             Plot plot = Plot.getPlot(plotId);
 
             if (plot == null || !plot.isOwner(player)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
                 return 1;
             }
 
@@ -57,8 +57,8 @@ public class ChatStyleCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Change the style of messages in plot chat";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.chat_style";
     }
 
     @Override

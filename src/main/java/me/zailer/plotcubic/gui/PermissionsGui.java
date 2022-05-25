@@ -6,13 +6,12 @@ import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.enums.PlotPermission;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.TrustedPlayer;
-import me.zailer.plotcubic.utils.GuiColors;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 
@@ -29,11 +28,11 @@ public class PermissionsGui {
         this.page = 1;
         this.gui = gui;
 
-        gui.setTitle(new LiteralText("Permissions of " + this.trustedPlayer.username()));
+        gui.setTitle(new TranslatableText("gui.plotcubic.permissions.title", this.trustedPlayer.username()));
 
         GuiElementBuilder acceptItem = new GuiElementBuilder()
                 .setItem(Items.EMERALD_BLOCK)
-                .setName(new MessageUtils("Accept", GuiColors.GREEN).get())
+                .setName(new TranslatableText("gui.plotcubic.accept"))
                 .setCallback((index, type, action) -> {
                             gui.close();
                             this.save();
@@ -42,7 +41,7 @@ public class PermissionsGui {
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new MessageUtils("Cancel", GuiColors.RED).get())
+                .setName(new TranslatableText("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         GuiUtils.setGlass(this.gui, 0, 9);
@@ -102,7 +101,7 @@ public class PermissionsGui {
             plot.addTrusted(trustedPlayerList);
         }
 
-        MessageUtils message = successful ? new MessageUtils("Player permissions saved") : MessageUtils.getError("Error saving player permissions");
-        MessageUtils.sendChatMessage(this.ownerPlayer, message.get());
+        String translationKey = successful ? "text.plotcubic.plot.permission.successful" : "error.plotcubic.permission_gui.saving";
+        MessageUtils.sendChatMessage(this.ownerPlayer, translationKey);
     }
 }

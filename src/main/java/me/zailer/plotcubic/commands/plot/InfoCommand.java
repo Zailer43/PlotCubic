@@ -13,7 +13,7 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
 
 public class InfoCommand extends SubcommandAbstract {
 
@@ -43,8 +43,8 @@ public class InfoCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Used to get information about the plot you are on";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.info";
     }
 
     @Override
@@ -56,7 +56,7 @@ public class InfoCommand extends SubcommandAbstract {
         PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
         if (plotID == null) {
-            MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+            MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
             return;
         }
 
@@ -68,9 +68,9 @@ public class InfoCommand extends SubcommandAbstract {
             new PlotInfoGui().open(player, plot);
     }
 
-    public Text getUnclaimedMessage(PlotID plotID) {
-        MessageUtils messageUtils = MessageUtils.getInfo("Plot info (Unclaimed)")
-                .append("Plot ID", plotID.toString());
+    public MutableText getUnclaimedMessage(PlotID plotID) {
+        MessageUtils messageUtils = MessageUtils.getTranslation("text.plotcubic.info.unclaimed_title")
+                .append("text.plotcubic.info.plot_id", plotID.toString());
 
         return messageUtils.get();
     }

@@ -13,12 +13,11 @@ import me.zailer.plotcubic.database.DatabaseManager;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.TrustedPlayer;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
 
 import java.util.Set;
 
@@ -48,17 +47,18 @@ public class RemoveCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
                 return 1;
             }
+
             Plot plot = Plot.getLoadedPlot(plotId);
             if (plot == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The plot is not loaded, you should not be seeing this error").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.not_loaded");
                 return 1;
             }
 
@@ -70,17 +70,17 @@ public class RemoveCommand extends SubcommandAbstract {
             databaseManager.removeDenied(plotId, removedPlayer);
             databaseManager.updateTrusted(new TrustedPlayer(removedPlayer, Set.of(), plotId));
 
-            String message;
+            String translationKey = "text.plotcubic.plot.remove.";
             if (denyRemoved && trustRemoved)
-                message = "Deny and trust removed for ";
+                translationKey += "deny_and_trust";
             else if (denyRemoved)
-                message = "Deny removed for ";
+                translationKey += "deny";
             else if (trustRemoved)
-                message = "Trust removed for ";
+                translationKey += "trust";
             else
-                message = "Nothing has been removed for ";
+                translationKey += "nothing";
 
-            MessageUtils.sendChatMessage(player, new MessageUtils(message).append(removedPlayer, CommandColors.HIGHLIGHT).get());
+            MessageUtils.sendChatMessage(player, translationKey, removedPlayer);
 
         } catch (CommandSyntaxException ignored) {
         }
@@ -88,8 +88,8 @@ public class RemoveCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Remove deny or trust of a user from your plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.remove";
     }
 
     @Override
@@ -98,11 +98,11 @@ public class RemoveCommand extends SubcommandAbstract {
     }
 
     @Override
-    public Text getValidUsage() {
+    public MutableText getValidUsage() {
         //Command usage: /plot remove <player>
 
-        MessageUtils messageUtils = new MessageUtils().appendInfo("Command usage: ")
-                .append(String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player"));
-        return messageUtils.get();
+        String command = String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player");
+
+        return MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", command);
     }
 }

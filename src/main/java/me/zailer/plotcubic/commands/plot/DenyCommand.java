@@ -14,12 +14,11 @@ import me.zailer.plotcubic.plot.DeniedPlayer;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.TrustedPlayer;
-import me.zailer.plotcubic.utils.CommandColors;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
 
 import java.util.Set;
 
@@ -57,38 +56,35 @@ public class DenyCommand extends SubcommandAbstract {
             }
 
             if (deniedUsername.equalsIgnoreCase(player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("I don't think you should deny yourself").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.yourself");
                 return 1;
             }
 
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
                 return 1;
             }
 
             if (reason != null && reason.length() > 64) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The deny reason must be a maximum of 64 characters").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.reason_length");
                 return 1;
             }
 
-            if (!PlotCubic.getDatabaseManager().existPlayer(deniedUsername)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The player ")
-                        .append(deniedUsername, CommandColors.HIGHLIGHT)
-                        .append(" does not exist", CommandColors.ERROR).get());
+            DatabaseManager databaseManager = PlotCubic.getDatabaseManager();
+            if (!databaseManager.existPlayer(deniedUsername)) {
+                MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", deniedUsername);
                 return 1;
             }
-            DatabaseManager databaseManager = PlotCubic.getDatabaseManager();
 
             if (databaseManager.isDenied(plotId, deniedUsername)) {
-                String removeCommand = String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], deniedUsername);
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The player already has deny, if you want to remove it you should use ")
-                        .append(removeCommand, CommandColors.HIGHLIGHT).get());
+                String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], deniedUsername);
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.already_has_deny", removeCommand);
                 return 1;
             }
 
@@ -97,12 +93,9 @@ public class DenyCommand extends SubcommandAbstract {
             DeniedPlayer deniedPlayer = new DeniedPlayer(deniedUsername, reason);
 
             if (removeTrustedSuccessful && deniedSuccessful) {
-                MessageUtils.sendChatMessage(player, new MessageUtils(deniedUsername, CommandColors.HIGHLIGHT)
-                        .append(" was successfully denied by ")
-                        .append(deniedPlayer.reason(), CommandColors.HIGHLIGHT)
-                        .get());
+                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.deny_successful", deniedUsername, reason);
             } else {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("An error occurred denying the player").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.unexpected");
             }
             Plot plot = Plot.getLoadedPlot(plotId);
 
@@ -115,20 +108,21 @@ public class DenyCommand extends SubcommandAbstract {
     }
 
     @Override
-    public Text getValidUsage() {
+    public MutableText getValidUsage() {
         //Command usage: /plot deny <player>
         //Command usage: /plot deny <player> <reason>
 
-        MessageUtils messageUtils = new MessageUtils().appendInfo("Command usage: ")
-                .append(String.format("/%s %s <%s>\n", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player"))
-                .appendInfo("Command usage: ")
-                .append(String.format("/%s %s <%s> <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player", "reason"));
-        return messageUtils.get();
+        String denyCommand = String.format("/%s %s <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player");
+        String denyCommandWithReason = String.format("/%s %s <%s> <%s>", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], "player", "reason");
+
+        return MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", denyCommand)
+                .append("\n")
+                .append(MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", denyCommandWithReason));
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Ban a player from entering your plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.deny";
     }
 
     @Override

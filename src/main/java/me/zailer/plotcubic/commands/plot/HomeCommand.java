@@ -5,11 +5,10 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.commands.PlotCommand;
-import me.zailer.plotcubic.utils.CommandColors;
-import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.TranslatableText;
 
 public class HomeCommand extends VisitCommand {
     @Override
@@ -49,21 +48,17 @@ public class HomeCommand extends VisitCommand {
     }
 
     @Override
-    public MessageUtils getOutBoundsErrorMsg(int plotCount) {
-        return MessageUtils.getError("You only have ")
-                .append(String.valueOf(plotCount), CommandColors.HIGHLIGHT)
-                .append(" plots", CommandColors.ERROR);
+    public TranslatableText getOutBoundsErrorMsg(int plotCount) {
+            return new TranslatableText("error.plotcubic.plot.home.out_bounds", plotCount);
     }
 
     @Override
-    public MessageUtils getThereAreNoPlotsMsg() {
-        String claimCommand = String.format("/%s %s", PlotCommand.COMMAND_ALIAS[0], new ClaimCommand().getAlias()[0]);
-        return MessageUtils.getError("you don't have plots try to get one with ")
-                .append(claimCommand, CommandColors.HIGHLIGHT);
+    public TranslatableText getThereAreNoPlotsMsg() {
+        return new TranslatableText("error.plotcubic.plot.home.there_are_no_plots", PlotCommand.COMMAND_ALIAS[0], new ClaimCommand().getAlias()[0]);
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Teleport to a plot that belongs to you.";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.home";
     }
 }

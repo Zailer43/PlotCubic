@@ -6,13 +6,11 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
-import me.zailer.plotcubic.plot.User;
+import me.zailer.plotcubic.plot.UserConfig;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 public class ChatCommand extends SubcommandAbstract {
     @Override
@@ -33,14 +31,14 @@ public class ChatCommand extends SubcommandAbstract {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
 
-            User user = PlotCubic.getUser(player);
+            UserConfig userConfig = PlotCubic.getUser(player);
 
-            if (user == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("you are null :(").get());
+            if (userConfig == null) {
+                MessageUtils.sendChatMessage(player, "error.plotcubic.null_user_config");
                 return 1;
             }
-            boolean plotChatEnabled = user.togglePlotChat();
-            MessageUtils.sendChatMessage(player, this.getToggleMessage(plotChatEnabled));
+            boolean plotChatEnabled = userConfig.togglePlotChat();
+            MessageUtils.sendChatMessage(player, this.getToggleMsg(plotChatEnabled));
 
         } catch (CommandSyntaxException ignored) {
         }
@@ -48,8 +46,8 @@ public class ChatCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Toggle plot chat";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.chat";
     }
 
     @Override
@@ -57,16 +55,7 @@ public class ChatCommand extends SubcommandAbstract {
         return CommandCategory.GENERAL;
     }
 
-    @SuppressWarnings("ConstantConditions")
-    private Text getToggleMessage(boolean plotChatEnabled) {
-        MessageUtils messageUtils = new MessageUtils()
-                .append("Plot chat ");
-
-        if (plotChatEnabled)
-            messageUtils.append("enabled", Formatting.GREEN.getColorValue());
-        else
-            messageUtils.append("disabled", Formatting.RED.getColorValue());
-
-        return messageUtils.get();
+    private String getToggleMsg(boolean plotChatEnabled) {
+        return plotChatEnabled ? "text.plotcubic.plot.chat.enabled" : "text.plotcubic.plot.chat.disabled";
     }
 }

@@ -5,8 +5,6 @@ import eu.pb4.sgui.api.gui.SimpleGui;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotChatStyle;
-import me.zailer.plotcubic.utils.CommandColors;
-import me.zailer.plotcubic.utils.GuiColors;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.enchantment.Enchantments;
@@ -19,8 +17,8 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
@@ -35,7 +33,7 @@ public class ChatStylesGui {
         this.chatStyleSelected = plot.getChatStyle();
         this.selectedIndex = 0;
 
-        this.gui.setTitle(new LiteralText("Edit plot chat style"));
+        this.gui.setTitle(new TranslatableText("gui.plotcubic.chat_style.title"));
 
         for (int i = 0; i != chatStyles.length; i++) {
             PlotChatStyle chatStyle = chatStyles[i];
@@ -43,14 +41,14 @@ public class ChatStylesGui {
 
             GuiElementBuilder builder = new GuiElementBuilder()
                     .setItem(item)
-                    .setName(new MessageUtils(chatStyle.name(), GuiColors.BLUE).get())
+                    .setName(new MessageUtils(chatStyle.name(), MessageUtils.getHighlight()).get())
                     .addLoreLine(chatStyle.getMessage(plot.getPlotID(), player, "Hello world!"))
                     .setCallback((index, type, action) -> this.setCallback(index, chatStyle));
 
             if (this.chatStyleSelected == chatStyle) {
                 builder.glow();
                 this.selectedIndex = i;
-                builder.addLoreLine(new MessageUtils("[Selected]", GuiColors.GREEN).get());
+                builder.addLoreLine(new TranslatableText("gui.plotcubic.chat_style.selected"));
             }
 
             this.gui.addSlot(builder);
@@ -58,7 +56,7 @@ public class ChatStylesGui {
 
         GuiElementBuilder acceptItem = new GuiElementBuilder()
                 .setItem(Items.EMERALD_BLOCK)
-                .setName(new MessageUtils("Accept", GuiColors.GREEN).get())
+                .setName(new TranslatableText("gui.plotcubic.accept"))
                 .setCallback((index, type, action) -> {
                             gui.close();
                             this.save(player, plot);
@@ -67,7 +65,7 @@ public class ChatStylesGui {
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new MessageUtils("Cancel", GuiColors.RED).get())
+                .setName(new TranslatableText("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> this.gui.close());
 
         this.gui.setSlot(45, acceptItem);
@@ -80,10 +78,7 @@ public class ChatStylesGui {
     private void save(ServerPlayerEntity player, Plot plot) {
         plot.setChatStyle(this.chatStyleSelected);
         PlotCubic.getDatabaseManager().updateChatStyle(this.chatStyleSelected, plot.getPlotID());
-        MessageUtils.sendChatMessage(player, new MessageUtils("Chat style changed to ")
-                .append(this.chatStyleSelected.name(), CommandColors.HIGHLIGHT)
-                .get()
-        );
+        MessageUtils.sendChatMessage(player,"text.plotcubic.plot.chat_style.successful", this.chatStyleSelected.name());
     }
 
     private void setCallback(int index, PlotChatStyle chatStyle) {
@@ -104,7 +99,7 @@ public class ChatStylesGui {
         assert nbt != null;
         NbtCompound display = nbt.getCompound(ItemStack.DISPLAY_KEY);
         NbtList lore = display.getList(ItemStack.LORE_KEY, NbtElement.STRING_TYPE);
-        lore.add(NbtString.of(Text.Serializer.toJson(new MessageUtils("[Selected]", GuiColors.GREEN).get())));
+        lore.add(NbtString.of(Text.Serializer.toJson(new TranslatableText("gui.plotcubic.chat_style.selected"))));
     }
 
     private void updatePreviousSelectedItem(int index) {

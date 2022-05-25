@@ -35,24 +35,24 @@ public class ReportCommand extends SubcommandAbstract {
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You cannot run this command on a road").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             Plot plot = Plot.getPlot(plotId);
 
             if (plot == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("This plot is unclaimed, in case it has any build you must call a staff").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.report.unclaimed");
                 return 1;
             }
 
             if (plot.isOwner(player)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You can't report your own plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.report.yourself");
                 return 1;
             }
 
             if (PlotCubic.getDatabaseManager().hasPendingReport(plotId, player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You have a pending report for this plot, wait for a staff to see it").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.report.pending");
                 return 1;
             }
 
@@ -65,8 +65,8 @@ public class ReportCommand extends SubcommandAbstract {
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Clean the plot and leave it as new";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.report";
     }
 
     @Override

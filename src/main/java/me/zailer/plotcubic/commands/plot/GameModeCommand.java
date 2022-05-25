@@ -15,7 +15,7 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
 import net.minecraft.world.GameMode;
 
 import java.util.Arrays;
@@ -47,31 +47,31 @@ public class GameModeCommand extends SubcommandAbstract {
             GameMode gameMode = GameMode.byName(serverCommandSource.getArgument("GAMEMODE", String.class), null);
 
             if (gameMode == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The game mode is invalid").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.invalid_game_mode");
                 return 1;
             }
 
             PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotId == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not in a plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("You are not the owner of this plot").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
                 return 1;
             }
 
             Plot plot = Plot.getLoadedPlot(plotId);
             if (plot == null) {
-                MessageUtils.sendChatMessage(player, MessageUtils.getError("The plot is not loaded, you should not be seeing this error").get());
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.not_loaded");
                 return 1;
             }
 
             plot.setGameMode(gameMode);
             PlotCubic.getDatabaseManager().updateGameMode(gameMode, plotId);
-            MessageUtils.sendChatMessage(player, new MessageUtils("Plot game mode changed").get());
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.game_mode.successful");
 
 
         } catch (CommandSyntaxException e) {
@@ -81,17 +81,17 @@ public class GameModeCommand extends SubcommandAbstract {
     }
 
     @Override
-    public Text getValidUsage() {
+    public MutableText getValidUsage() {
         //Command usage: /plot gamemode [adventure/creative/spectator/survival]
+
         String options = String.join("/", Arrays.stream(GameMode.values()).map(GameMode::getName).sorted().toList());
-        return new MessageUtils().appendInfo("Command usage: ")
-                .append(String.format("/%s %s [%s]", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], options))
-                .get();
+        String command = String.format("/%s %s [%s]", PlotCommand.COMMAND_ALIAS[0], this.getAlias()[0], options);
+        return MessageUtils.formatArgs("text.plotcubic.help.command_usage.generic", command);
     }
 
     @Override
-    protected String getHelpDetails() {
-        return "Change the game mode of the players on the plot";
+    protected String getHelpTranslationKey() {
+        return "text.plotcubic.help.game_mode";
     }
 
     @Override
