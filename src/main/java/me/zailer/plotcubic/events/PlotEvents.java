@@ -17,9 +17,6 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.network.Packet;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -27,7 +24,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import xyz.nucleoid.stimuli.Stimuli;
@@ -36,7 +32,6 @@ import xyz.nucleoid.stimuli.event.block.BlockPlaceEvent;
 import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.block.FluidPlaceEvent;
 import xyz.nucleoid.stimuli.event.entity.EntitySpawnEvent;
-import xyz.nucleoid.stimuli.event.player.PlayerC2SPacketEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerChatContentEvent;
 import xyz.nucleoid.stimuli.event.world.ExplosionDetonatedEvent;
 import xyz.nucleoid.stimuli.event.world.FluidFlowEvent;
@@ -80,8 +75,6 @@ public class PlotEvents {
 
         Stimuli.global().listen(ExplosionDetonatedEvent.EVENT, (explosion, particles) -> protectRoads(explosion));
         Stimuli.global().listen(ExplosionDetonatedEvent.EVENT, (explosion, particles) -> protectMinHeight(explosion));
-
-        Stimuli.global().listen(PlayerC2SPacketEvent.EVENT, PlotEvents::protectRoads);
     }
 
     private static void registerAvoidEntitiesSpawn() {
@@ -129,28 +122,6 @@ public class PlotEvents {
     private static void protectRoads(Explosion explosion) {
         List<BlockPos> affectedBlocks = explosion.getAffectedBlocks();
         affectedBlocks.removeIf(pos -> !PlotManager.getInstance().isPlot(pos));
-    }
-
-    private static ActionResult protectRoads(ServerPlayerEntity player, Packet<?> packet) {
-        if (!(packet instanceof PlayerInteractBlockC2SPacket packetInteract)) {
-            return ActionResult.PASS;
-        }
-
-        Item item = player.getStackInHand(packetInteract.getHand()).getItem();
-
-        for (var itemUseBlacklist : PlotCubic.ITEM_USE_BLACKLIST) {
-            if (item == itemUseBlacklist) {
-
-                World world = player.getWorld();
-                Direction side = packetInteract.getBlockHitResult().getSide();
-                BlockPos pos = packetInteract.getBlockHitResult().getBlockPos().offset(side);
-
-                player.networkHandler.sendPacket(new BlockUpdateS2CPacket(world, pos));
-                return ActionResult.FAIL;
-            }
-        }
-
-        return ActionResult.PASS;
     }
 
     private static ActionResult entityWhitelist(Entity entity) {

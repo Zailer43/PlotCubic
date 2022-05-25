@@ -17,10 +17,13 @@ import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.block.BlockBreakEvent;
 import xyz.nucleoid.stimuli.event.block.BlockPlaceEvent;
@@ -29,6 +32,7 @@ import xyz.nucleoid.stimuli.event.block.FluidPlaceEvent;
 import xyz.nucleoid.stimuli.event.entity.EntityUseEvent;
 import xyz.nucleoid.stimuli.event.item.ItemUseEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerAttackEntityEvent;
+import xyz.nucleoid.stimuli.event.player.PlayerC2SPacketEvent;
 
 import java.util.Set;
 
@@ -76,6 +80,21 @@ public class PlotPermissionsEvents {
                 return hasPermission(player, pos, PlotPermission.PLACE_EXPLOSIVES);
 
             return ActionResult.PASS;
+        });
+
+        Stimuli.global().listen(PlayerC2SPacketEvent.EVENT, (player, packet) -> {
+            if (!(packet instanceof PlayerInteractBlockC2SPacket packetInteract))
+                return ActionResult.PASS;
+
+            Direction side = packetInteract.getBlockHitResult().getSide();
+            BlockPos pos = packetInteract.getBlockHitResult().getBlockPos().offset(side);
+
+            ActionResult result = hasPermission(player, pos, PlotPermission.PLACE_BLOCKS);
+
+            if (result == ActionResult.FAIL)
+                player.networkHandler.sendPacket(new BlockUpdateS2CPacket(player.getWorld(), pos));
+
+            return result;
         });
 
         Stimuli.global().listen(FluidPlaceEvent.EVENT, (world, pos, player, hitResult) -> hasPermission(player, pos, PlotPermission.PLACE_FLUIDS));

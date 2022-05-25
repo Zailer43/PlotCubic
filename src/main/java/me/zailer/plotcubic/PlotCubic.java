@@ -20,8 +20,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -53,10 +51,6 @@ public class PlotCubic implements ModInitializer {
             EntityType.TNT,
             EntityType.ARROW,
             EntityType.SPECTRAL_ARROW
-    );
-    public static final ImmutableList<Item> ITEM_USE_BLACKLIST = ImmutableList.of(
-            Items.FLINT_AND_STEEL,
-            Items.FIRE_CHARGE
     );
     private static final HashMap<ServerPlayerEntity, UserConfig> playersSet = new HashMap<>();
     public static RuntimeWorldHandle plotWorldHandle;
