@@ -9,11 +9,10 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
@@ -86,6 +85,7 @@ public class Plot {
 
     public void clearPlot() {
         new Thread(() -> {
+            this.removeEntities();
             PlotworldSettings settings = PlotManager.getInstance().getSettings();
             ChunkGenerator chunkGenerator = PlotCubic.getPlotWorldHandle().asWorld().getChunkManager().getChunkGenerator();
             int plotSize = settings.getPlotSize() - 1;
@@ -314,6 +314,23 @@ public class Plot {
 
     public PlotChatStyle getChatStyle() {
         return this.chatStyle;
+    }
+
+    public void removeEntities() {
+        Iterable<Entity> entities = PlotCubic.getPlotWorldHandle().asWorld().iterateEntities();
+
+        for (var entity : entities) {
+            if (entity instanceof ServerPlayerEntity)
+                continue;
+
+            PlotID plotId = PlotID.ofBlockPos(entity.getBlockX(), entity.getBlockZ());
+
+            if (plotId == null)
+                continue;
+
+            if (plotId.equals(this.plotID))
+                entity.kill();
+        }
     }
 
 }
