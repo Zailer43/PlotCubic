@@ -54,7 +54,6 @@ public class PlotEvents {
 
 
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> allowAdmin(player));
-        //FIXME: https://github.com/NucleoidMC/stimuli/issues/19
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> protectRoads(pos));
 
         Stimuli.global().listen(FluidPlaceEvent.EVENT, (world, pos, player, hitResult) -> {
