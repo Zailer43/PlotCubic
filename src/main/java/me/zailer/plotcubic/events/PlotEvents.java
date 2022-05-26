@@ -177,21 +177,17 @@ public class PlotEvents {
             return ActionResult.PASS;
 
         NbtCompound entityTag = nbt.getCompound(EntityType.ENTITY_TAG_KEY);
-        PlotID placePlotId = PlotID.ofBlockPos(placePos.getX(), placePos.getZ());
-
-        if (placePlotId == null)
-            return ActionResult.FAIL;
 
         if (item.equals(Items.ARMOR_STAND))
-            return fixArmorStandSpawnBypass(entityTag, placePlotId);
+            return fixArmorStandSpawnBypass(entityTag, placePos.getX(), placePos.getZ());
 
         if (item instanceof ItemFrameItem)
-            return fixItemFrameSpawnBypass(entityTag, placePlotId);
+            return fixItemFrameSpawnBypass(entityTag, placePos.getX(), placePos.getZ());
 
         return ActionResult.PASS;
     }
 
-    private static ActionResult fixArmorStandSpawnBypass(NbtCompound entityTag, PlotID placePlotId) {
+    private static ActionResult fixArmorStandSpawnBypass(NbtCompound entityTag, int placePosX, int placePosZ) {
         if (!entityTag.contains("Pos", NbtElement.LIST_TYPE))
             return ActionResult.PASS;
 
@@ -200,15 +196,13 @@ public class PlotEvents {
         if (pos.size() < 3)
             return ActionResult.PASS;
 
-        PlotID armorStandPlotId = PlotID.ofBlockPos((int) pos.getDouble(0), (int) pos.getDouble(2));
-
-        boolean isDifferentPlot = armorStandPlotId == null || !placePlotId.equals(armorStandPlotId);
+        boolean isDifferentPlot = PlotID.isDifferentPlot(placePosX, placePosZ, (int) pos.getDouble(0), (int) pos.getDouble(2));
         return isDifferentPlot ? ActionResult.FAIL : ActionResult.PASS;
     }
 
-    private static ActionResult fixItemFrameSpawnBypass(NbtCompound entityTag, PlotID placePlotId) {
-        int x = placePlotId.getXPos();
-        int z = placePlotId.getZPos();
+    private static ActionResult fixItemFrameSpawnBypass(NbtCompound entityTag, int placePosX, int placePosZ) {
+        int x = 0;
+        int z = 0;
         boolean hasTileTag = false;
 
         if (entityTag.contains("TileX", NbtElement.INT_TYPE)) {
@@ -224,9 +218,7 @@ public class PlotEvents {
         if (!hasTileTag)
             return ActionResult.PASS;
 
-        PlotID itemFramePlotId = PlotID.ofBlockPos(x, z);
-
-        boolean isDifferentPlot = itemFramePlotId == null || !placePlotId.equals(itemFramePlotId);
+        boolean isDifferentPlot = PlotID.isDifferentPlot(placePosX, placePosZ, x, z);
         return isDifferentPlot ? ActionResult.FAIL : ActionResult.PASS;
     }
 

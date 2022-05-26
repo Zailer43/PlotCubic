@@ -40,6 +40,16 @@ public record PlotID(int x, int z) {
         return pos;
     }
 
+    public static boolean isDifferentPlot(int x, int z, int x2, int z2) {
+        return isDifferentPlot(PlotID.ofBlockPos(x, z), x2, z2);
+    }
+
+    public static boolean isDifferentPlot(@Nullable PlotID plotId, int x2, int z2) {
+        PlotID plotId2 = ofBlockPos(x2, z2);
+
+        return plotId == null || plotId2 == null || !plotId.equals(plotId2);
+    }
+
     public static boolean isValid(String plotIdString) {
         return plotIdString.matches(PlotID.PLOT_ID_REGEX);
     }

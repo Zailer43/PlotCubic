@@ -10,7 +10,8 @@
     "EndPortalBlockMixin",
     "ExplosionAccessor",
     "MinecraftServerAccessor",
-    "ServerWorldMixin"
+    "ServerWorldMixin",
+    "TreeFeatureMixin"
   ],
   "injectors": {
     "defaultRequire": 1
