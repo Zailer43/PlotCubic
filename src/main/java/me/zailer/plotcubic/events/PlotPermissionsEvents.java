@@ -86,6 +86,9 @@ public class PlotPermissionsEvents {
             if (!(packet instanceof PlayerInteractBlockC2SPacket packetInteract))
                 return ActionResult.PASS;
 
+            if (player.hasPermissionLevel(4))
+                return ActionResult.PASS;
+
             Direction side = packetInteract.getBlockHitResult().getSide();
             BlockPos pos = packetInteract.getBlockHitResult().getBlockPos().offset(side);
 
