@@ -121,4 +121,8 @@ public class PlotManager {
         return zone == ZoneType.PLOT;
     }
 
+    public static boolean isOutOfPlot(BlockPos pos) {
+        return PlotManager.getInstance().getZone(pos.getX(), pos.getZ()) != ZoneType.PLOT;
+    }
+
 }

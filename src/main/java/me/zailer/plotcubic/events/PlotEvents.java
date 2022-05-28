@@ -8,12 +8,11 @@ import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.UserConfig;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.PistonBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemFrameItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -24,6 +23,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import xyz.nucleoid.stimuli.Stimuli;
@@ -53,6 +53,7 @@ public class PlotEvents {
         Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> protectRoads(pos));
 
 
+        Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> protectRoadOfPiston(world, pos, state, context));
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> allowAdmin(player));
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> protectRoads(pos));
 
@@ -253,6 +254,38 @@ public class PlotEvents {
             return ActionResult.PASS;
 
         plot.sendPlotChatMessage(sender, message.getRaw());
+
+        return ActionResult.FAIL;
+    }
+
+    private static ActionResult protectRoadOfPiston(ServerWorld world, BlockPos pos, BlockState state, ItemUsageContext context) {
+        if (!(state.getBlock() instanceof PistonBlock))
+            return ActionResult.PASS;
+
+        // this would be easier if the blockstate had its properties...
+        ItemStack stack = context.getStack();
+        if (!stack.hasNbt())
+            return ActionResult.PASS;
+
+        NbtCompound nbt = stack.getNbt();
+        assert nbt != null;
+
+        if (!nbt.contains(BlockItem.BLOCK_STATE_TAG_KEY, NbtElement.COMPOUND_TYPE))
+            return ActionResult.PASS;
+        NbtCompound stateTag = nbt.getCompound(BlockItem.BLOCK_STATE_TAG_KEY);
+
+        if (!stateTag.contains(PistonBlock.EXTENDED.getName(), NbtElement.STRING_TYPE))
+            return ActionResult.PASS;
+
+        Direction direction = state.get(PistonBlock.FACING);
+
+        BlockPos pistonHead = pos.offset(direction);
+
+        if (!PlotManager.isOutOfPlot(pistonHead))
+            return ActionResult.PASS;
+
+        BlockState notExtended = state.with(PistonBlock.EXTENDED, false).with(PistonBlock.FACING, direction);
+        world.setBlockState(pos, notExtended);
 
         return ActionResult.FAIL;
     }

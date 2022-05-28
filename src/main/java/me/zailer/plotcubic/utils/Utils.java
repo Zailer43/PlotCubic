@@ -1,12 +1,8 @@
 package me.zailer.plotcubic.utils;
 
-import eu.pb4.sgui.api.SlotHolder;
-import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import me.zailer.plotcubic.PlotCubic;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.item.Items;
-import net.minecraft.text.LiteralText;
 import net.minecraft.util.math.BlockPos;
 
 public class Utils {
