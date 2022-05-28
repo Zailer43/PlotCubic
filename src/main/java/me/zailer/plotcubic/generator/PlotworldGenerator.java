@@ -80,12 +80,16 @@ public class PlotworldGenerator extends ChunkGenerator {
         PlotManager plotManager = PlotManager.getInstance();
         for (int x = 0; x != 16; x++) {
             for (int z = 0; z != 16; z++) {
-                for (int y = this.getMinimumY(); y != this.getWorldHeight(); y++) {
-                    BlockState block  = plotManager.getBlock(chunk.getPos().getBlockPos(x, y, z));
-
-                    chunk.setBlockState(new BlockPos(x, y, z), block, false);
-                }
+                this.regen(plotManager, chunk, x, z);
             }
+        }
+    }
+
+    public void regen(PlotManager plotManager, Chunk chunk, int x, int z) {
+        for (int y = this.getMinimumY(); y != this.getWorldHeight(); y++) {
+            BlockState block  = plotManager.getBlock(chunk.getPos().getBlockPos(x, y, z));
+
+            chunk.setBlockState(new BlockPos(x, y, z), block, false);
         }
     }
 

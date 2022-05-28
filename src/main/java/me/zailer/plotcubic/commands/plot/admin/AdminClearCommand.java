@@ -36,7 +36,7 @@ public class AdminClearCommand extends ClearCommand {
         new ConfirmationGui().open(player, "gui.plotcubic.confirmation.clear.title", List.of("gui.plotcubic.confirmation.admin_clear.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
             MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.cleaning");
             Plot plot = new Plot(player, plotId);
-            plot.clearPlot();
+            plot.clearPlot(player);
         });
     }
 

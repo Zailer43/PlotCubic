@@ -13,6 +13,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.util.Date;
 import java.util.List;
 
 public class ClearCommand extends SubcommandAbstract {
@@ -55,7 +56,7 @@ public class ClearCommand extends SubcommandAbstract {
         new ConfirmationGui().open(player, "gui.plotcubic.confirmation.clear.title", List.of("gui.plotcubic.confirmation.clear.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
             MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.cleaning");
             Plot plot = new Plot(player, plotId);
-            plot.clearPlot();
+            plot.clearPlot(player);
         });
     }
 

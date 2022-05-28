@@ -4,24 +4,28 @@ import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.commands.plot.ChatCommand;
+import me.zailer.plotcubic.generator.PlotworldGenerator;
 import me.zailer.plotcubic.generator.PlotworldSettings;
 import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameMode;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
+import net.minecraft.world.chunk.Chunk;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+
+import static net.minecraft.SharedConstants.CHUNK_WIDTH;
 
 public class Plot {
     public static final List<Plot> loadedPlots = new ArrayList<>();
@@ -61,7 +65,7 @@ public class Plot {
 
     public void delete() {
         this.setBorder(PlotManager.getInstance().getSettings().getUnclaimedBorderBlock());
-        this.clearPlot();
+        this.clearPlot(null);
     }
 
     public void setBorder(BlockState block) {
@@ -83,28 +87,54 @@ public class Plot {
         }).start();
     }
 
-    public void clearPlot() {
+    public void clearPlot(@Nullable ServerPlayerEntity player) {
         new Thread(() -> {
+            long startTime = new Date().getTime();
             this.removeEntities();
-            PlotworldSettings settings = PlotManager.getInstance().getSettings();
-            ChunkGenerator chunkGenerator = PlotCubic.getPlotWorldHandle().asWorld().getChunkManager().getChunkGenerator();
-            int plotSize = settings.getPlotSize() - 1;
-            int y = chunkGenerator.getWorldHeight();
-            int x = this.plotID.getXPos() - plotSize;
-            int z = this.plotID.getZPos() - plotSize;
-            List<FlatChunkGeneratorLayer> layers = new ArrayList<>(List.copyOf(settings.getLayers()));
+            this.clearPlotTerrain();
 
-            int airHeight = chunkGenerator.getWorldHeight() - settings.getMaxHeight();
-            Utils.fillWithDimensions(Blocks.AIR.getDefaultState(), x, y, z, plotSize, -airHeight, plotSize);
-            y -= airHeight;
-
-
-            for (int i = layers.size() - 1; i != -1; i--) {
-                Utils.fillWithDimensions(layers.get(i).getBlockState(), x, y, z, plotSize, -(layers.get(i).getThickness() - 1), plotSize);
-                y -= layers.get(i).getThickness();
+            if (player != null) {
+                long timeTaken = new Date().getTime() - startTime;
+                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.successful", timeTaken);
             }
 
         }).start();
+    }
+
+    private void clearPlotTerrain() {
+        ServerWorld world = PlotCubic.getPlotWorldHandle().asWorld();
+        PlayerManager playerManager = PlotCubic.getServer().getPlayerManager();
+        PlotworldGenerator plotworldGenerator = (PlotworldGenerator) world.getChunkManager().getChunkGenerator();
+        PlotworldSettings settings = PlotManager.getInstance().getSettings();
+        PlotManager plotManager = PlotManager.getInstance();
+        int plotSize = settings.getPlotSize() - 1;
+        int absoluteX = this.plotID.getXPos();
+        int absoluteZ = this.plotID.getZPos();
+
+        Set<Chunk> chunkList = new HashSet<>();
+        int plotMaxChunkX = absoluteX / CHUNK_WIDTH;
+        int plotMaxChunkZ = absoluteZ / CHUNK_WIDTH;
+
+        for (int x = absoluteX - plotSize; x / CHUNK_WIDTH <= plotMaxChunkX; x += CHUNK_WIDTH) {
+            for (int z = absoluteZ - plotSize; z / CHUNK_WIDTH <= plotMaxChunkZ; z += CHUNK_WIDTH) {
+                chunkList.add(world.getChunk(new BlockPos(x, 0, z)));
+            }
+        }
+
+        for (var chunk : chunkList) {
+            for (int x = 0; x != CHUNK_WIDTH; x++) {
+                for (int z = 0; z != CHUNK_WIDTH; z++) {
+                    ChunkPos chunkPos = chunk.getPos();
+                    absoluteX = chunkPos.getOffsetX(x);
+                    absoluteZ = chunkPos.getOffsetZ(z);
+                    if (PlotID.isDifferentPlot(plotID, absoluteX, absoluteZ))
+                        continue;
+
+                    plotworldGenerator.regen(plotManager, chunk, x, z);
+                    playerManager.sendToAround(null, absoluteX, 0, absoluteZ, 512, world.getRegistryKey(), new ChunkDataS2CPacket(world.getChunk(chunkPos.x, chunkPos.z), world.getLightingProvider(), null, null, true));
+                }
+            }
+        }
     }
 
     public boolean isId(@NotNull PlotID id) {
@@ -192,10 +222,6 @@ public class Plot {
 
     public Date getClaimedDate() {
         return this.claimedDate;
-    }
-
-    public void addDenied(List<DeniedPlayer> deniedPlayerList) {
-        this.deniedPlayers.addAll(deniedPlayerList);
     }
 
     public void addDenied(DeniedPlayer deniedPlayer) {

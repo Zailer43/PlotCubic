@@ -3,6 +3,7 @@ package me.zailer.plotcubic.utils;
 import me.zailer.plotcubic.PlotCubic;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
 public class Utils {
@@ -13,17 +14,21 @@ public class Utils {
             return;
         }
 
+        ServerWorld world = PlotCubic.getPlotWorldHandle().asWorld();
+
         for (BlockPos blockPos : BlockPos.iterate(x, y, z, x2, y2, z2)) {
-            if (!block.isOf(PlotCubic.getPlotWorldHandle().asWorld().getBlockState(blockPos).getBlock()))
-                PlotCubic.getPlotWorldHandle().asWorld().setBlockState(blockPos, block);
+            if (!block.isOf(world.getBlockState(blockPos).getBlock()))
+                world.setBlockState(blockPos, block);
         }
     }
 
     public static void fillPosWithAir(int x, int y, int z, int x2, int y2, int z2) {
+        ServerWorld world = PlotCubic.getPlotWorldHandle().asWorld();
+        BlockState air = Blocks.AIR.getDefaultState();
         for (int i = y2; i != y; i--) {
             for (BlockPos blockPos : BlockPos.iterate(x, i, z, x2, i, z2)) {
-                if (!PlotCubic.getPlotWorldHandle().asWorld().isAir(blockPos))
-                    PlotCubic.getPlotWorldHandle().asWorld().setBlockState(blockPos, Blocks.AIR.getDefaultState());
+                if (!world.isAir(blockPos))
+                    world.setBlockState(blockPos, air);
             }
         }
     }
