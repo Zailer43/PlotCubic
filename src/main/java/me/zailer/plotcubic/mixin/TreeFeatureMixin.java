@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 import java.util.Random;
 import java.util.Set;
@@ -37,15 +38,20 @@ public class TreeFeatureMixin {
                            Set<BlockPos> leavesPositions,
                            Set<BlockPos> decorationPositions) {
 
-        PlotID originPlotId = PlotID.ofBlockPos(origin.getX(), origin.getZ());
-        this.removeBlocksOutOfPlot(decorationPositions, originPlotId);
-        this.removeBlocksOutOfPlot(leavesPositions, originPlotId);
-        this.removeBlocksOutOfPlot(logPositions, originPlotId);
+        RuntimeWorldHandle handle = PlotCubic.getPlotWorldHandle();
+
+        if (handle != null) {
+            ServerWorld world = handle.asWorld();
+
+            PlotID originPlotId = PlotID.ofBlockPos(origin.getX(), origin.getZ());
+            this.removeBlocksOutOfPlot(decorationPositions, originPlotId, world);
+            this.removeBlocksOutOfPlot(leavesPositions, originPlotId, world);
+            this.removeBlocksOutOfPlot(logPositions, originPlotId, world);
+        }
     }
 
-    public void removeBlocksOutOfPlot(Set<BlockPos> blockPosSet, PlotID originPlotId) {
+    public void removeBlocksOutOfPlot(Set<BlockPos> blockPosSet, PlotID originPlotId, ServerWorld world) {
         //TODO: remove blocks from the tree before they are placed
-        ServerWorld world = PlotCubic.getPlotWorldHandle().asWorld();
         for (var pos : blockPosSet) {
             if (PlotID.isDifferentPlot(originPlotId, pos.getX(), pos.getZ()))
                 world.setBlockState(pos, Blocks.AIR.getDefaultState());

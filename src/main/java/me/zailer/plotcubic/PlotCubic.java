@@ -32,6 +32,7 @@ import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 import xyz.nucleoid.stimuli.Stimuli;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +61,7 @@ public class PlotCubic implements ModInitializer {
     private static DatabaseManager databaseManager;
     private static ConfigManager configManager;
 
+    @Nullable
     public static RuntimeWorldHandle getPlotWorldHandle() {
         return plotWorldHandle;
     }
