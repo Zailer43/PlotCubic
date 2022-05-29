@@ -122,18 +122,18 @@ public class Plot {
         }
 
         for (var chunk : chunkList) {
+            ChunkPos chunkPos = chunk.getPos();
             for (int x = 0; x != CHUNK_WIDTH; x++) {
                 for (int z = 0; z != CHUNK_WIDTH; z++) {
-                    ChunkPos chunkPos = chunk.getPos();
                     absoluteX = chunkPos.getOffsetX(x);
                     absoluteZ = chunkPos.getOffsetZ(z);
                     if (PlotID.isDifferentPlot(plotID, absoluteX, absoluteZ))
                         continue;
 
                     plotworldGenerator.regen(plotManager, chunk, x, z);
-                    playerManager.sendToAround(null, absoluteX, 0, absoluteZ, 512, world.getRegistryKey(), new ChunkDataS2CPacket(world.getChunk(chunkPos.x, chunkPos.z), world.getLightingProvider(), null, null, true));
                 }
             }
+            playerManager.sendToAround(null, absoluteX, 0, absoluteZ, 512, world.getRegistryKey(), new ChunkDataS2CPacket(world.getChunk(chunkPos.x, chunkPos.z), world.getLightingProvider(), null, null, true));
         }
     }
 
