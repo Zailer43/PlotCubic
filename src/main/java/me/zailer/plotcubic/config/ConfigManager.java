@@ -8,6 +8,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 public class ConfigManager {
@@ -33,7 +34,7 @@ public class ConfigManager {
             }
 
             try {
-                this.config = this.getGson().fromJson(Files.readString(this.file.toPath()), Config.class);
+                this.config = this.getGson().fromJson(this.readJson(), Config.class);
             } catch (JsonParseException e) {
                 this.config = this.updateJson();
             }
@@ -59,12 +60,12 @@ public class ConfigManager {
             this.config = loadDefault();
             return;
         }
-        this.config = this.getGson().fromJson(Files.readString(this.file.toPath()), Config.class);
+        this.config = this.getGson().fromJson(this.readJson(), Config.class);
     }
 
     private Config updateJson() throws IOException {
         Gson gson = this.getGson();
-        JsonObject configJson = JsonParser.parseReader(new FileReader(file.getAbsolutePath())).getAsJsonObject();
+        JsonObject configJson = JsonParser.parseString(this.readJson()).getAsJsonObject();
         Config cfg = Config.DEFAULT;
         JsonObject defaultValues = gson.toJsonTree(cfg, Config.class).getAsJsonObject();
 
@@ -82,6 +83,10 @@ public class ConfigManager {
     }
 
     private Gson getGson() {
-        return new GsonBuilder().registerTypeAdapterFactory(RecordTypeAdapterFactory.DEFAULT).setPrettyPrinting().create();
+        return new GsonBuilder().registerTypeAdapterFactory(RecordTypeAdapterFactory.DEFAULT).disableHtmlEscaping().setPrettyPrinting().create();
+    }
+
+    private String readJson() throws IOException {
+        return Files.readString(this.file.toPath());
     }
 }
