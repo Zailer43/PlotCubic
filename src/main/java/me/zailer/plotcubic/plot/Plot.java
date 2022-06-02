@@ -14,8 +14,8 @@ import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameMode;
@@ -313,18 +313,14 @@ public class Plot {
         MutableText messageText = this.chatStyle.getMessage(this.plotID, sender, message);
 
         if (isPlotEmpty) {
-            String tooltipMessage = String.format(
-                    """
-                            The plot is currently empty
-                            No one else can read the message you sent
-                            If you want everyone to read you, you can use /%s %s""",
+            TranslatableText tooltipMessage = new TranslatableText("text.plotcubic.chat_style.warning_empty_plot.tooltip",
                     PlotCommand.COMMAND_ALIAS[0],
                     new ChatCommand().getAlias()[0]
             );
 
-            messageText = MessageUtils.getTranslation("text.plotcubic.chat_style.warning_empty_plot")
+            messageText = MessageUtils.getTranslation("text.plotcubic.chat_style.warning_empty_plot.chat")
                     .append(messageText)
-                    .setTooltipMessage(new LiteralText(tooltipMessage))
+                    .setTooltipMessage(tooltipMessage)
                     .get();
         }
 
