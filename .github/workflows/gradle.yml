@@ -24,6 +24,7 @@ jobs:
       with:
         arguments: build
     - name: Fetch build artifacts
+      uses: actions/upload-artifact@v2
       with:
         name: Build
         path: build/libs/
