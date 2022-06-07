@@ -17,6 +17,7 @@ import me.zailer.plotcubic.registry.DimensionRegistry;
 import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.TickTracker;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.EntityType;
@@ -24,6 +25,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.dimension.DimensionType;
 import org.slf4j.Logger;
@@ -124,10 +126,17 @@ public class PlotCubic implements ModInitializer {
             }
         });
 
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+            if (configManager.getConfig().general().autoTeleport()) newPlayer.teleport(plotWorldHandle.asWorld(), 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0, 0);
+        });
+
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            String username = handler.player.getName().getString();
+            ServerPlayerEntity player = handler.getPlayer();
+
+            player.changeGameMode(GameMode.CREATIVE);
+            String username = player.getName().getString();
             UserConfig userConfig = databaseManager.getPlayer(username);
-            playersSet.put(handler.player, userConfig == null ? new UserConfig(username, false) : databaseManager.getPlayer(username));
+            playersSet.put(player, userConfig == null ? new UserConfig(username, false) : databaseManager.getPlayer(username));
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> playersSet.remove(handler.player));
     }

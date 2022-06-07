@@ -145,6 +145,10 @@ public class PlotEvents {
             return;
         }
 
+        if (!PlotCubic.getDatabaseManager().existPlayer(handler.player.getName().getString())) {
+            handler.player.teleport(PlotCubic.getPlotWorldHandle().asWorld(), 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0, 0);
+        }
+
         PlotCubic.getDatabaseManager().newUser(handler.player.getName().getString());
     }
 

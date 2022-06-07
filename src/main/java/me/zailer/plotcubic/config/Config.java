@@ -2,9 +2,10 @@ package me.zailer.plotcubic.config;
 
 import me.zailer.plotcubic.plot.PlotChatStyle;
 
-public record Config(Database database, PlotChatStyle[] plotChatStyles, CustomColors customColors) {
+public record Config(General general, Database database, PlotChatStyle[] plotChatStyles, CustomColors customColors) {
 
     public static final Config DEFAULT = new Config(
+            new General(true),
             new Database(
                     "mysql",
                     "localhost",
@@ -49,6 +50,9 @@ public record Config(Database database, PlotChatStyle[] plotChatStyles, CustomCo
                     }
             )
     );
+
+    public record General(Boolean autoTeleport) {
+    }
 
     public record Database(String type, String host, Integer port, String user, String password,
                            String database, String table_name) {

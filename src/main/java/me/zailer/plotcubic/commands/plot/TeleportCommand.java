@@ -4,6 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.zailer.plotcubic.PlotCubic;
+import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -40,7 +41,7 @@ public class TeleportCommand extends SubcommandAbstract {
 
             MessageUtils.sendChatMessage(player, this.getTeleportMsg());
 
-            player.teleport(plotWorld, 0, 52, 0, 0f, 0f);
+            player.teleport(plotWorld, 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0f, 0f);
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }

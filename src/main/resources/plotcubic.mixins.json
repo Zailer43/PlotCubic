@@ -4,15 +4,16 @@
   "package": "me.zailer.plotcubic.mixin",
   "compatibilityLevel": "JAVA_17",
   "server": [
-    "piston.PistonHandlerMixin",
-    "translations.LocalizedTextVisitorMixin",
     "ArgumentTypesMixin",
     "CommandTreeS2CPacketMixin",
     "EndPortalBlockMixin",
     "ExplosionAccessor",
     "MinecraftServerAccessor",
     "ServerWorldMixin",
-    "TreeFeatureMixin"
+    "TreeFeatureMixin",
+    "piston.PistonHandlerMixin",
+    "translations.LocalizedTextVisitorMixin",
+    "PlayerManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
