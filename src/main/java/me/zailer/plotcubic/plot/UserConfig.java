@@ -12,17 +12,16 @@ public final class UserConfig {
     }
 
     public String getUsername() {
-        return username;
+        return this.username;
     }
 
-    public boolean getPlotChatEnabled() {
-        return plotChatEnabled;
-    }
-
-    public boolean togglePlotChat() {
-        this.plotChatEnabled = !this.plotChatEnabled;
-        PlotCubic.getDatabaseManager().updatePlotChat(this.username, this.plotChatEnabled);
+    public boolean isPlotChatEnabled() {
         return this.plotChatEnabled;
+    }
+
+    public void setPlotChat(boolean isEnabled) {
+        this.plotChatEnabled = isEnabled;
+        PlotCubic.getDatabaseManager().updatePlotChat(this.username, this.plotChatEnabled);
     }
 
 }

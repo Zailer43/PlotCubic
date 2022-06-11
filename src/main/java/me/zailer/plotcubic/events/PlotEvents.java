@@ -254,7 +254,7 @@ public class PlotEvents {
 
         UserConfig userConfig = PlotCubic.getUser(sender);
 
-        if (userConfig == null || !userConfig.getPlotChatEnabled())
+        if (userConfig == null || !userConfig.isPlotChatEnabled())
             return ActionResult.PASS;
 
         plot.sendPlotChatMessage(sender, message.getRaw());

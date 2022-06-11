@@ -96,6 +96,7 @@
   "text.plotcubic.help.teleport": "Teleports you to the Plot World dimension.",
   "text.plotcubic.help.trust": "Give some permissions on the plot to a player.",
   "text.plotcubic.help.visit": "Used to visit the specified plot.",
+  "text.plotcubic.help.toggle": "Disable or enable settings.",
   "text.plotcubic.info.claimed_date": "<p3_normal>▎ Claimed date: %s",
   "text.plotcubic.info.claimed_title": "<p3_icon>ℹ<p3_normal> Plot info <p3_icon>ℹ",
   "text.plotcubic.info.denied": "<p3_normal>▎ Denied: %s",

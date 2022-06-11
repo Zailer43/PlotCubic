@@ -23,6 +23,7 @@ public class PlotCommand {
             new InfoCommand(),
             new RemoveCommand(),
             new ReportCommand(),
+            new ToggleCommand(),
             new TrustedCommand(),
             new VisitCommand(),
             new TeleportCommand()
