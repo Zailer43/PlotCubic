@@ -16,7 +16,7 @@ import net.minecraft.server.world.ServerWorld;
 public class TeleportCommand extends SubcommandAbstract {
     @Override
     public String[] getAlias() {
-        return new String[] { "teleport", "t" };
+        return new String[] { "teleport", "tp" };
     }
 
     @Override

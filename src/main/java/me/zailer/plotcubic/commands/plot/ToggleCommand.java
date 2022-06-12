@@ -25,14 +25,13 @@ public class ToggleCommand extends SubcommandAbstract {
 
     @Override
     public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
-        LiteralArgumentBuilder<ServerCommandSource> adminCommand = CommandManager.literal(alias)
-                .requires(source -> source.hasPermissionLevel(4))
+        LiteralArgumentBuilder<ServerCommandSource> toggleCommand = CommandManager.literal(alias)
                 .executes(this::execute);
 
         for (var subCommand : SUB_COMMANDS)
-            subCommand.apply(adminCommand);
+            subCommand.apply(toggleCommand);
 
-        command.then(adminCommand);
+        command.then(toggleCommand);
     }
 
     @Override
