@@ -15,6 +15,7 @@ import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.TrustedPlayer;
 import me.zailer.plotcubic.utils.MessageUtils;
+import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -48,12 +49,7 @@ public class DenyCommand extends SubcommandAbstract {
         try {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
             String deniedUsername = serverCommandSource.getArgument("PLAYER", String.class);
-            String reason = null;
-
-            try {
-                reason = serverCommandSource.getArgument("REASON", String.class);
-            } catch (IllegalArgumentException ignored) {
-            }
+            String reason = Utils.getArg(serverCommandSource, String.class, "REASON");
 
             if (deniedUsername.equalsIgnoreCase(player.getName().getString())) {
                 MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.yourself");
@@ -93,7 +89,7 @@ public class DenyCommand extends SubcommandAbstract {
             DeniedPlayer deniedPlayer = new DeniedPlayer(deniedUsername, reason);
 
             if (removeTrustedSuccessful && deniedSuccessful) {
-                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.deny_successful", deniedUsername, reason);
+                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.deny_successful", deniedUsername, deniedPlayer.reason());
             } else {
                 MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.unexpected");
             }

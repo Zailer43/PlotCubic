@@ -1,10 +1,14 @@
 package me.zailer.plotcubic.utils;
 
+import com.mojang.brigadier.context.CommandContext;
 import me.zailer.plotcubic.PlotCubic;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+
+import javax.annotation.Nullable;
 
 public class Utils {
     public static void fillWithPos(BlockState block, int x, int y, int z, int x2, int y2, int z2) {
@@ -50,5 +54,14 @@ public class Utils {
         }
 
         fillWithPos(block, x, y, z, x + width, y + height, z + depth);
+    }
+
+    @Nullable
+    public static <T> T getArg(CommandContext<ServerCommandSource> source, Class<T> type, String name) {
+        try {
+            return source.getArgument(name, type);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 }
