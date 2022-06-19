@@ -3,7 +3,6 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
 import me.zailer.plotcubic.gui.PlotInfoGui;
@@ -60,7 +59,7 @@ public class InfoCommand extends SubcommandAbstract {
             return;
         }
 
-        Plot plot = PlotCubic.getDatabaseManager().getPlot(plotID);
+        Plot plot = Plot.getPlot(plotID);
 
         if (plot == null)
             MessageUtils.sendChatMessage(player, this.getUnclaimedMessage(plotID));
