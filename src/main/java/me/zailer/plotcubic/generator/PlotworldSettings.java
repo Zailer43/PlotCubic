@@ -14,6 +14,7 @@ import java.util.List;
 public final class PlotworldSettings {
     private final int roadSize;
     private final int plotSize;
+    private final int totalSize;
     private final int maxHeight;
     private final RegistryEntry<Biome> biome;
     private final BlockState roadBlock;
@@ -25,6 +26,7 @@ public final class PlotworldSettings {
     public PlotworldSettings(int roadSize, int plotSize, Biome biome, BlockState roadBlock, BlockState unclaimedBorderBlock, BlockState claimedBorderBlock, BlockState borderSign, List<FlatChunkGeneratorLayer> layers) {
         this.roadSize = roadSize;
         this.plotSize = plotSize;
+        this.totalSize = plotSize + roadSize + 2;
         this.biome = RegistryEntry.of(biome);
         this.roadBlock = roadBlock;
         this.unclaimedBorderBlock = unclaimedBorderBlock;
@@ -44,6 +46,10 @@ public final class PlotworldSettings {
 
     public int getPlotSize() {
         return this.plotSize;
+    }
+
+    public int getTotalSize() {
+        return this.totalSize;
     }
 
     public Biome getBiome() {

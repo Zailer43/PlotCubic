@@ -64,18 +64,14 @@ public class PlotManager {
     }
 
     public ZoneType getZone(int x, int z) {
-        int roadSize = this.settings.getRoadSize() + 1;
         int plotSize = this.settings.getPlotSize() + 1;
-        int offset = roadSize / 2;
-        int size = plotSize + roadSize;
-        int plotAndHalfRoad = plotSize + offset;
-        int xOffset = this.getPlotOffset(x, offset, size, false);
-        int zOffset = this.getPlotOffset(z, offset, size, false);
-        int xOffsetInvested = this.getPlotOffset(x, offset, size, true);
-        int zOffsetInvested = this.getPlotOffset(z, offset, size, true);
+        int size = this.settings.getTotalSize();
+        int halfPlot = plotSize / 2;
+        int xOffset = this.getPlotOffset(x, size) - halfPlot;
+        int zOffset = this.getPlotOffset(z, size) - halfPlot;
 
-        if (this.isSquare(offset, plotAndHalfRoad, xOffset, zOffset, xOffsetInvested, zOffsetInvested, 1)) {
-            if (this.isSquare(offset, plotAndHalfRoad, xOffset, zOffset, xOffsetInvested, zOffsetInvested, 0))
+        if (this.isPointInsideSquare(xOffset, zOffset, halfPlot, 1)) {
+            if (this.isPointInsideSquare(xOffset, zOffset, halfPlot, 0))
                 return ZoneType.PLOT;
             return ZoneType.BORDER;
         }
@@ -83,25 +79,21 @@ public class PlotManager {
         return ZoneType.ROAD;
     }
 
-    private int getPlotOffset(int pos, int offset, int size, boolean invested) {
-        pos -= offset;
+    private int getPlotOffset(int pos, int size) {
         pos %= size;
 
         if(pos < 0)
             pos += size;
 
-        if (invested)
-            pos = Math.abs(pos - size);
-
         return pos;
     }
 
-    private boolean isSquare(int pos1, int pos2, int x, int z, int x2, int z2, int enlarge) {
-        x += enlarge;
-        z -= enlarge;
-        x2 += enlarge;
-        z2 -= enlarge;
-        return ++pos1 <= x && pos1 < x2 && pos2 >= z && pos2 > z2;
+    private boolean isPointInsideSquare(int posX, int posZ, int halfSquareSize, int enlarge) {
+        int x = -halfSquareSize - enlarge;
+        int z = -halfSquareSize - enlarge;
+        int x2 = halfSquareSize + enlarge;
+        int z2 = halfSquareSize + enlarge;
+        return posX > x && posZ > z && posX <= x2 && posZ <= z2;
     }
 
     public BlockPos getPlotworldSpawn() {
