@@ -28,13 +28,8 @@ public record PlotID(int x, int z) {
     }
 
     private static int ofBlockPos(int pos) {
-        PlotManager plotManager = PlotManager.getInstance();
-        int roadSize = plotManager.getSettings().getRoadSize() + 1;
-        int plotSize = plotManager.getSettings().getPlotSize() + 1;
-        int offset = roadSize / 2;
-        int size = plotSize + roadSize;
+        int size = PlotManager.getInstance().getSettings().getTotalSize();
 
-        pos -= offset;
         pos = (int) Math.ceil(pos / (float) size);
 
         return pos;
