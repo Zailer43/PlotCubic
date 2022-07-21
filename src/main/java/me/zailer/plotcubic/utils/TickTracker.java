@@ -20,14 +20,12 @@ public class TickTracker {
     private static HashMap<PlotID, Plot> plotHashMap = new HashMap<>();
 
     public static void start() {
-        new Thread(() -> {
-            if (++tickCount % 20 == 0) {
-                tickCount = 0;
+        if (++tickCount % 20 == 0) {
+            tickCount = 0;
 
-                removeEntitiesFromRoad();
-                updatePlayerPlotEvent();
-            }
-        }).start();
+            removeEntitiesFromRoad();
+            updatePlayerPlotEvent();
+        }
     }
 
     private static void removeEntitiesFromRoad() {
