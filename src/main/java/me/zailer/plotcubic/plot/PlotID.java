@@ -69,11 +69,12 @@ public record PlotID(int x, int z) {
     }
 
     public float getSpawnOfX() {
-        return this.getSpawnPos(this.x, 0.5f);
+        int halfRoad = PlotManager.getInstance().getSettings().getRoadSize() / 2;
+        return this.getSpawnPos(this.x, 0.5f) - halfRoad;
     }
 
     public float getSpawnOfY() {
-        return PlotManager.getInstance().getSettings().getMaxHeight() + 1;
+        return PlotManager.getInstance().getSettings().getMaxHeight() + 2;
     }
 
     public float getSpawnOfZ() {
@@ -81,12 +82,9 @@ public record PlotID(int x, int z) {
     }
 
     private float getSpawnPos(int id, float inPercentageOfPlot) {
-        PlotManager plotManager = PlotManager.getInstance();
-        int roadSize = plotManager.getSettings().getRoadSize() + 1;
-        int plotSize = plotManager.getSettings().getPlotSize() + 1;
-        int size = plotSize + roadSize;
+        int size = PlotManager.getInstance().getSettings().getTotalSize();
 
-        return this.getPos(--id) + size * inPercentageOfPlot + roadSize - 1;
+        return this.getPos(--id) + size * inPercentageOfPlot;
     }
 
     public boolean equals(PlotID plotID) {
