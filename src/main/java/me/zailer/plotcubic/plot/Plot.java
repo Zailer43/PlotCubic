@@ -18,6 +18,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.chunk.Chunk;
 import org.jetbrains.annotations.NotNull;
@@ -69,36 +70,31 @@ public class Plot {
     }
 
     public void setBorder(BlockState block) {
-        new Thread(() -> {
-            PlotworldSettings settings = PlotManager.getInstance().getSettings();
-            int plotSize = settings.getPlotSize() + 1;
-            int y = settings.getMaxHeight() + 1;
-            int x = this.plotID.getXPos();
-            int z = this.plotID.getZPos();
+        PlotworldSettings settings = PlotManager.getInstance().getSettings();
+        int plotSize = settings.getPlotSize() + 1;
+        int y = settings.getMaxHeight() + 1;
+        int x = this.plotID.getXPos();
+        int z = this.plotID.getZPos();
 
-            Utils.fillWithDimensions(block, x, y, z, plotSize, 0, 0);
-            Utils.fillWithDimensions(block, x, y, z, 0, 0, plotSize);
+        Utils.fillWithDimensions(block, x, y, z, plotSize, 0, 0);
+        Utils.fillWithDimensions(block, x, y, z, 0, 0, plotSize);
 
-            x += plotSize;
-            z += plotSize;
+        x += plotSize;
+        z += plotSize;
 
-            Utils.fillWithDimensions(block, x, y, z, -plotSize, 0, 0);
-            Utils.fillWithDimensions(block, x, y, z, 0, 0, -plotSize);
-        }).start();
+        Utils.fillWithDimensions(block, x, y, z, -plotSize, 0, 0);
+        Utils.fillWithDimensions(block, x, y, z, 0, 0, -plotSize);
     }
 
     public void clearPlot(@Nullable ServerPlayerEntity player) {
-        new Thread(() -> {
-            long startTime = new Date().getTime();
-            this.removeEntities();
-            this.clearPlotTerrain();
+        long startTime = new Date().getTime();
+        this.removeEntities();
+        this.clearPlotTerrain();
 
-            if (player != null) {
-                long timeTaken = new Date().getTime() - startTime;
-                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.successful", timeTaken);
-            }
-
-        }).start();
+        if (player != null) {
+            long timeTaken = new Date().getTime() - startTime;
+            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.successful", String.valueOf(timeTaken));
+        }
     }
 
     private void clearPlotTerrain() {
@@ -107,33 +103,43 @@ public class Plot {
         PlotworldGenerator plotworldGenerator = (PlotworldGenerator) world.getChunkManager().getChunkGenerator();
         PlotworldSettings settings = PlotManager.getInstance().getSettings();
         PlotManager plotManager = PlotManager.getInstance();
-        int plotSize = settings.getPlotSize() - 1;
-        int absoluteX = this.plotID.getXPos();
-        int absoluteZ = this.plotID.getZPos();
+        int plotSizeWithBorder = settings.getPlotSize() + 2;
+        int xPos = this.plotID.getXPos();
+        int zPos = this.plotID.getZPos();
 
         Set<Chunk> chunkList = new HashSet<>();
-        int plotMaxChunkX = absoluteX / CHUNK_WIDTH;
-        int plotMaxChunkZ = absoluteZ / CHUNK_WIDTH;
 
-        for (int x = absoluteX - plotSize; x / CHUNK_WIDTH <= plotMaxChunkX; x += CHUNK_WIDTH) {
-            for (int z = absoluteZ - plotSize; z / CHUNK_WIDTH <= plotMaxChunkZ; z += CHUNK_WIDTH) {
-                chunkList.add(world.getChunk(new BlockPos(x, 0, z)));
+        //Note: this will break if for some reason the plots are not square
+        int xChunk = ChunkSectionPos.getSectionCoord(xPos);
+        int zChunk = ChunkSectionPos.getSectionCoord(zPos);
+        int oppositeCornerXChunk =  ChunkSectionPos.getSectionCoord(xPos + plotSizeWithBorder);
+
+        int plotChunkSize = oppositeCornerXChunk - xChunk;
+
+        //Add all the chunks of the plot to a set
+        for (int x = 0; x <= plotChunkSize; x++) {
+            for (int z = 0; z <= plotChunkSize; z++) {
+                chunkList.add(world.getChunk(xChunk + x, zChunk + z));
             }
         }
 
+        //Go through all the chunks and regenerate them one at a time
         for (var chunk : chunkList) {
             ChunkPos chunkPos = chunk.getPos();
             for (int x = 0; x != CHUNK_WIDTH; x++) {
                 for (int z = 0; z != CHUNK_WIDTH; z++) {
-                    absoluteX = chunkPos.getOffsetX(x);
-                    absoluteZ = chunkPos.getOffsetZ(z);
-                    if (PlotID.isDifferentPlot(plotID, absoluteX, absoluteZ))
+                    xPos = chunkPos.getOffsetX(x);
+                    zPos = chunkPos.getOffsetZ(z);
+                    if (PlotID.isDifferentPlot(this.plotID, xPos, zPos))
                         continue;
 
+                    //FIXME: at no time is the light taken into account, preferably it has to be recalculated
+                    // after finishing generating the chunks so that there are no unnecessary updates
                     plotworldGenerator.regen(plotManager, chunk, x, z);
                 }
             }
-            playerManager.sendToAround(null, absoluteX, 0, absoluteZ, 512, world.getRegistryKey(), new ChunkDataS2CPacket(world.getChunk(chunkPos.x, chunkPos.z), world.getLightingProvider(), null, null, true));
+            //Send the chunk to nearby players
+            playerManager.sendToAround(null, xPos, 0, zPos, 512, world.getRegistryKey(), new ChunkDataS2CPacket(world.getChunk(chunkPos.x, chunkPos.z), world.getLightingProvider(), null, null, true));
         }
     }
 

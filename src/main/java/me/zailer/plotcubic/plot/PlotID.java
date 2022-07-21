@@ -49,10 +49,16 @@ public record PlotID(int x, int z) {
         return plotIdString.matches(PlotID.PLOT_ID_REGEX);
     }
 
+    /**
+     * @return Returns the coordinate of the plot border to the southwest (negative X and Z)
+     */
     public int getXPos() {
         return this.getPos(this.x - 1);
     }
 
+    /**
+     * @return Returns the coordinate of the plot border to the southwest (negative X and Z)
+     */
     public int getZPos() {
         return this.getPos(this.z - 1);
     }
