@@ -50,20 +50,16 @@ public record PlotID(int x, int z) {
     }
 
     public int getXPos() {
-        return this.getPos(this.x) - 2;
+        return this.getPos(this.x - 1);
     }
 
     public int getZPos() {
-        return this.getPos(this.z) - 1;
+        return this.getPos(this.z - 1);
     }
 
     private int getPos(int id) {
         PlotManager plotManager = PlotManager.getInstance();
-        int roadSize = plotManager.getSettings().getRoadSize() + 1;
-        int plotSize = plotManager.getSettings().getPlotSize() + 1;
-        int size = plotSize + roadSize;
-
-        return id * size;
+        return id * plotManager.getSettings().getTotalSize();
     }
 
     public float getSpawnOfX() {

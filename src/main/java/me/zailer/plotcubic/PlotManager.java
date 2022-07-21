@@ -64,9 +64,9 @@ public class PlotManager {
     }
 
     public ZoneType getZone(int x, int z) {
-        int plotSize = this.settings.getPlotSize() + 1;
+        int plotSize = this.settings.getPlotSize();
         int size = this.settings.getTotalSize();
-        int halfPlot = plotSize / 2;
+        int halfPlot = Math.round(plotSize / 2f);
         int xOffset = this.getPlotOffset(x, size) - halfPlot;
         int zOffset = this.getPlotOffset(z, size) - halfPlot;
 

@@ -73,10 +73,10 @@ public class Plot {
             PlotworldSettings settings = PlotManager.getInstance().getSettings();
             int plotSize = settings.getPlotSize() + 1;
             int y = settings.getMaxHeight() + 1;
-            int x = this.plotID.getXPos() - plotSize;
-            int z = this.plotID.getZPos() - plotSize + 1;
+            int x = this.plotID.getXPos();
+            int z = this.plotID.getZPos();
 
-            Utils.fillWithDimensions(block, ++x, y, z, plotSize, 0, 0);
+            Utils.fillWithDimensions(block, x, y, z, plotSize, 0, 0);
             Utils.fillWithDimensions(block, x, y, z, 0, 0, plotSize);
 
             x += plotSize;
