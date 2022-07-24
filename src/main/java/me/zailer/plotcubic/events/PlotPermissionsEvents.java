@@ -1,7 +1,7 @@
 package me.zailer.plotcubic.events;
 
 import me.zailer.plotcubic.PlotCubic;
-import me.zailer.plotcubic.enums.PlotPermission;
+import me.zailer.plotcubic.plot.PlotPermission;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.TrustedPlayer;

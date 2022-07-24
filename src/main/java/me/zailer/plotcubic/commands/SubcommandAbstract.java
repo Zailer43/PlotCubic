@@ -49,4 +49,8 @@ public abstract class SubcommandAbstract {
     public MutableText getValidUsage() {
         return null;
     }
+
+    public String getCommandPermission() {
+        return "plotcubic.command." + this.getAlias()[0] + ".use";
+    }
 }

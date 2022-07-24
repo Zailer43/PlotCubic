@@ -3,8 +3,8 @@ package me.zailer.plotcubic.database;
 import com.mojang.logging.LogUtils;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.config.Config;
-import me.zailer.plotcubic.enums.PlotPermission;
-import me.zailer.plotcubic.enums.ReportReason;
+import me.zailer.plotcubic.plot.PlotPermission;
+import me.zailer.plotcubic.plot.ReportReason;
 import me.zailer.plotcubic.plot.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -136,11 +136,10 @@ public class DatabaseManager {
             statement.setInt(2, plot_id_z);
 
             ResultSet rs = statement.executeQuery();
-            PlotPermission[] plotPermissions = PlotPermission.values();
 
             while(rs.next()) {
                 String username = rs.getString("trusted_username");
-                PlotPermission permission = plotPermissions[rs.getInt("permission_index")];
+                PlotPermission permission = PlotPermission.PERMISSION_HASH_MAP.get(rs.getString("permission_id"));
                 if (playersPermissionsHashMap.containsKey(username)) {
                     playersPermissionsHashMap.get(username).add(permission);
                 } else {
@@ -166,17 +165,16 @@ public class DatabaseManager {
         try (Connection conn = database.getConnection()) {
             PreparedStatement statement;
 
-            statement = conn.prepareStatement("SELECT `permission_index` FROM `trusted` WHERE `plot_id_x` = ? AND `plot_id_z` = ? AND `trusted_username` LIKE ?;");
+            statement = conn.prepareStatement("SELECT `permission_id` FROM `trusted` WHERE `plot_id_x` = ? AND `plot_id_z` = ? AND `trusted_username` LIKE ?;");
 
             statement.setInt(1, plotId.x());
             statement.setInt(2, plotId.z());
             statement.setString(3, username);
 
             ResultSet rs = statement.executeQuery();
-            PlotPermission[] plotPermissions = PlotPermission.values();
 
             while(rs.next()) {
-                trustedPlayer.addPermission(plotPermissions[rs.getInt("permission_index")]);
+                trustedPlayer.addPermission(PlotPermission.PERMISSION_HASH_MAP.get(rs.getString("permission_id")));
             }
 
             return trustedPlayer;
@@ -206,12 +204,12 @@ public class DatabaseManager {
             for (var permission : trustedPlayer.permissions()) {
                 PreparedStatement statement;
 
-                statement = conn.prepareStatement("INSERT INTO `trusted`(`plot_id_x`, `plot_id_z`, `trusted_username`, `permission_index`) VALUES (?, ?, ?, ?);");
+                statement = conn.prepareStatement("INSERT INTO `trusted`(`plot_id_x`, `plot_id_z`, `trusted_username`, `permission_id`) VALUES (?, ?, ?, ?);");
 
                 statement.setInt(1, plot_id_x);
                 statement.setInt(2, plot_id_z);
                 statement.setString(3, trusted_username);
-                statement.setInt(4, permission.ordinal());
+                statement.setString(4, permission.getId());
 
                 statement.execute();
             }
@@ -248,7 +246,7 @@ public class DatabaseManager {
                     this.getAllTrusted(plot_id_x, plot_id_z),
                     this.getDenied(plot_id_x, plot_id_z),
                     rs.getDate("date_claimed"),
-                    GameMode.byId(rs.getByte("gamemode_id"), null),
+                    GameMode.byName(rs.getString("gamemode_id"), null),
                     PlotChatStyle.byId(rs.getString("chat_style_id"))
             );
 
@@ -266,7 +264,7 @@ public class DatabaseManager {
         try (Connection conn = database.getConnection()) {
             PreparedStatement statement = conn.prepareStatement("UPDATE `plots` SET `gamemode_id` = ? WHERE `id_x` = ? AND `id_z` = ?;");
 
-            statement.setByte(1, (byte) gameMode.getId());
+            statement.setString(1, gameMode.getName());
             statement.setInt(2, plot_id_x);
             statement.setInt(3, plot_id_z);
 
@@ -277,13 +275,13 @@ public class DatabaseManager {
         }
     }
 
-    private void addGameMode(byte id) {
+    private void addGameMode(String id) {
         try (Connection conn = database.getConnection()) {
             PreparedStatement statement = conn.prepareStatement("""
                         INSERT INTO `gamemodes` (`id`) VALUES (?)
                 """);
 
-            statement.setByte(1, id);
+            statement.setString(1, id);
 
             statement.execute();
         } catch (SQLException e) {
@@ -527,9 +525,9 @@ public class DatabaseManager {
             long id = rs.getLong("id");
 
             for (var reportReason : reportReasonSet) {
-                PreparedStatement insertReasonStatement = conn.prepareStatement("INSERT INTO `reportreasons`(`reason_index`, `report_id`) VALUES (?, ?);");
+                PreparedStatement insertReasonStatement = conn.prepareStatement("INSERT INTO `reportreasons`(`reason_id`, `report_id`) VALUES (?, ?);");
 
-                insertReasonStatement.setInt(1, reportReason.ordinal());
+                insertReasonStatement.setString(1, reportReason.getId());
                 insertReasonStatement.setLong(2, id);
 
                 insertReasonStatement.execute();
@@ -555,7 +553,7 @@ public class DatabaseManager {
         }
     }
 
-    public boolean hasPendingReport(PlotID plotId, String reportingUser) {
+    public boolean hasUnmoderatedReport(PlotID plotId, String reportingUser) {
         try (Connection conn = database.getConnection()) {
 
             PreparedStatement statement = conn.prepareStatement("SELECT * FROM `reports` WHERE `plot_id_x` = ? AND `plot_id_z` = ? AND `reporting_user` = ? AND `is_moderated` = FALSE;");
@@ -570,6 +568,25 @@ public class DatabaseManager {
         } catch (SQLException e) {
             handleException(e);
             return false;
+        }
+    }
+
+    public int getTotalUnmoderatedReports(String reportingUser) {
+        int total = 0;
+        try (Connection conn = database.getConnection()) {
+
+            PreparedStatement statement = conn.prepareStatement("SELECT * FROM `reports` WHERE `reporting_user` = ? AND `is_moderated` = FALSE;");
+
+            statement.setString(1, reportingUser);
+
+            ResultSet rs = statement.executeQuery();
+
+            while (rs.next())
+                total++;
+            return total;
+        } catch (SQLException e) {
+            handleException(e);
+            return total;
         }
     }
 
@@ -600,10 +617,9 @@ public class DatabaseManager {
                 reasonStatement.setLong(1, id);
 
                 ResultSet resultSetReasons = reasonStatement.executeQuery();
-                ReportReason[] reportReasons = ReportReason.values();
 
                 while (resultSetReasons.next())
-                    reportedPlot.addReason(reportReasons[resultSetReasons.getInt("reason_index")]);
+                    reportedPlot.addReason(ReportReason.REPORT_REASON_HASH_MAP.get(resultSetReasons.getString("reason_id")));
 
                 reportedPlotList.add(reportedPlot);
             }
@@ -656,7 +672,7 @@ public class DatabaseManager {
 
             conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS `gamemodes` (
-                      `id` tinyint NOT NULL
+                      `id` varchar(24) DEFAULT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
 
@@ -670,21 +686,15 @@ public class DatabaseManager {
                       `music` varchar(32) DEFAULT NULL,
                       `team` varchar(32) DEFAULT NULL,
                       `owner_username` varchar(32) DEFAULT NULL,
-                      `gamemode_id` tinyint DEFAULT -1,
+                      `gamemode_id` varchar(24) DEFAULT NULL,
                       `date_claimed` timestamp NOT NULL,
                       `chat_style_id` varchar(32) NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
 
             conn.prepareStatement("""
-                    CREATE TABLE IF NOT EXISTS `reportreasontype` (
-                      `index` int(11) NOT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            """).execute();
-
-            conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS `reportreasons` (
-                      `reason_index` int(11) NOT NULL,
+                      `reason_id` varchar(24) NOT NULL,
                       `report_id` bigint(20) NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
@@ -709,17 +719,11 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
-                    CREATE TABLE IF NOT EXISTS `permissions` (
-                      `index` int(11) NOT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            """).execute();
-
-            conn.prepareStatement("""
                     CREATE TABLE IF NOT EXISTS `trusted` (
                       `plot_id_x` int(11) NOT NULL,
                       `plot_id_z` int(11) NOT NULL,
                       `trusted_username` varchar(16) NOT NULL,
-                      `permission_index` int(11) NOT NULL
+                      `permission_id` varchar(32) NOT NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """).execute();
 
@@ -763,15 +767,9 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
-                    ALTER TABLE `reportreasontype`
-                      ADD PRIMARY KEY (`index`);
-            """).execute();
-
-            conn.prepareStatement("""
                     ALTER TABLE `reportreasons`
-                      ADD PRIMARY KEY (`reason_index`, `report_id`),
-                      ADD KEY `fk_reportreasons_reports` (`report_id`),
-                      ADD KEY `fk_reportreasons_reportreasontype` (`reason_index`);
+                      ADD PRIMARY KEY (`reason_id`, `report_id`),
+                      ADD KEY `fk_reportreasons_reports` (`report_id`);
             """).execute();
 
             conn.prepareStatement("""
@@ -787,16 +785,10 @@ public class DatabaseManager {
             """).execute();
 
             conn.prepareStatement("""
-                    ALTER TABLE `permissions`
-                      ADD PRIMARY KEY (`index`);
-            """).execute();
-
-            conn.prepareStatement("""
                     ALTER TABLE `trusted`
-                      ADD PRIMARY KEY (`plot_id_x`,`plot_id_z`,`trusted_username`, `permission_index`),
+                      ADD PRIMARY KEY (`plot_id_x`,`plot_id_z`,`trusted_username`, `permission_id`),
                       ADD KEY `fk_trusted_users` (`trusted_username`),
-                      ADD KEY `fk_trusted_plots` (`plot_id_x`, `plot_id_z`),
-                      ADD KEY `fk_trusted_permissions` (`permission_index`);
+                      ADD KEY `fk_trusted_plots` (`plot_id_x`, `plot_id_z`);
             """).execute();
 
             conn.prepareStatement("""
@@ -826,8 +818,7 @@ public class DatabaseManager {
 
             conn.prepareStatement("""
                     ALTER TABLE `reportreasons`
-                      ADD CONSTRAINT `fk_reportreasons_reports` FOREIGN KEY (`report_id`) REFERENCES `reports` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-                      ADD CONSTRAINT `fk_reportreasons_reportreasontype` FOREIGN KEY (`reason_index`) REFERENCES `reportreasontype` (`index`) ON DELETE CASCADE ON UPDATE CASCADE;
+                      ADD CONSTRAINT `fk_reportreasons_reports` FOREIGN KEY (`report_id`) REFERENCES `reports` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
             """).execute();
 
             conn.prepareStatement("""
@@ -839,35 +830,11 @@ public class DatabaseManager {
             conn.prepareStatement("""
                     ALTER TABLE `trusted`
                       ADD CONSTRAINT `fk_trusted_users` FOREIGN KEY (`trusted_username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE,
-                      ADD CONSTRAINT `fk_trusted_plots` FOREIGN KEY (`plot_id_x`,`plot_id_z`) REFERENCES `plots` (`id_x`, `id_z`) ON DELETE CASCADE ON UPDATE CASCADE,
-                      ADD CONSTRAINT `fk_trusted_permissions` FOREIGN KEY (`permission_index`) REFERENCES `permissions` (`index`) ON DELETE CASCADE ON UPDATE CASCADE;
+                      ADD CONSTRAINT `fk_trusted_plots` FOREIGN KEY (`plot_id_x`,`plot_id_z`) REFERENCES `plots` (`id_x`, `id_z`) ON DELETE CASCADE ON UPDATE CASCADE
             """).execute();
 
-            for (var permission : PlotPermission.values()) {
-                PreparedStatement statement = conn.prepareStatement("""
-                        INSERT INTO `permissions` (`index`) VALUES (?)
-                """);
-
-                statement.setInt(1, permission.ordinal());
-
-                statement.execute();
-            }
-
-            for (var reportReason : ReportReason.values()) {
-                PreparedStatement statement = conn.prepareStatement("""
-                        INSERT INTO `reportreasontype` (`index`) VALUES (?)
-                """);
-
-                statement.setInt(1, reportReason.ordinal());
-
-                statement.execute();
-            }
-
-            this.addGameMode((byte) -1); //default
-
-            for (var gameMode : GameMode.values()) {
-                this.addGameMode((byte) gameMode.getId());
-            }
+            for (var gameMode : GameMode.values())
+                this.addGameMode(gameMode.getName());
 
         } catch (SQLException e) {
             handleException(e);

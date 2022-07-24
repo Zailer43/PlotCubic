@@ -3,6 +3,7 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
@@ -26,6 +27,7 @@ public class ToggleCommand extends SubcommandAbstract {
     @Override
     public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
         LiteralArgumentBuilder<ServerCommandSource> toggleCommand = CommandManager.literal(alias)
+                .requires(Permissions.require(this.getCommandPermission()))
                 .executes(this::execute);
 
         for (var subCommand : SUB_COMMANDS)

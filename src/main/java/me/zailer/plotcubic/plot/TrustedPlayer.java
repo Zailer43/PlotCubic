@@ -1,6 +1,5 @@
 package me.zailer.plotcubic.plot;
 
-import me.zailer.plotcubic.enums.PlotPermission;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.Set;

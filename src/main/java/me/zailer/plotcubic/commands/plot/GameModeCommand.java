@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
@@ -31,6 +32,7 @@ public class GameModeCommand extends SubcommandAbstract {
     public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
         command.then(
                 CommandManager.literal(alias)
+                        .requires(Permissions.require(this.getCommandPermission()))
                         .executes(this::executeValidUsages)
                         .then(
                                 CommandManager.argument("GAMEMODE", StringArgumentType.word())
@@ -48,6 +50,11 @@ public class GameModeCommand extends SubcommandAbstract {
 
             if (gameMode == null) {
                 MessageUtils.sendChatMessage(player, "error.plotcubic.invalid_game_mode");
+                return 1;
+            }
+
+            if (!Permissions.check(player, "plotcubic.command.gamemode." + gameMode.getName())) {
+                MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.gamemode.game_mode");
                 return 1;
             }
 

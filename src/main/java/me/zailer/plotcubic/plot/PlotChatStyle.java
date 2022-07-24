@@ -3,6 +3,7 @@ package me.zailer.plotcubic.plot;
 import eu.pb4.placeholders.PlaceholderAPI;
 import eu.pb4.placeholders.TextParser;
 import eu.pb4.placeholders.util.TextParserUtils;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.config.Config;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -59,5 +60,9 @@ public record PlotChatStyle(String id, String name, String itemId, String messag
         }
 
         return Config.DEFAULT.plotChatStyles()[0];
+    }
+
+    public boolean hasPermission(ServerPlayerEntity player) {
+        return Permissions.check(player, "plotcubic.chatstyle.style." + this.id);
     }
 }

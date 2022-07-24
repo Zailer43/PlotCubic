@@ -1,5 +1,6 @@
 package me.zailer.plotcubic.plot;
 
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.commands.PlotCommand;
@@ -16,7 +17,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.GameMode;
@@ -240,10 +240,10 @@ public class Plot {
 
 
     public boolean hasDeny(ServerPlayerEntity player) {
-        return this.hasDeny(player.getName().getString());
-    }
+        if (Permissions.check(player, "plotcubic.bypass.deny"))
+            return false;
 
-    public boolean hasDeny(String username) {
+        String username = player.getName().getString();
         for (var deniedPlayer : this.deniedPlayers) {
             if (deniedPlayer.isPlayer(username))
                 return true;

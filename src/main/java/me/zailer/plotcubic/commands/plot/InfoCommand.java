@@ -3,6 +3,7 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
 import me.zailer.plotcubic.gui.PlotInfoGui;
@@ -25,6 +26,7 @@ public class InfoCommand extends SubcommandAbstract {
     public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
         command.then(
                 CommandManager.literal(alias)
+                        .requires(Permissions.require(this.getCommandPermission()))
                         .executes(this::execute)
         );
     }
@@ -63,6 +65,8 @@ public class InfoCommand extends SubcommandAbstract {
 
         if (plot == null)
             MessageUtils.sendChatMessage(player, this.getUnclaimedMessage(plotID));
+        else if (!plot.isOwner(player) && !Permissions.check(player, "plotcubic.command.info.use_without_owner"))
+            MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.info.use_without_owner");
         else
             new PlotInfoGui().open(player, plot);
     }

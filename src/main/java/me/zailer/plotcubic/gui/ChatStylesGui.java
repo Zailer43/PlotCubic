@@ -17,6 +17,8 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
@@ -29,30 +31,12 @@ public class ChatStylesGui {
 
     public void open(ServerPlayerEntity player, Plot plot) {
         this.gui = new SimpleGui(ScreenHandlerType.GENERIC_9X6, player, false);
-        PlotChatStyle[] chatStyles = PlotCubic.getConfig().plotChatStyles();
         this.chatStyleSelected = plot.getChatStyle();
         this.selectedIndex = 0;
 
         this.gui.setTitle(new TranslatableText("gui.plotcubic.chat_style.title"));
 
-        for (int i = 0; i != chatStyles.length; i++) {
-            PlotChatStyle chatStyle = chatStyles[i];
-            Item item = Registry.ITEM.get(new Identifier(chatStyle.itemId()));
-
-            GuiElementBuilder builder = new GuiElementBuilder()
-                    .setItem(item)
-                    .setName(new MessageUtils(chatStyle.name(), MessageUtils.getHighlight()).get())
-                    .addLoreLine(chatStyle.getMessage(plot.getPlotID(), player, "Hello world!"))
-                    .setCallback((index, type, action) -> this.setCallback(index, chatStyle));
-
-            if (this.chatStyleSelected == chatStyle) {
-                builder.glow();
-                this.selectedIndex = i;
-                builder.addLoreLine(new TranslatableText("gui.plotcubic.chat_style.selected"));
-            }
-
-            this.gui.addSlot(builder);
-        }
+        this.addStyles(player, plot);
 
         GuiElementBuilder acceptItem = new GuiElementBuilder()
                 .setItem(Items.EMERALD_BLOCK)
@@ -75,14 +59,40 @@ public class ChatStylesGui {
         this.gui.open();
     }
 
+    public void addStyles(ServerPlayerEntity player, Plot plot) {
+        PlotChatStyle[] chatStyles = PlotCubic.getConfig().plotChatStyles();
+        for (int i = 0; i != chatStyles.length; i++) {
+            PlotChatStyle chatStyle = chatStyles[i];
+            Item item = Registry.ITEM.get(new Identifier(chatStyle.itemId()));
+
+            boolean hasPermission = chatStyle.hasPermission(player);
+            GuiElementBuilder builder = new GuiElementBuilder()
+                    .setItem(hasPermission ? item : Items.GRAY_DYE)
+                    .setName(new MessageUtils(chatStyle.name(), MessageUtils.getHighlight()).get())
+                    .addLoreLine(chatStyle.getMessage(plot.getPlotID(), player, "Hello world!"))
+                    .addLoreLine(LiteralText.EMPTY)
+                    .setCallback((index, type, action) -> this.setCallback(player, index, chatStyle));
+
+            if (this.chatStyleSelected == chatStyle) {
+                builder.glow();
+                this.selectedIndex = i;
+                builder.addLoreLine(new TranslatableText("gui.plotcubic.chat_style.selected"));
+            } else {
+                builder.addLoreLine(new TranslatableText("gui.plotcubic.chat_style." + (hasPermission ? "has_permission" : "not_has_permission")));
+            }
+
+            this.gui.addSlot(builder);
+        }
+    }
+
     private void save(ServerPlayerEntity player, Plot plot) {
         plot.setChatStyle(this.chatStyleSelected);
         PlotCubic.getDatabaseManager().updateChatStyle(this.chatStyleSelected, plot.getPlotID());
-        MessageUtils.sendChatMessage(player,"text.plotcubic.plot.chat_style.successful", this.chatStyleSelected.name());
+        MessageUtils.sendChatMessage(player, "text.plotcubic.plot.chat_style.successful", this.chatStyleSelected.name());
     }
 
-    private void setCallback(int index, PlotChatStyle chatStyle) {
-        if (index == this.selectedIndex)
+    private void setCallback(ServerPlayerEntity player, int index, PlotChatStyle chatStyle) {
+        if (index == this.selectedIndex || !chatStyle.hasPermission(player))
             return;
 
         this.updateCurrentSelectedItem(index, chatStyle);
@@ -99,7 +109,11 @@ public class ChatStylesGui {
         assert nbt != null;
         NbtCompound display = nbt.getCompound(ItemStack.DISPLAY_KEY);
         NbtList lore = display.getList(ItemStack.LORE_KEY, NbtElement.STRING_TYPE);
-        lore.add(NbtString.of(Text.Serializer.toJson(new TranslatableText("gui.plotcubic.chat_style.selected"))));
+        lore.remove(lore.size() - 1);
+        lore.add(NbtString.of(Text.Serializer.toJson(
+                new TranslatableText("gui.plotcubic.chat_style.selected")
+                        .setStyle(Style.EMPTY.withItalic(false)))
+        ));
     }
 
     private void updatePreviousSelectedItem(int index) {
@@ -115,5 +129,11 @@ public class ChatStylesGui {
         NbtCompound display = nbt.getCompound(ItemStack.DISPLAY_KEY);
         NbtList lore = display.getList(ItemStack.LORE_KEY, NbtElement.STRING_TYPE);
         lore.remove(lore.size() - 1);
+        //Note: if the user stops having permission of this style
+        // and changes to another one he will temporarily see until he reopens the gui that they have permissions
+        lore.add(NbtString.of(Text.Serializer.toJson(
+                new TranslatableText("gui.plotcubic.chat_style.has_permission")
+                        .setStyle(Style.EMPTY.withItalic(false)))
+        ));
     }
 }

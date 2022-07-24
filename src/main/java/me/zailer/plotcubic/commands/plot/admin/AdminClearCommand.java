@@ -1,19 +1,31 @@
 package me.zailer.plotcubic.commands.plot.admin;
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.plot.ClearCommand;
 import me.zailer.plotcubic.gui.ConfirmationGui;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.utils.MessageUtils;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.List;
 
 public class AdminClearCommand extends ClearCommand {
+
+    @Override
+    public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
+        command.then(
+                CommandManager.literal(alias)
+                        .requires(Permissions.require("plotcubic.command.admin_clear.use"))
+                        .executes(this::execute)
+        );
+    }
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {

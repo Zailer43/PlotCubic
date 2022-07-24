@@ -14,6 +14,14 @@ repositories {
     // for more information about repositories.
     maven { url = 'https://maven.nucleoid.xyz/' }
     maven { url = 'https://jitpack.io' }
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 dependencies {
@@ -23,7 +31,6 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation(fabricApi.module('fabric-dimensions-v1', project.fabric_version))
     modImplementation(fabricApi.module('fabric-command-api-v1', project.fabric_version))
@@ -34,6 +41,9 @@ dependencies {
     modImplementation include("eu.pb4:sgui:${project.sgui_version}")
     modImplementation include("fr.catcore:server-translations-api:${project.server_translations_api_version}")
     modImplementation include("eu.pb4:placeholder-api:${project.placeholder_api_version}")
+
+    modImplementation "me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}"
+    modImplementation "maven.modrinth:luckperms:5.3.86"
 
     implementation "com.zaxxer:HikariCP:${project.hikaricp_version}"
     implementation "mysql:mysql-connector-java:${project.mysql_connector_version}"

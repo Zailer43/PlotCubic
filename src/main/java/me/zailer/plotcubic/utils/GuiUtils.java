@@ -11,6 +11,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.TranslatableText;
 
+import java.util.List;
 import java.util.Set;
 
 public class GuiUtils {
@@ -24,9 +25,9 @@ public class GuiUtils {
         }
     }
 
-    public static <BooleanOption extends IBooleanOption> void setBoolOption(SlotHolder gui, int index, BooleanOption option, Set<BooleanOption> trueOptions) {
+    public static <BooleanOption extends IBooleanOption> void setBoolOption(SlotHolder gui, int index, BooleanOption option, Set<BooleanOption> optionsInTrue) {
         gui.setSlot(index, getInfoItem(option));
-        gui.setSlot(index + 9, getBoolItem(option, trueOptions));
+        gui.setSlot(index + 9, getBoolItem(option, optionsInTrue));
     }
 
     private static GuiElementBuilder getInfoItem(IBooleanOption option) {
@@ -44,26 +45,26 @@ public class GuiUtils {
         return builder;
     }
 
-    private static <BooleanOption extends IBooleanOption> GuiElementBuilder getBoolItem(BooleanOption option, Set<BooleanOption> trueOptions) {
-        boolean isOptionTrue = trueOptions.contains(option);
+    private static <BooleanOption extends IBooleanOption> GuiElementBuilder getBoolItem(BooleanOption option, Set<BooleanOption> optionsInTrue) {
+        boolean isOptionTrue = optionsInTrue.contains(option);
 
         return new GuiElementBuilder()
                 .setItem(getBooleanItem(isOptionTrue))
                 .setName(getBooleanName(isOptionTrue))
-                .setCallback((index, type, action, gui) -> getBoolCallback(gui, index, option, trueOptions));
+                .setCallback((index, type, action, gui) -> getBoolCallback(gui, index, option, optionsInTrue));
     }
 
-    private static <BooleanOption extends IBooleanOption> void getBoolCallback(SlotHolder gui, int index, BooleanOption option, Set<BooleanOption> trueOptions) {
-        boolean isOptionTrue = trueOptions.contains(option);
+    private static <BooleanOption extends IBooleanOption> void getBoolCallback(SlotHolder gui, int index, BooleanOption option, Set<BooleanOption> optionsInTrue) {
+        boolean isOptionTrue = optionsInTrue.contains(option);
         if (isOptionTrue)
-            trueOptions.remove(option);
+            optionsInTrue.remove(option);
         else
-            trueOptions.add(option);
+            optionsInTrue.add(option);
 
         ItemStack stack = getBooleanItem(!isOptionTrue).getDefaultStack();
         stack.setCustomName(getBooleanName(!isOptionTrue));
 
-        gui.setSlot(index, stack, (index2, type2, action2, gui2) -> getBoolCallback(gui, index, option, trueOptions));
+        gui.setSlot(index, stack, (index2, type2, action2, gui2) -> getBoolCallback(gui, index, option, optionsInTrue));
     }
 
     private static Item getBooleanItem(boolean value) {
@@ -72,5 +73,19 @@ public class GuiUtils {
 
     private static MutableText getBooleanName(boolean value) {
         return new TranslatableText(value ? "gui.plotcubic.true" : "gui.plotcubic.false").setStyle(Style.EMPTY.withItalic(false));
+    }
+
+    public static <BooleanOption extends IBooleanOption> void loadPage(SlotHolder gui, int pageIndex, List<BooleanOption> allOptions, Set<BooleanOption> optionsInTrue) {
+        for (int i = 9; i != 45; i++)
+            gui.clearSlot(i);
+
+        for (int i = 0; i != 18; i++) {
+            int optionsIndex = i * pageIndex;
+            if (optionsIndex >= allOptions.size())
+                return;
+
+            int slotIndex = i + (i > 8 ? 18 : 9);
+            GuiUtils.setBoolOption(gui, slotIndex, allOptions.get(optionsIndex), optionsInTrue);
+        }
     }
 }

@@ -5,7 +5,7 @@ import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.layered.Layer;
 import eu.pb4.sgui.api.gui.layered.LayerView;
 import eu.pb4.sgui.api.gui.layered.LayeredGui;
-import me.zailer.plotcubic.enums.PlotPermission;
+import me.zailer.plotcubic.plot.PlotPermission;
 import me.zailer.plotcubic.plot.DeniedPlayer;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.TrustedPlayer;
@@ -51,14 +51,14 @@ public class PlotInfoGui {
         GuiElementBuilder trustedItem = new GuiElementBuilder()
                 .setItem(Items.TRIPWIRE_HOOK)
                 .setName(new TranslatableText("gui.plotcubic.info.trusted.title"))
-                .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.trusted.count", plot.getTrusted().size()))
+                .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.trusted.count", String.valueOf(plot.getTrusted().size())))
                 .addLoreLine(new TranslatableText("gui.plotcubic.click_for_details"))
                 .setCallback((index, type, action) -> this.addPermissionsLayer(gui, plot.getTrusted()));
 
         GuiElementBuilder deniedItem = new GuiElementBuilder()
                 .setItem(Items.BARRIER)
                 .setName(new TranslatableText("gui.plotcubic.info.denied.title"))
-                .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.denied.count", plot.getDeniedPlayers().size()))
+                .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.denied.count", String.valueOf(plot.getDeniedPlayers().size())))
                 .addLoreLine(new TranslatableText("gui.plotcubic.click_for_details"))
                 .setCallback((index, type, action) -> this.addDeniedLayer(gui, plot.getDeniedPlayers(), player.getServer()));
 

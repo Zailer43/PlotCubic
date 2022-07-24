@@ -5,8 +5,7 @@ import eu.pb4.sgui.api.ClickType;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.SimpleGui;
 import me.zailer.plotcubic.PlotCubic;
-import me.zailer.plotcubic.commands.plot.VisitCommand;
-import me.zailer.plotcubic.enums.ReportReason;
+import me.zailer.plotcubic.plot.ReportReason;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.plot.ReportedPlot;
@@ -19,15 +18,12 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.TranslatableText;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class ReportGui {
     public void openAddReport(ServerPlayerEntity reportingPlayer, Plot reportedPlot) {
-        SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X3, reportingPlayer, false);
-        Set<ReportReason> reportReasonSet = new HashSet<>();
+        SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X6, reportingPlayer, false);
+        Set<ReportReason> reportReasonsInTrue = new HashSet<>();
 
         gui.setTitle(new TranslatableText("gui.plotcubic.report.title", reportedPlot.getOwnerUsername()));
 
@@ -36,7 +32,7 @@ public class ReportGui {
                 .setName(new TranslatableText("gui.plotcubic.accept"))
                 .setCallback((index, type, action) -> {
                             gui.close();
-                            this.saveReport(reportingPlayer, reportedPlot, reportReasonSet);
+                            this.saveReport(reportingPlayer, reportedPlot, reportReasonsInTrue);
                         }
                 );
 
@@ -45,26 +41,24 @@ public class ReportGui {
                 .setName(new TranslatableText("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
-        ReportReason[] options = ReportReason.values();
-        int maxOptions = Math.min(9, options.length);
-        for (int i = 0; i != maxOptions; i++)
-            GuiUtils.setBoolOption(gui, i, options[i], reportReasonSet);
+        GuiUtils.setGlass(gui, 0, 9);
 
+        GuiUtils.loadPage(gui, 1, this.getReportReasons(), reportReasonsInTrue);
 
-        gui.setSlot(18, acceptItem);
-        GuiUtils.setGlass(gui, 19, 7);
-        gui.setSlot(26, cancelItem);
+        gui.setSlot(45, acceptItem);
+        GuiUtils.setGlass(gui, 46, 7);
+        gui.setSlot(53, cancelItem);
 
         gui.open();
     }
 
-    private void saveReport(ServerPlayerEntity reportingPlayer, Plot reportedPlot, Set<ReportReason> reportReasonSet) {
-        if (reportReasonSet.isEmpty()) {
+    private void saveReport(ServerPlayerEntity reportingPlayer, Plot reportedPlot, Set<ReportReason> reportReasonsInTrue) {
+        if (reportReasonsInTrue.isEmpty()) {
             MessageUtils.sendChatMessage(reportingPlayer, "error.plotcubic.plot.report.no_reason");
             return;
         }
 
-        PlotCubic.getDatabaseManager().addReport(reportedPlot.getPlotID(), reportingPlayer.getName().getString(), reportReasonSet);
+        PlotCubic.getDatabaseManager().addReport(reportedPlot.getPlotID(), reportingPlayer.getName().getString(), reportReasonsInTrue);
         MessageUtils.sendChatMessage(reportingPlayer, "text.plotcubic.plot.report.successful");
     }
 
@@ -115,7 +109,15 @@ public class ReportGui {
 
     private void reportItemCallback(ClickType clickType, ServerPlayerEntity player, PlotID plotId, ReportedPlot report) {
         if (clickType.isLeft) {
-            new VisitCommand().visit(player, plotId);
+            //Here a bypass is being applied to the permission to visit plots
+            // but it is necessary so that the admin can moderate the plot
+            Plot plot = Plot.getPlot(plotId);
+
+            if (plot == null)
+                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.visit.unclaimed");
+            else
+                plot.visit(player);
+
         } else if (clickType.isRight) {
             List<String> infoList = List.of("gui.plotcubic.confirmation.report_view.info");
             new ConfirmationGui().open(player, "gui.plotcubic.confirmation.report_view.title", infoList, () -> this.updateReport(report, player));
@@ -124,5 +126,14 @@ public class ReportGui {
 
     private void updateReport(ReportedPlot report, ServerPlayerEntity admin) {
         PlotCubic.getDatabaseManager().updateReport(report, admin);
+    }
+
+    private List<ReportReason> getReportReasons() {
+        Set<String> reportKeySet = ReportReason.REPORT_REASON_HASH_MAP.keySet();
+        List<ReportReason> reportReasonList = new ArrayList<>();
+        for (var key : reportKeySet)
+            reportReasonList.add(ReportReason.REPORT_REASON_HASH_MAP.get(key));
+
+        return reportReasonList;
     }
 }

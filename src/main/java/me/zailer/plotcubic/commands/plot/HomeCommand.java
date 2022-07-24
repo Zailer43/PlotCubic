@@ -4,7 +4,9 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.PlotCommand;
+import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -20,6 +22,7 @@ public class HomeCommand extends VisitCommand {
     public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
         command.then(
                 CommandManager.literal(alias)
+                        .requires(Permissions.require(this.getCommandPermission()))
                         .executes(this::execute)
                         .then(CommandManager.argument("NUMBER", IntegerArgumentType.integer(1))
                             .executes(this::execute)
@@ -33,12 +36,13 @@ public class HomeCommand extends VisitCommand {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
             String playerUsername = player.getName().getString();
 
+            int index = 1;
             try {
-                int index = serverCommandSource.getArgument("NUMBER", Integer.class);
-                this.visit(player, playerUsername, index);
+                index = serverCommandSource.getArgument("NUMBER", Integer.class);
             } catch (IllegalArgumentException e) {
-                this.visit(player, playerUsername);
             }
+            TranslatableText message = this.visit(player, playerUsername, index);
+            MessageUtils.sendChatMessage(player, message);
 
             return 1;
         } catch (CommandSyntaxException e) {

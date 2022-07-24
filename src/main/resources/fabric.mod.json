@@ -22,9 +22,7 @@
   "depends": {
     "fabricloader": ">=0.13.3",
     "fabric": "*",
-    "fantasy": "*",
-    "stimuli": ">=0.2.8",
-    "sgui": ">=1.0.2",
+    "fabric-permissions-api-v0": "*",
     "minecraft": "1.18.2"
   }
 }

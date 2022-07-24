@@ -1,7 +1,5 @@
 package me.zailer.plotcubic.plot;
 
-import me.zailer.plotcubic.enums.ReportReason;
-
 import java.util.Date;
 import java.util.Set;
 

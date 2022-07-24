@@ -1,6 +1,7 @@
 package me.zailer.plotcubic.commands;
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.plot.DeniedPlayer;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
@@ -63,9 +64,12 @@ public class CommandSuggestions {
     public static final SuggestionProvider<ServerCommandSource> GAME_MODE_SUGGESTION = ((context, builder) -> {
         List<String> gameModeList = new ArrayList<>();
         String usernameInput = builder.getRemainingLowerCase();
+        ServerPlayerEntity player = context.getSource().getPlayer();
 
-        for (var gameMode : GameMode.values())
-            gameModeList.add(gameMode.getName());
+        for (var gameMode : GameMode.values()) {
+            if (Permissions.check(player,"plotcubic.command.gamemode." + gameMode.getName()))
+                gameModeList.add(gameMode.getName());
+        }
 
         for (String gameMode : gameModeList) {
             if (gameMode.toLowerCase().contains(usernameInput))

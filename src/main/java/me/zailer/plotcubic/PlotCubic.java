@@ -10,9 +10,7 @@ import me.zailer.plotcubic.events.PlayerPlotEvent;
 import me.zailer.plotcubic.events.PlotEvents;
 import me.zailer.plotcubic.events.PlotPermissionsEvents;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
-import me.zailer.plotcubic.plot.Plot;
-import me.zailer.plotcubic.plot.PlotID;
-import me.zailer.plotcubic.plot.UserConfig;
+import me.zailer.plotcubic.plot.*;
 import me.zailer.plotcubic.registry.DimensionRegistry;
 import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.TickTracker;
@@ -105,13 +103,15 @@ public class PlotCubic implements ModInitializer {
         PlotCommand.register();
         DimensionRegistry.register();
         MessageUtils.reloadColors();
+        PlotPermission.register();
+        ReportReason.register();
 
         ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
             PlotEvents.register();
             PlotPermissionsEvents.register();
             PlotEvents.fixEntitySpawnBypass();
 
-            setupPlotWorld();
+            this.setupPlotWorld();
 
             modReady = true;
         });

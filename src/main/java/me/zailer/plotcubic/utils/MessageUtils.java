@@ -60,8 +60,8 @@ public class MessageUtils {
         return this;
     }
 
-    public MessageUtils append(String message, int color) {
-        return this.append(new LiteralText(message).setStyle(Style.EMPTY.withColor(color)));
+    public void append(String message, int color) {
+        this.append(new LiteralText(message).setStyle(Style.EMPTY.withColor(color)));
     }
 
     public MessageUtils append(String key, String info) {
@@ -93,6 +93,10 @@ public class MessageUtils {
         player.sendMessage(text, MessageType.CHAT, player.getUuid());
     }
 
+    public static void sendChatMessage(ServerPlayerEntity player, TranslatableText text) {
+        sendChatMessage(player, text.getKey(), text.getArgs());
+    }
+
     public static void sendChatMessage(ServerPlayerEntity player, String translationKey) {
         player.sendMessage(new TranslatableText(translationKey), MessageType.CHAT, player.getUuid());
     }
@@ -101,11 +105,27 @@ public class MessageUtils {
         player.sendMessage(formatArgs(key, args), MessageType.CHAT, player.getUuid());
     }
 
+    public static TranslatableText getMissingPermissionMsg(String translationKey) {
+        return MessageUtils.formatArgs("error.plotcubic.not_have_permission", new TranslatableText(translationKey));
+    }
+
+    public static void sendMissingPermissionMessage(ServerPlayerEntity player, String translationKey) {
+        sendChatMessage(player, getMissingPermissionMsg(translationKey));
+    }
+
     public static TranslatableText formatArgs(String key, Object... args) {
         Object[] textArgs = new Text[args.length];
 
-        for (int i = 0; i != args.length; i++)
-            textArgs[i] = new LiteralText(args[i].toString()).setStyle(Style.EMPTY.withColor(getHighlight()));
+        for (int i = 0; i != args.length; i++) {
+            Text text;
+
+            if (args[i] instanceof Text textArg)
+                text = textArg;
+            else
+                text = new LiteralText(args[i].toString());
+
+            textArgs[i] = text.copy().setStyle(Style.EMPTY.withColor(getHighlight()));
+        }
 
         return new TranslatableText(key, textArgs);
     }
