@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.utils.MessageUtils;
+import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -36,12 +37,8 @@ public class HomeCommand extends VisitCommand {
             ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
             String playerUsername = player.getName().getString();
 
-            int index = 1;
-            try {
-                index = serverCommandSource.getArgument("NUMBER", Integer.class);
-            } catch (IllegalArgumentException e) {
-            }
-            TranslatableText message = this.visit(player, playerUsername, index);
+            Integer index = Utils.getArg(serverCommandSource, Integer.class, "NUMBER");
+            TranslatableText message = this.visit(player, playerUsername, index == null ? 1 : index);
             MessageUtils.sendChatMessage(player, message);
 
             return 1;
@@ -58,7 +55,7 @@ public class HomeCommand extends VisitCommand {
 
     @Override
     public TranslatableText getThereAreNoPlotsMsg() {
-        return new TranslatableText("error.plotcubic.plot.home.there_are_no_plots", PlotCommand.COMMAND_ALIAS[0], new ClaimCommand().getAlias()[0]);
+        return new TranslatableText("error.plotcubic.plot.home.there_are_no_plots", String.format("/%s %s", PlotCommand.COMMAND_ALIAS[0], new ClaimCommand().getAlias()[0]));
     }
 
     @Override
