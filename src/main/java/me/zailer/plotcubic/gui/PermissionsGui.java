@@ -3,9 +3,9 @@ package me.zailer.plotcubic.gui;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.SimpleGui;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import me.zailer.plotcubic.PlotCubic;
-import me.zailer.plotcubic.plot.PlotPermission;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.plot.Plot;
+import me.zailer.plotcubic.plot.PlotPermission;
 import me.zailer.plotcubic.plot.TrustedPlayer;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -14,6 +14,7 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.TranslatableText;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,16 +66,34 @@ public class PermissionsGui {
     }
 
     private void save() {
-        boolean successful = PlotCubic.getDatabaseManager().updateTrusted(this.trustedPlayer);
-        List<TrustedPlayer> trustedPlayerList = PlotCubic.getDatabaseManager().getAllTrusted(this.trustedPlayer.plotId());
+        try (var uow = new UnitOfWork()) {
+            try {
+                uow.beginTransaction();
+                uow.trustedRepository.update(this.trustedPlayer);
+                uow.commit();
+
+                this.updateLoadedPlot();
+
+                MessageUtils.sendChatMessage(this.ownerPlayer, "text.plotcubic.plot.permission.successful");
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendChatMessage(this.ownerPlayer, "error.plotcubic.database.trust");
+            }
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(this.ownerPlayer);
+        }
+    }
+
+    private void updateLoadedPlot() {
         Plot plot = Plot.getLoadedPlot(this.trustedPlayer.plotId());
 
         if (plot != null) {
-            plot.clearTrusted();
-            plot.addTrusted(trustedPlayerList);
-        }
+            TrustedPlayer trustedPlayer = plot.getTrusted(this.trustedPlayer.username());
 
-        String translationKey = successful ? "text.plotcubic.plot.permission.successful" : "error.plotcubic.permission_gui.saving";
-        MessageUtils.sendChatMessage(this.ownerPlayer, translationKey);
+            if (trustedPlayer != null)
+                trustedPlayer.setPermissions(this.trustedPlayer.permissions());
+            else
+                plot.addTrusted(this.trustedPlayer);
+        }
     }
 }

@@ -4,7 +4,7 @@ import com.mojang.authlib.GameProfile;
 import eu.pb4.sgui.api.ClickType;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.SimpleGui;
-import me.zailer.plotcubic.PlotCubic;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.plot.ReportReason;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
@@ -18,6 +18,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.TranslatableText;
 
+import java.sql.SQLException;
 import java.util.*;
 
 public class ReportGui {
@@ -58,8 +59,19 @@ public class ReportGui {
             return;
         }
 
-        PlotCubic.getDatabaseManager().addReport(reportedPlot.getPlotID(), reportingPlayer.getName().getString(), reportReasonsInTrue);
-        MessageUtils.sendChatMessage(reportingPlayer, "text.plotcubic.plot.report.successful");
+        try (var uow = new UnitOfWork()) {
+            try {
+                uow.beginTransaction();
+                uow.reportsRepository.add(reportedPlot.getPlotID(), reportingPlayer.getName().getString(), reportReasonsInTrue);
+                uow.commit();
+                MessageUtils.sendChatMessage(reportingPlayer, "text.plotcubic.plot.report.successful");
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendChatMessage(reportingPlayer, "error.plotcubic.database.report.add");
+            }
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(reportingPlayer);
+        }
     }
 
     public void openViewReports(ServerPlayerEntity player) {
@@ -73,9 +85,13 @@ public class ReportGui {
                 .setName(new TranslatableText("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
-        List<ReportedPlot> reportedPlots = PlotCubic.getDatabaseManager().getAllReports(false);
-        if (reportedPlots == null)
-            return;
+        List<ReportedPlot> reportedPlots = new ArrayList<>();
+
+        try (var uow = new UnitOfWork()) {
+            reportedPlots.addAll(uow.reportsRepository.getAllReports(false));
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(player);
+        }
 
         int maxReports = Math.min(45, reportedPlots.size());
         for (int i = 0; i != maxReports; i++) {
@@ -125,7 +141,20 @@ public class ReportGui {
     }
 
     private void updateReport(ReportedPlot report, ServerPlayerEntity admin) {
-        PlotCubic.getDatabaseManager().updateReport(report, admin);
+        try (var uow = new UnitOfWork()) {
+            try {
+                uow.beginTransaction();
+                uow.reportsRepository.setModerated(report, admin);
+                uow.commit();
+
+                MessageUtils.sendChatMessage(admin, "text.plotcubic.report.moderated", admin.getName().getString(), new Date());
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendChatMessage(admin, "error.plotcubic.database.report.moderated");
+            }
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(admin);
+        }
     }
 
     private List<ReportReason> getReportReasons() {

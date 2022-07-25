@@ -4,15 +4,17 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+
+import java.sql.SQLException;
 
 public class ClaimCommand extends SubcommandAbstract {
 
@@ -45,16 +47,27 @@ public class ClaimCommand extends SubcommandAbstract {
                 return 1;
             }
 
-            if (!PlotCubic.getDatabaseManager().claimPlot(plotID.x(), plotID.z(), player.getEntityName())) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.claimed");
-                return 1;
+            try (var uow = new UnitOfWork()) {
+                try {
+                    if (uow.plotsRepository.exists(plotID)) {
+                        MessageUtils.sendChatMessage(player, "error.plotcubic.plot.already_claimed");
+                        return 1;
+                    }
+
+                    uow.beginTransaction();
+                    uow.plotsRepository.add(plotID, player.getName().getString());
+                    uow.commit();
+                    Plot.claim(player, plotID);
+                    MessageUtils.sendChatMessage(player, "text.plotcubic.plot.claimed");
+                } catch (SQLException e) {
+                    uow.rollback();
+                    MessageUtils.sendChatMessage(player, "error.plotcubic.database.plot.claim");
+                }
+            } catch (Exception ignored) {
+                MessageUtils.sendDatabaseConnectionError(player);
             }
 
-            Plot.claim(player, plotID);
-            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.claimed");
-
-        } catch (CommandSyntaxException e) {
-            e.printStackTrace();
+        } catch (CommandSyntaxException ignored) {
         }
         return 1;
     }

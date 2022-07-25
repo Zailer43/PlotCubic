@@ -1,9 +1,11 @@
 package me.zailer.plotcubic.commands.plot.admin;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
+import me.zailer.plotcubic.commands.plot.DeleteCommand;
 import me.zailer.plotcubic.gui.ConfirmationGui;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
@@ -14,11 +16,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.List;
 
-public class AdminDeleteCommand extends AdminClearCommand {
-    @Override
-    public String[] getAlias() {
-        return new String[]{"delete", "dispose"};
-    }
+public class AdminDeleteCommand extends DeleteCommand {
 
     @Override
     public void apply(LiteralArgumentBuilder<ServerCommandSource> command, String alias) {
@@ -29,12 +27,29 @@ public class AdminDeleteCommand extends AdminClearCommand {
         );
     }
 
+    @Override
+    public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
+        try {
+            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+            PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+
+            if (plotId == null) {
+                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
+                return 1;
+            }
+
+            this.execute(player, plotId);
+        } catch (CommandSyntaxException ignored) {
+        }
+        return 1;
+    }
+
     public void execute(ServerPlayerEntity player, PlotID plotId) {
         new ConfirmationGui().open(player, "gui.plotcubic.confirmation.delete.title", List.of("gui.plotcubic.confirmation.admin_delete.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
             MessageUtils.sendChatMessage(player, "text.plotcubic.plot.delete.deleting");
             Plot plot = new Plot("", plotId);
             plot.delete();
-            PlotCubic.getDatabaseManager().deletePlot(plotId);
+            this.deletePlot(player, plotId);
         });
     }
 

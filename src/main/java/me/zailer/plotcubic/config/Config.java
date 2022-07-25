@@ -7,7 +7,7 @@ public record Config(General general, Database database, PlotChatStyle[] plotCha
     public static final Config DEFAULT = new Config(
             new General(true),
             new Database(
-                    "mysql",
+                    "mariadb",
                     "localhost",
                     3306,
                     "root",

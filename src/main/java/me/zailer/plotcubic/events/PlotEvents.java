@@ -2,6 +2,7 @@ package me.zailer.plotcubic.events;
 
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.mixin.ExplosionAccessor;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
@@ -34,6 +35,7 @@ import xyz.nucleoid.stimuli.event.world.ExplosionDetonatedEvent;
 import xyz.nucleoid.stimuli.event.world.FluidFlowEvent;
 
 import javax.annotation.Nullable;
+import java.sql.SQLException;
 import java.util.List;
 
 public class PlotEvents {
@@ -145,11 +147,24 @@ public class PlotEvents {
             return;
         }
 
-        if (!PlotCubic.getDatabaseManager().existPlayer(handler.player.getName().getString())) {
-            handler.player.teleport(PlotCubic.getPlotWorldHandle().asWorld(), 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0, 0);
-        }
+        String username = handler.player.getName().getString();
 
-        PlotCubic.getDatabaseManager().newUser(handler.player.getName().getString());
+        try (var uow = new UnitOfWork()) {
+            try {
+                if (uow.usersRepository.exists(username))
+                    return;
+
+                handler.player.teleport(PlotCubic.getPlotWorldHandle().asWorld(), 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0, 0);
+                uow.beginTransaction();
+                uow.usersRepository.add(username);
+                uow.commit();
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendChatMessage(handler.player, "error.plotcubic.database.new_user");
+            }
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(handler.player);
+        }
     }
 
     private static void denyEvent(ServerPlayerEntity player, PlotID plotId, @Nullable Plot plot) {

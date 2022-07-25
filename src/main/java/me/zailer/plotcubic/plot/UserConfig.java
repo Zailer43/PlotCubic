@@ -1,6 +1,8 @@
 package me.zailer.plotcubic.plot;
 
-import me.zailer.plotcubic.PlotCubic;
+import me.zailer.plotcubic.database.UnitOfWork;
+
+import java.sql.SQLException;
 
 public final class UserConfig {
     private final String username;
@@ -21,7 +23,16 @@ public final class UserConfig {
 
     public void setPlotChat(boolean isEnabled) {
         this.plotChatEnabled = isEnabled;
-        PlotCubic.getDatabaseManager().updatePlotChat(this.username, this.plotChatEnabled);
+        try (var uow = new UnitOfWork()) {
+            try {
+                uow.beginTransaction();
+                uow.usersRepository.updatePlotChat(this.username, isEnabled);
+                uow.commit();
+            } catch (SQLException e) {
+                uow.rollback();
+            }
+        } catch (Exception ignored) {
+        }
     }
 
 }

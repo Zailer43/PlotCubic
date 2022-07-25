@@ -5,22 +5,20 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
-import me.zailer.plotcubic.database.DatabaseManager;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
-import me.zailer.plotcubic.plot.TrustedPlayer;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 
-import java.util.Set;
+import java.sql.SQLException;
 
 public class RemoveCommand extends SubcommandAbstract {
     @Override
@@ -64,13 +62,26 @@ public class RemoveCommand extends SubcommandAbstract {
                 return 1;
             }
 
-            DatabaseManager databaseManager = PlotCubic.getDatabaseManager();
-
             boolean denyRemoved = plot.removeDeny(removedPlayer);
             boolean trustRemoved = plot.removeTrust(removedPlayer);
 
-            databaseManager.removeDenied(plotId, removedPlayer);
-            databaseManager.updateTrusted(new TrustedPlayer(removedPlayer, Set.of(), plotId));
+            try (var uow = new UnitOfWork()) {
+                try {
+                    uow.beginTransaction();
+                    if (uow.deniedRepository.exists(plotId, removedPlayer))
+                        uow.deniedRepository.delete(plotId, removedPlayer);
+
+                    uow.trustedRepository.delete(plotId, removedPlayer);
+                    uow.commit();
+                } catch (SQLException e) {
+                    uow.rollback();
+                    MessageUtils.sendChatMessage(player, "error.plotcubic.database.remove");
+                    return 1;
+                }
+            } catch (Exception ignored) {
+                MessageUtils.sendDatabaseConnectionError(player);
+                return 1;
+            }
 
             String translationKey = "text.plotcubic.plot.remove.";
             if (denyRemoved && trustRemoved)

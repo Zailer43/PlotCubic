@@ -3,7 +3,7 @@ package me.zailer.plotcubic.database;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class MySQL extends SQLDatabase {
+public class MariaDB extends SQLDatabase {
     private final Hikari hikari;
 
     @Override
@@ -16,7 +16,7 @@ public class MySQL extends SQLDatabase {
         hikari.close();
     }
 
-    public MySQL(String hostname, Integer port, String database, String username, String password) {
-        hikari = Hikari.createHikari("com.mysql.cj.jdbc.MysqlDataSource", hostname, port, database, username, password);
+    public MariaDB(String hostname, Integer port, String databaseName, String username, String password) {
+        this.hikari = Hikari.createHikari("org.mariadb.jdbc.MariaDbDataSource", hostname, port, databaseName, username, password);
     }
 }

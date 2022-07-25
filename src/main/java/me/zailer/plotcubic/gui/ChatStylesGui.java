@@ -3,6 +3,7 @@ package me.zailer.plotcubic.gui;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.SimpleGui;
 import me.zailer.plotcubic.PlotCubic;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotChatStyle;
 import me.zailer.plotcubic.utils.GuiUtils;
@@ -23,6 +24,8 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+
+import java.sql.SQLException;
 
 public class ChatStylesGui {
     private PlotChatStyle chatStyleSelected;
@@ -87,8 +90,19 @@ public class ChatStylesGui {
 
     private void save(ServerPlayerEntity player, Plot plot) {
         plot.setChatStyle(this.chatStyleSelected);
-        PlotCubic.getDatabaseManager().updateChatStyle(this.chatStyleSelected, plot.getPlotID());
-        MessageUtils.sendChatMessage(player, "text.plotcubic.plot.chat_style.successful", this.chatStyleSelected.name());
+        try (var uow = new UnitOfWork()) {
+            try {
+                uow.beginTransaction();
+                uow.plotsRepository.updateChatStyle(plot.getPlotID(), this.chatStyleSelected);
+                uow.commit();
+                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.chat_style.successful", this.chatStyleSelected.name());
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendChatMessage(player, "error.plotcubic.database.plot.update_chat_style");
+            }
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(player);
+        }
     }
 
     private void setCallback(ServerPlayerEntity player, int index, PlotChatStyle chatStyle) {

@@ -105,6 +105,11 @@ public class MessageUtils {
         player.sendMessage(formatArgs(key, args), MessageType.CHAT, player.getUuid());
     }
 
+    public static void sendDatabaseConnectionError(ServerPlayerEntity player) {
+        PlotCubic.log("[PlotCubic] Failed to get database connection");
+        sendChatMessage(player, "error.plotcubic.database.connection");
+    }
+
     public static TranslatableText getMissingPermissionMsg(String translationKey) {
         return MessageUtils.formatArgs("error.plotcubic.not_have_permission", new TranslatableText(translationKey));
     }

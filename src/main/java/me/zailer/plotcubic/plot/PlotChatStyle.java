@@ -5,7 +5,6 @@ import eu.pb4.placeholders.TextParser;
 import eu.pb4.placeholders.util.TextParserUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
-import me.zailer.plotcubic.config.Config;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
@@ -54,12 +53,13 @@ public record PlotChatStyle(String id, String name, String itemId, String messag
     }
 
     public static PlotChatStyle byId(String id) {
-        for (var chatStyle : PlotCubic.getConfig().plotChatStyles()) {
+        PlotChatStyle[] chatStyles = PlotCubic.getConfig().plotChatStyles();
+        for (var chatStyle : chatStyles) {
             if (chatStyle.isId(id))
                 return chatStyle;
         }
 
-        return Config.DEFAULT.plotChatStyles()[0];
+        return chatStyles[0];
     }
 
     public boolean hasPermission(ServerPlayerEntity player) {

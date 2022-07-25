@@ -6,6 +6,7 @@ import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.config.ConfigManager;
 import me.zailer.plotcubic.database.DatabaseManager;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.events.PlayerPlotEvent;
 import me.zailer.plotcubic.events.PlotEvents;
 import me.zailer.plotcubic.events.PlotPermissionsEvents;
@@ -17,9 +18,11 @@ import me.zailer.plotcubic.utils.TickTracker;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.EntityType;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.Difficulty;
@@ -130,15 +133,23 @@ public class PlotCubic implements ModInitializer {
             if (configManager.getConfig().general().autoTeleport()) newPlayer.teleport(plotWorldHandle.asWorld(), 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0, 0);
         });
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayerEntity player = handler.getPlayer();
-
-            player.changeGameMode(GameMode.CREATIVE);
-            String username = player.getName().getString();
-            UserConfig userConfig = databaseManager.getPlayer(username);
-            playersSet.put(player, userConfig == null ? new UserConfig(username, false) : databaseManager.getPlayer(username));
-        });
+        ServerPlayConnectionEvents.JOIN.register(this::addPlayer);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> playersSet.remove(handler.player));
+    }
+
+    private void addPlayer(ServerPlayNetworkHandler handler, PacketSender sender, MinecraftServer server) {
+        ServerPlayerEntity player = handler.getPlayer();
+
+        player.changeGameMode(GameMode.CREATIVE);
+        String username = player.getName().getString();
+        UserConfig userConfig;
+        try (var uow = new UnitOfWork()) {
+            userConfig = uow.usersRepository.get(username);
+        } catch (Exception ignored) {
+            userConfig = null;
+            MessageUtils.sendDatabaseConnectionError(player);
+        }
+        playersSet.put(player, userConfig == null ? new UserConfig(username, false) : userConfig);
     }
 
     private void setupPlotWorld() {

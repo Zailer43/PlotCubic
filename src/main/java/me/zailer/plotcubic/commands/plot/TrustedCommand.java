@@ -5,12 +5,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
-import me.zailer.plotcubic.database.DatabaseManager;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.gui.PermissionsGui;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
@@ -62,20 +61,25 @@ public class TrustedCommand extends SubcommandAbstract {
                 return 1;
             }
 
-            DatabaseManager databaseManager = PlotCubic.getDatabaseManager();
+            TrustedPlayer trustedPlayer;
+            try (var uow = new UnitOfWork()) {
+                if (!uow.usersRepository.exists(trustedUsername)) {
+                    MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", trustedUsername);
+                    return 1;
+                }
 
-            if (!databaseManager.existPlayer(trustedUsername)) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", trustedUsername);
+                if (uow.deniedRepository.exists(plotId, trustedUsername)) {
+                    String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], trustedUsername);
+                    MessageUtils.sendChatMessage(player, "error.plotcubic.plot.trust.has_deny", removeCommand);
+                    return 1;
+                }
+
+                trustedPlayer = uow.trustedRepository.get(plotId, trustedUsername);
+
+            } catch (Exception ignored) {
+                MessageUtils.sendDatabaseConnectionError(player);
                 return 1;
             }
-
-            if (databaseManager.isDenied(plotId, trustedUsername)) {
-                String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], trustedUsername);
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.trust.has_deny", removeCommand);
-                return 1;
-            }
-
-            TrustedPlayer trustedPlayer = databaseManager.getTrusted(plotId, trustedUsername);
 
             new PermissionsGui().open(player, trustedPlayer);
         } catch (CommandSyntaxException ignored) {

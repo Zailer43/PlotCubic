@@ -10,6 +10,7 @@ import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -19,6 +20,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.world.GameMode;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 
 public class GameModeCommand extends SubcommandAbstract {
@@ -76,10 +78,21 @@ public class GameModeCommand extends SubcommandAbstract {
                 return 1;
             }
 
-            plot.setGameMode(gameMode);
-            PlotCubic.getDatabaseManager().updateGameMode(gameMode, plotId);
-            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.game_mode.successful");
+            try (var uow = new UnitOfWork()) {
+                try {
+                    uow.beginTransaction();
+                    uow.plotsRepository.updateGameMode(plotId, gameMode);
+                    uow.commit();
 
+                    plot.setGameMode(gameMode);
+                    MessageUtils.sendChatMessage(player, "text.plotcubic.plot.game_mode.successful");
+                } catch (SQLException e) {
+                    uow.rollback();
+                    MessageUtils.sendChatMessage(player, "error.plotcubic.database.game_mode");
+                }
+            } catch (Exception ignored) {
+                MessageUtils.sendDatabaseConnectionError(player);
+            }
 
         } catch (CommandSyntaxException e) {
             e.printStackTrace();

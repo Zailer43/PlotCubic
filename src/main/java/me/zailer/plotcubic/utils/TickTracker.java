@@ -2,6 +2,7 @@ package me.zailer.plotcubic.utils;
 
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.enums.ZoneType;
 import me.zailer.plotcubic.events.PlayerPlotEvent;
 import me.zailer.plotcubic.plot.Plot;
@@ -78,7 +79,11 @@ public class TickTracker {
         if (plotHashMap.containsKey(plotId))
             return plotHashMap.get(plotId);
 
-        return PlotCubic.getDatabaseManager().getPlot(plotId);
+        try (var uow = new UnitOfWork()) {
+            return uow.plotsRepository.get(plotId);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private static void clearUnusedPlayers(List<ServerPlayerEntity> currentPlayerList) {

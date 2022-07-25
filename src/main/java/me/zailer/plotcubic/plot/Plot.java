@@ -5,6 +5,7 @@ import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.commands.plot.ChatCommand;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
 import me.zailer.plotcubic.generator.PlotworldSettings;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -168,22 +169,25 @@ public class Plot {
         return this.ownerUsername;
     }
 
-    public void addTrusted(List<TrustedPlayer> usernameList) {
-        this.trustedPlayers.addAll(usernameList);
+
+    public void addTrusted(TrustedPlayer trusted) {
+        this.trustedPlayers.add(trusted);
     }
 
-    public void clearTrusted() {
-        this.trustedPlayers.clear();
-    }
 
     public List<TrustedPlayer> getTrusted() {
         return this.trustedPlayers;
     }
 
     @Nullable
-    public TrustedPlayer getTrustedPermissions(ServerPlayerEntity player) {
+    public TrustedPlayer getTrusted(ServerPlayerEntity player) {
+        return this.getTrusted(player.getName().getString());
+    }
+
+    @Nullable
+    public TrustedPlayer getTrusted(String username) {
         for (var trustedPlayer : this.trustedPlayers) {
-            if (trustedPlayer.isPlayer(player)) {
+            if (trustedPlayer.isPlayer(username)) {
                 return trustedPlayer;
             }
         }
@@ -278,7 +282,11 @@ public class Plot {
                 return plot;
         }
 
-        return PlotCubic.getDatabaseManager().getPlot(plotId);
+        try (var uow = new UnitOfWork()) {
+            return uow.plotsRepository.get(plotId);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     public boolean visit(ServerPlayerEntity player) {

@@ -176,7 +176,7 @@ public class PlotPermissionsEvents {
         if (plot.isOwner(player))
             return ActionResult.PASS;
 
-        TrustedPlayer trustedPlayer = plot.getTrustedPermissions(player);
+        TrustedPlayer trustedPlayer = plot.getTrusted(player);
         if (trustedPlayer == null)
             return ActionResult.FAIL;
 

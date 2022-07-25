@@ -6,8 +6,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.*;
+import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -91,12 +91,17 @@ public class VisitCommand extends SubcommandAbstract {
     }
 
     public TranslatableText visit(ServerPlayerEntity player, String playerToVisit, int index) {
-        List<Plot> plotList = PlotCubic.getDatabaseManager().getAllPlots(playerToVisit, true);
+        List<Plot> plotList;
+        try (var uow = new UnitOfWork()) {
+            plotList = uow.plotsRepository.getAllPlots(playerToVisit);
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(player);
+            return new TranslatableText("error.plotcubic.database.connection");
+        }
+
         TranslatableText message;
 
-        if (plotList == null)
-            message = new TranslatableText("error.plotcubic.unexpected");
-        else if (plotList.isEmpty())
+        if (plotList.isEmpty())
             message = this.getThereAreNoPlotsMsg();
         else if (plotList.size() < index)
             message = this.getOutBoundsErrorMsg(plotList.size());
