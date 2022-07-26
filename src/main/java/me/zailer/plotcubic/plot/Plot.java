@@ -9,6 +9,7 @@ import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
 import me.zailer.plotcubic.generator.PlotworldSettings;
 import me.zailer.plotcubic.utils.MessageUtils;
+import me.zailer.plotcubic.utils.TickTracker;
 import me.zailer.plotcubic.utils.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -59,10 +60,10 @@ public class Plot {
         this(ownerUsername, plotID, new ArrayList<>(), new ArrayList<>(), null, null, PlotCubic.getConfig().plotChatStyles()[0]);
     }
 
-    public static void claim(ServerPlayerEntity player, PlotID plotID) {
-        Plot plot = new Plot(player, plotID);
+    public static void claim(ServerPlayerEntity player, Plot plot) {
         plot.setBorder(PlotManager.getInstance().getSettings().getClaimedBorderBlock());
         Plot.loadPlot(player, plot);
+        TickTracker.updatePlot(plot.getPlotID(), plot);
     }
 
     public void delete() {

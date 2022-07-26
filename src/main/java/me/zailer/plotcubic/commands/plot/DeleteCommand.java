@@ -1,11 +1,11 @@
 package me.zailer.plotcubic.commands.plot;
 
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.gui.ConfirmationGui;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
 import me.zailer.plotcubic.utils.MessageUtils;
+import me.zailer.plotcubic.utils.TickTracker;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.sql.SQLException;
@@ -33,6 +33,9 @@ public class DeleteCommand extends ClearCommand {
                 uow.beginTransaction();
                 uow.plotsRepository.deletePlot(plotId);
                 uow.commit();
+                Plot.unloadPlot(player, Plot.getLoadedPlot(plotId));
+                TickTracker.updatePlot(plotId, null);
+                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.delete.successful");
             } catch (SQLException e) {
                 uow.rollback();
                 MessageUtils.sendChatMessage(player, "error.plotcubic.database.plot.delete");

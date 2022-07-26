@@ -57,7 +57,12 @@ public class ClaimCommand extends SubcommandAbstract {
                     uow.beginTransaction();
                     uow.plotsRepository.add(plotID, player.getName().getString());
                     uow.commit();
-                    Plot.claim(player, plotID);
+
+                    Plot plot = uow.plotsRepository.get(plotID);
+                    if (plot == null)
+                        throw new SQLException("Plot just saved in the database has returned null");
+
+                    Plot.claim(player, plot);
                     MessageUtils.sendChatMessage(player, "text.plotcubic.plot.claimed");
                 } catch (SQLException e) {
                     uow.rollback();

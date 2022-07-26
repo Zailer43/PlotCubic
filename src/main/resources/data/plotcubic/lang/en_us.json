@@ -146,6 +146,7 @@
   "text.plotcubic.plot.clear.cleaning": "<p3_normal>Cleaning plot...",
   "text.plotcubic.plot.clear.successful": "<p3_normal>Plot cleared in %s<p3_normal> ms",
   "text.plotcubic.plot.delete.deleting": "<p3_normal>Deleting plot...",
+  "text.plotcubic.plot.delete.successful": "<p3_normal>Successfully deleted",
   "text.plotcubic.plot.deny_successful": "%s<p3_normal> was successfully denied by %s",
   "text.plotcubic.plot.game_mode.successful": "<p3_normal>Plot game mode changed",
   "text.plotcubic.plot.permission.successful": "<p3_normal>Player permissions saved",

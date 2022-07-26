@@ -23,10 +23,10 @@ public class PlotCommand {
             new InfoCommand(),
             new RemoveCommand(),
             new ReportCommand(),
+            new TeleportCommand(),
             new ToggleCommand(),
             new TrustedCommand(),
-            new VisitCommand(),
-            new TeleportCommand()
+            new VisitCommand()
     };
 
     public static void register() {
