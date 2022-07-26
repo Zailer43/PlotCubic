@@ -5,8 +5,6 @@ import me.zailer.plotcubic.generator.PlotworldSettings;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.TeleportTarget;
 
 public class PlotManager {
     private static PlotManager instance = null;
@@ -66,9 +64,9 @@ public class PlotManager {
     public ZoneType getZone(int x, int z) {
         int plotSize = this.settings.getPlotSize();
         int size = this.settings.getTotalSize();
-        int halfPlot = Math.round(plotSize / 2f);
-        int xOffset = this.getPlotOffset(x, size) - halfPlot;
-        int zOffset = this.getPlotOffset(z, size) - halfPlot;
+        float halfPlot = plotSize / 2f;
+        float xOffset = this.getPlotOffset(x, size) - halfPlot;
+        float zOffset = this.getPlotOffset(z, size) - halfPlot;
 
         if (this.isPointInsideSquare(xOffset, zOffset, halfPlot, 1)) {
             if (this.isPointInsideSquare(xOffset, zOffset, halfPlot, 0))
@@ -88,20 +86,16 @@ public class PlotManager {
         return pos;
     }
 
-    private boolean isPointInsideSquare(int posX, int posZ, int halfSquareSize, int enlarge) {
-        int x = -halfSquareSize - enlarge;
-        int z = -halfSquareSize - enlarge;
-        int x2 = halfSquareSize + enlarge;
-        int z2 = halfSquareSize + enlarge;
+    private boolean isPointInsideSquare(float posX, float posZ, float halfSquareSize, int enlarge) {
+        int x = ((int) -halfSquareSize) - enlarge;
+        int z = ((int) -halfSquareSize) - enlarge;
+        int x2 = Math.round(halfSquareSize) + enlarge;
+        int z2 = Math.round(halfSquareSize) + enlarge;
         return posX > x && posZ > z && posX <= x2 && posZ <= z2;
     }
 
     public BlockPos getPlotworldSpawn() {
         return new BlockPos(0, this.settings.getMaxHeight() + 2, 0);
-    }
-
-    public TeleportTarget getSpawnTeleportTarget() {
-        return new TeleportTarget(new Vec3d(0, getSettings().getMaxHeight() + 1, 0), Vec3d.ZERO, 0, 0);
     }
 
     public boolean isPlot(BlockPos pos) {
