@@ -92,22 +92,26 @@ public class VisitCommand extends SubcommandAbstract {
 
     public TranslatableText visit(ServerPlayerEntity player, String playerToVisit, int index) {
         List<Plot> plotList;
+        TranslatableText message;
         try (var uow = new UnitOfWork()) {
             plotList = uow.plotsRepository.getAllPlots(playerToVisit);
+
+            if (plotList.isEmpty())
+                message = this.getThereAreNoPlotsMsg();
+            else if (plotList.size() < index)
+                message = this.getOutBoundsErrorMsg(plotList.size());
+            else if (!Permissions.check(player, "plotcubic.bypass.deny")
+                    && uow.deniedRepository.exists(plotList.get(index - 1).getPlotID(), player.getName().getString()))
+                message = this.getDenyMessage();
+            else {
+                plotList.get(index - 1).visit(player);
+                message = this.getSuccessfulMsg(playerToVisit, index, plotList.size());
+            }
+
         } catch (Exception ignored) {
             MessageUtils.sendDatabaseConnectionError(player);
             return new TranslatableText("error.plotcubic.database.connection");
         }
-
-        TranslatableText message;
-
-        if (plotList.isEmpty())
-            message = this.getThereAreNoPlotsMsg();
-        else if (plotList.size() < index)
-            message = this.getOutBoundsErrorMsg(plotList.size());
-        else
-            message = plotList.get(index - 1).visit(player) ? this.getSuccessfulMsg(playerToVisit, index, plotList.size()) : this.getDenyMessage();
-
         return message;
     }
 
