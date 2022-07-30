@@ -96,7 +96,6 @@ public class DenyCommand extends SubcommandAbstract {
 
                     uow.trustedRepository.update(new TrustedPlayer(deniedUsername, Set.of(), plotId));
                     uow.deniedRepository.add(plotId, deniedUsername, reason);
-                    uow.plotsRepository.deletePlot(plotId);
                     uow.commit();
 
                     DeniedPlayer deniedPlayer = new DeniedPlayer(deniedUsername, reason);
