@@ -1,14 +1,37 @@
 package me.zailer.plotcubic;
 
+import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.enums.ZoneType;
-import me.zailer.plotcubic.generator.PlotworldSettings;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.item.BlockItem;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.Property;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class PlotManager {
     private static PlotManager instance = null;
-    private PlotworldSettings settings;
+    //private Config.PlotworldConfig settings;
+    private int maxTerrainHeight;
+    private int plotSize;
+    private int roadSize;
+    private int totalSize;
+    private int minHeight;
+    private int maxHeight;
+    private Biome biome;
+    private BlockState unclaimedBorderBlock;
+    private BlockState claimedBorderBlock;
+    private BlockState borderBlock;
+    private BlockState roadBlock;
+    private List<Layer> layers;
 
     private PlotManager() {
     }
@@ -20,12 +43,22 @@ public class PlotManager {
         return instance;
     }
 
-    public void setSettings(PlotworldSettings settings) {
-        this.settings = settings;
-    }
+    public void setSettings(Config.PlotworldConfig settings, MinecraftServer server) {
+        this.maxTerrainHeight = settings.minHeight() - 1;
+        for (var layer : settings.layers())
+            this.maxTerrainHeight += layer.thickness();
 
-    public PlotworldSettings getSettings() {
-        return this.settings;
+        this.plotSize = settings.plotSize();
+        this.roadSize = settings.roadSize();
+        this.totalSize = settings.plotSize() + settings.roadSize() + 2;
+        this.minHeight = settings.minHeight();
+        this.maxHeight = settings.maxHeight();
+        this.biome = server.getRegistryManager().get(Registry.BIOME_KEY).get(new Identifier(settings.biomeId()));
+        this.unclaimedBorderBlock = this.getBlock(settings.unclaimedBorderBlock());
+        this.claimedBorderBlock = this.getBlock(settings.claimedBorderBlock());
+        this.borderBlock = this.getBlock(settings.borderBlock());
+        this.roadBlock = this.getBlock(settings.roadBlock());
+        this.layers = Arrays.stream(settings.layers()).map(layer -> new Layer(layer.thickness(), this.getBlock(layer.block()))).toList();
     }
 
     public BlockState getBlock(BlockPos pos) {
@@ -42,28 +75,32 @@ public class PlotManager {
     }
 
     private BlockState getPlotBlock(int y) {
-        int height = 0;
-        for (var layer : this.settings.getLayers()) {
-            height += layer.getThickness();
+        int height = this.minHeight;
+        for (var layer : this.layers) {
+            height += layer.thickness;
             if (height > y)
-                return layer.getBlockState();
+                return layer.block;
         }
         return Blocks.AIR.getDefaultState();
     }
 
     private BlockState getRoadBlock(int y) {
-        return y > this.settings.getMaxHeight() ? Blocks.AIR.getDefaultState() : this.settings.getRoadBlock();
+        return this.getRoadBlock(y, this.roadBlock);
+    }
+
+    private BlockState getRoadBlock(int y, BlockState block) {
+        return y > this.maxTerrainHeight ? Blocks.AIR.getDefaultState() : block;
     }
 
     private BlockState getBorderBlock(int y) {
-        if (y == this.settings.getMaxHeight() + 1)
-            return this.settings.getUnclaimedBorderBlock();
-        return this.getRoadBlock(y);
+        if (y == this.maxTerrainHeight + 1)
+            return this.unclaimedBorderBlock;
+        return this.getRoadBlock(y, this.borderBlock);
     }
 
     public ZoneType getZone(int x, int z) {
-        int plotSize = this.settings.getPlotSize();
-        int size = this.settings.getTotalSize();
+        int plotSize = this.plotSize;
+        int size = this.totalSize;
         float halfPlot = plotSize / 2f;
         float xOffset = this.getPlotOffset(x, size) - halfPlot;
         float zOffset = this.getPlotOffset(z, size) - halfPlot;
@@ -95,7 +132,7 @@ public class PlotManager {
     }
 
     public BlockPos getPlotworldSpawn() {
-        return new BlockPos(0, this.settings.getMaxHeight() + 2, 0);
+        return new BlockPos(0, this.maxTerrainHeight + 2, 0);
     }
 
     public boolean isPlot(BlockPos pos) {
@@ -111,4 +148,59 @@ public class PlotManager {
         return PlotManager.getInstance().getZone(pos.getX(), pos.getZ()) != ZoneType.PLOT;
     }
 
+    public int getMaxTerrainHeight() {
+        return this.maxTerrainHeight;
+    }
+
+    public Biome getBiome() {
+        return this.biome;
+    }
+
+    public BlockState getBlock(Config.BlockConfig blockConfig) {
+        Block block = Registry.BLOCK.get(new Identifier(blockConfig.id()));
+        BlockState blockState = block.getDefaultState();
+
+        StateManager<Block, BlockState> stateManager = blockState.getBlock().getStateManager();
+
+        for (var state : blockConfig.states()) {
+            Property<?> property = stateManager.getProperty(state.key());
+            if (property == null)
+                continue;
+
+            blockState = BlockItem.with(blockState, property, state.value());
+        }
+
+        return blockState;
+    }
+
+    public int getPlotSize() {
+        return this.plotSize;
+    }
+
+    public int getRoadSize() {
+        return this.roadSize;
+    }
+
+    public int getTotalSize() {
+        return this.totalSize;
+    }
+
+    public int getMaxHeight() {
+        return this.maxHeight;
+    }
+
+    public int getMinHeight() {
+        return this.minHeight;
+    }
+
+    public BlockState getClaimedBorderBlock() {
+        return this.claimedBorderBlock;
+    }
+
+    public BlockState getUnclaimedBorderBlock() {
+        return this.unclaimedBorderBlock;
+    }
+
+    private record Layer(int thickness, BlockState block) {
+    }
 }

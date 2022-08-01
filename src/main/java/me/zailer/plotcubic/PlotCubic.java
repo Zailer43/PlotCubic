@@ -1,6 +1,5 @@
 package me.zailer.plotcubic;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.logging.LogUtils;
 import me.zailer.plotcubic.commands.PlotCommand;
 import me.zailer.plotcubic.config.Config;
@@ -10,8 +9,12 @@ import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.events.PlayerPlotEvent;
 import me.zailer.plotcubic.events.PlotEvents;
 import me.zailer.plotcubic.events.PlotPermissionsEvents;
+import me.zailer.plotcubic.events.ReloadEvent;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
-import me.zailer.plotcubic.plot.*;
+import me.zailer.plotcubic.plot.Plot;
+import me.zailer.plotcubic.plot.PlotID;
+import me.zailer.plotcubic.plot.PlotPermission;
+import me.zailer.plotcubic.plot.UserConfig;
 import me.zailer.plotcubic.registry.DimensionRegistry;
 import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.TickTracker;
@@ -25,6 +28,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
@@ -36,26 +40,15 @@ import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 import xyz.nucleoid.stimuli.Stimuli;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PlotCubic implements ModInitializer {
     public static final String MOD_ID = "plotcubic";
-    public static final ImmutableList<EntityType<?>> ENTITY_IN_ROAD_BLACKLIST = ImmutableList.of(
-            EntityType.ARMOR_STAND,
-            EntityType.BOAT,
-            EntityType.CHEST_MINECART,
-            EntityType.END_CRYSTAL,
-            EntityType.FURNACE_MINECART,
-            EntityType.GLOW_ITEM_FRAME,
-            EntityType.ITEM_FRAME,
-            EntityType.MINECART,
-            EntityType.PAINTING,
-            EntityType.TNT,
-            EntityType.ARROW,
-            EntityType.SPECTRAL_ARROW
-    );
+    private static Set<EntityType<?>> ENTITY_WHITELIST = Set.of();
+    private static Set<EntityType<?>> ENTITY_ROAD_WHITELIST = Set.of();
+    private static Set<EntityType<?>> ENTITY_ROAD_BLACKLIST = Set.of();
     private static final HashMap<ServerPlayerEntity, UserConfig> playersSet = new HashMap<>();
     public static RuntimeWorldHandle plotWorldHandle;
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -94,31 +87,39 @@ public class PlotCubic implements ModInitializer {
 
         ServerLifecycleEvents.SERVER_STARTING.register((server) -> {
             PlotCubic.server = server;
-            if (configManager.getConfig() == null) {
+            Config config = configManager.getConfig();
+            if (config == null) {
                 LOGGER.info("[PlotCubic] Configuration is null due to an error, the server will shutdown.");
                 server.shutdown();
                 return;
             }
 
-            databaseManager = new DatabaseManager(configManager.getConfig(), server);
+            databaseManager = new DatabaseManager(config, server);
         });
 
         PlotCommand.register();
         DimensionRegistry.register();
-        MessageUtils.reloadColors();
         PlotPermission.register();
-        ReportReason.register();
 
         ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
             PlotEvents.register();
             PlotPermissionsEvents.register();
             PlotEvents.fixEntitySpawnBypass();
 
+            try (var invokers = Stimuli.select().at(server.getOverworld(), new BlockPos(0, 0, 0))) {
+                invokers.get(ReloadEvent.EVENT).onReload(PlotCubic.getConfig());
+            }
+
             this.setupPlotWorld();
 
             modReady = true;
         });
 
+        Stimuli.global().listen(ReloadEvent.EVENT, config -> {
+            PlotManager.getInstance().setSettings(config.PlotWorld(), server);
+            MessageUtils.reloadColors(config.customColors());
+            reloadEntitiesWhitelist(config.general());
+        });
 
         ServerLifecycleEvents.SERVER_STARTED.register((server) -> server.addServerGuiTickable(TickTracker::start));
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -130,7 +131,7 @@ public class PlotCubic implements ModInitializer {
         });
 
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
-            if (configManager.getConfig().general().autoTeleport()) newPlayer.teleport(plotWorldHandle.asWorld(), 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0, 0);
+            if (configManager.getConfig().general().autoTeleport()) newPlayer.teleport(plotWorldHandle.asWorld(), 0, PlotManager.getInstance().getMaxTerrainHeight() + 2, 0, 0, 0);
         });
 
         ServerPlayConnectionEvents.JOIN.register(this::addPlayer);
@@ -164,27 +165,6 @@ public class PlotCubic implements ModInitializer {
         plotWorldHandle = fantasy.getOrOpenPersistentWorld(new Identifier(MOD_ID, "plot"), worldConfig);
     }
 
-    public static ImmutableList<EntityType<?>> getEntityWhitelist() {
-        List<EntityType<?>> entityList = new ArrayList<>(List.of(
-                EntityType.ARROW,
-                EntityType.EGG,
-                EntityType.ENDER_PEARL,
-                EntityType.EXPERIENCE_BOTTLE,
-                EntityType.EYE_OF_ENDER,
-                EntityType.FIREWORK_ROCKET,
-                EntityType.FISHING_BOBBER,
-                EntityType.ITEM,
-                EntityType.POTION,
-                EntityType.SNOWBALL,
-                EntityType.SPECTRAL_ARROW,
-                EntityType.TRIDENT
-        ));
-
-        entityList.addAll(ENTITY_IN_ROAD_BLACKLIST);
-
-        return entityList.stream().collect(ImmutableList.toImmutableList());
-    }
-
     public static void log(String message) {
         LOGGER.info(message);
     }
@@ -195,5 +175,37 @@ public class PlotCubic implements ModInitializer {
 
     public static UserConfig getUser(ServerPlayerEntity player) {
         return playersSet.get(player);
+    }
+
+    private static void reloadEntitiesWhitelist(Config.General config) {
+        ENTITY_WHITELIST = parseEntities(config.entityWhitelist());
+        ENTITY_ROAD_WHITELIST = parseEntities(config.entityRoadWhitelist());
+        ENTITY_ROAD_BLACKLIST = parseEntities(config.entityWhitelist());
+        ENTITY_ROAD_BLACKLIST.removeAll(ENTITY_ROAD_WHITELIST);
+    }
+
+    private static HashSet<EntityType<?>> parseEntities(String[] entityList) {
+        HashSet<EntityType<?>> entityTypes = new HashSet<>();
+        for (var entityId : entityList) {
+            var optionalEntity = EntityType.get(entityId);
+
+            if (optionalEntity.isPresent())
+                entityTypes.add(optionalEntity.get());
+            else
+                LOGGER.warn("Could not parse entity '{}' from configuration", entityId);
+        }
+        return entityTypes;
+    }
+
+    public static Set<EntityType<?>> getEntityWhitelist() {
+        return ENTITY_WHITELIST;
+    }
+
+    public static Set<EntityType<?>> getEntityRoadWhitelist() {
+        return ENTITY_ROAD_WHITELIST;
+    }
+
+    public static Set<EntityType<?>> getEntityRoadBlacklist() {
+        return ENTITY_ROAD_BLACKLIST;
     }
 }

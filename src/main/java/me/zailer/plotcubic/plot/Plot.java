@@ -4,10 +4,11 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.commands.PlotCommand;
-import me.zailer.plotcubic.commands.plot.ChatCommand;
+import me.zailer.plotcubic.commands.plot.ToggleCommand;
+import me.zailer.plotcubic.commands.plot.toggle.ToggleChatCommand;
+import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.database.UnitOfWork;
 import me.zailer.plotcubic.generator.PlotworldGenerator;
-import me.zailer.plotcubic.generator.PlotworldSettings;
 import me.zailer.plotcubic.utils.MessageUtils;
 import me.zailer.plotcubic.utils.TickTracker;
 import me.zailer.plotcubic.utils.Utils;
@@ -61,20 +62,20 @@ public class Plot {
     }
 
     public static void claim(ServerPlayerEntity player, Plot plot) {
-        plot.setBorder(PlotManager.getInstance().getSettings().getClaimedBorderBlock());
+        plot.setBorder(PlotManager.getInstance().getClaimedBorderBlock());
         Plot.loadPlot(player, plot);
         TickTracker.updatePlot(plot.getPlotID(), plot);
     }
 
     public void delete() {
-        this.setBorder(PlotManager.getInstance().getSettings().getUnclaimedBorderBlock());
+        this.setBorder(PlotManager.getInstance().getUnclaimedBorderBlock());
         this.clearPlot(null);
     }
 
     public void setBorder(BlockState block) {
-        PlotworldSettings settings = PlotManager.getInstance().getSettings();
-        int plotSize = settings.getPlotSize() + 1;
-        int y = settings.getMaxHeight() + 1;
+        PlotManager plotManager = PlotManager.getInstance();
+        int plotSize = plotManager.getPlotSize() + 1;
+        int y = plotManager.getMaxTerrainHeight() + 1;
         int x = this.plotID.getXPos();
         int z = this.plotID.getZPos();
 
@@ -103,9 +104,7 @@ public class Plot {
         ServerWorld world = PlotCubic.getPlotWorldHandle().asWorld();
         PlayerManager playerManager = PlotCubic.getServer().getPlayerManager();
         PlotworldGenerator plotworldGenerator = (PlotworldGenerator) world.getChunkManager().getChunkGenerator();
-        PlotworldSettings settings = PlotManager.getInstance().getSettings();
-        PlotManager plotManager = PlotManager.getInstance();
-        int plotSizeWithBorder = settings.getPlotSize() + 2;
+        int plotSizeWithBorder = PlotManager.getInstance().getPlotSize() + 2;
         int xPos = this.plotID.getXPos();
         int zPos = this.plotID.getZPos();
 
@@ -137,7 +136,7 @@ public class Plot {
 
                     //FIXME: at no time is the light taken into account, preferably it has to be recalculated
                     // after finishing generating the chunks so that there are no unnecessary updates
-                    plotworldGenerator.regen(plotManager, chunk, x, z);
+                    plotworldGenerator.regen(chunk, x, z);
                 }
             }
             //Send the chunk to nearby players
@@ -295,7 +294,11 @@ public class Plot {
             return false;
 
         PlotID plotId = this.getPlotID();
-        player.teleport(player.getWorld(), plotId.getSpawnOfX(), plotId.getSpawnOfY(), plotId.getSpawnOfZ(), 0, 0);
+        Config.BlockPos defaultPlotSpawn = PlotCubic.getConfig().general().defaultPlotSpawn();
+        float x = plotId.getSpawnOfX() + defaultPlotSpawn.x();
+        float y = plotId.getSpawnOfY() + defaultPlotSpawn.y();
+        float z = plotId.getSpawnOfZ() + defaultPlotSpawn.z();
+        player.teleport(PlotCubic.getPlotWorldHandle().asWorld(), x, y, z, 0, 0);
         return true;
     }
 
@@ -324,13 +327,12 @@ public class Plot {
     }
 
     public void sendPlotChatMessage(ServerPlayerEntity sender, String message) {
-        boolean isPlotEmpty = this.players.size() <= 1;
         MutableText messageText = this.chatStyle.getMessage(this.plotID, sender, message);
+        Config.General config = PlotCubic.getConfig().general();
 
-        if (isPlotEmpty) {
+        if (config.warningUseOfPlotChatInEmptyPlot() && this.players.size() <= 1) {
             TranslatableText tooltipMessage = new TranslatableText("text.plotcubic.chat_style.warning_empty_plot.tooltip",
-                    PlotCommand.COMMAND_ALIAS[0],
-                    new ChatCommand().getAlias()[0]
+                    String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new ToggleCommand().getAlias()[0], new ToggleChatCommand().getAlias()[0])
             );
 
             messageText = MessageUtils.getTranslation("text.plotcubic.chat_style.warning_empty_plot.chat")
@@ -342,7 +344,8 @@ public class Plot {
         for (var player : this.players)
             MessageUtils.sendChatMessage(player, messageText);
 
-        PlotCubic.log(messageText.getString());
+        if (config.logPlotChat())
+            PlotCubic.log(messageText.getString());
     }
 
     public void setChatStyle(PlotChatStyle chatStyle) {

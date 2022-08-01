@@ -24,17 +24,17 @@ public class TickTracker {
         if (++tickCount % 20 == 0) {
             tickCount = 0;
 
-            removeEntitiesFromRoad();
+            removeEntitiesInRoad();
             updatePlayerPlotEvent();
         }
     }
 
-    private static void removeEntitiesFromRoad() {
-        for (var entityType : PlotCubic.ENTITY_IN_ROAD_BLACKLIST)
-            removeEntitiesFromRoad(entityType);
+    private static void removeEntitiesInRoad() {
+        for (var entityType : PlotCubic.getEntityRoadBlacklist())
+            removeEntitiesInRoad(entityType);
     }
 
-    private static void removeEntitiesFromRoad(EntityType<?> entityType) {
+    private static void removeEntitiesInRoad(EntityType<?> entityType) {
         List<? extends Entity> entityList = PlotCubic.getPlotWorldHandle().asWorld().getEntitiesByType(entityType, entity -> true);
         PlotManager plotManager = PlotManager.getInstance();
         for (var entity : entityList) {

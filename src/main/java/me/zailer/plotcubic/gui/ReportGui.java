@@ -4,10 +4,11 @@ import com.mojang.authlib.GameProfile;
 import eu.pb4.sgui.api.ClickType;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.SimpleGui;
+import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.database.UnitOfWork;
-import me.zailer.plotcubic.plot.ReportReason;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
+import me.zailer.plotcubic.plot.ReportReason;
 import me.zailer.plotcubic.plot.ReportedPlot;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -125,7 +126,7 @@ public class ReportGui {
 
     private void reportItemCallback(ClickType clickType, ServerPlayerEntity player, PlotID plotId, ReportedPlot report) {
         if (clickType.isLeft) {
-            //Here a bypass is being applied to the permission to visit plots
+            // Here a bypass is being applied to the permission to visit plots,
             // but it is necessary so that the admin can moderate the plot
             Plot plot = Plot.getPlot(plotId);
 
@@ -158,11 +159,6 @@ public class ReportGui {
     }
 
     private List<ReportReason> getReportReasons() {
-        Set<String> reportKeySet = ReportReason.REPORT_REASON_HASH_MAP.keySet();
-        List<ReportReason> reportReasonList = new ArrayList<>();
-        for (var key : reportKeySet)
-            reportReasonList.add(ReportReason.REPORT_REASON_HASH_MAP.get(key));
-
-        return reportReasonList;
+        return Arrays.stream(PlotCubic.getConfig().reportReasons()).sorted(Comparator.comparing(ReportReason::id)).toList();
     }
 }

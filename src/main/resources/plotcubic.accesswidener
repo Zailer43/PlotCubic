@@ -1,0 +1,3 @@
+accessWidener v1 named
+
+accessible method net/minecraft/item/BlockItem with (Lnet/minecraft/block/BlockState;Lnet/minecraft/state/property/Property;Ljava/lang/String;)Lnet/minecraft/block/BlockState;

@@ -43,7 +43,7 @@ public class TeleportCommand extends SubcommandAbstract {
 
             MessageUtils.sendChatMessage(player, this.getTeleportMsg());
 
-            player.teleport(plotWorld, 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0f, 0f);
+            player.teleport(plotWorld, 0, PlotManager.getInstance().getMaxTerrainHeight() + 2, 0, 0f, 0f);
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }

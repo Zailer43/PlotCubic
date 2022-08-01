@@ -36,8 +36,14 @@ public class GuiUtils {
                 .setName(option.getDisplayName())
                 .setCount(option.getCount());
 
+        for (var description : option.getDescription())
+            builder.addLoreLine(description);
+
         if (option.isHideAttributes())
             builder.hideFlags((byte) ItemStack.TooltipSection.MODIFIERS.getFlag());
+
+        if (option.hasGlow())
+            builder.glow();
 
         if (option.hasHeadValue())
             builder.setSkullOwner(option.getHeadValue());

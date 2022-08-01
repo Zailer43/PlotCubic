@@ -7,7 +7,9 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class PlotPermission implements IBooleanOption {
     public static final HashMap<String, PlotPermission> PERMISSION_HASH_MAP = new HashMap<>();
@@ -55,6 +57,11 @@ public class PlotPermission implements IBooleanOption {
     }
 
     @Override
+    public List<Text> getDescription() {
+        return new ArrayList<>();
+    }
+
+    @Override
     public Item getItem() {
         return this.item;
     }
@@ -71,6 +78,11 @@ public class PlotPermission implements IBooleanOption {
 
     @Override
     public boolean hasHeadValue() {
+        return false;
+    }
+
+    @Override
+    public boolean hasGlow() {
         return false;
     }
 

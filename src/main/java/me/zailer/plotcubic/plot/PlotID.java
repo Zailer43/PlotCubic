@@ -28,7 +28,7 @@ public record PlotID(int x, int z) {
     }
 
     private static int ofBlockPos(int pos) {
-        int size = PlotManager.getInstance().getSettings().getTotalSize();
+        int size = PlotManager.getInstance().getTotalSize();
 
         pos = (int) Math.ceil(pos / (float) size);
 
@@ -64,17 +64,16 @@ public record PlotID(int x, int z) {
     }
 
     private int getPos(int id) {
-        PlotManager plotManager = PlotManager.getInstance();
-        return id * plotManager.getSettings().getTotalSize();
+        return id * PlotManager.getInstance().getTotalSize();
     }
 
     public float getSpawnOfX() {
-        int halfRoad = PlotManager.getInstance().getSettings().getRoadSize() / 2;
+        float halfRoad = PlotManager.getInstance().getRoadSize() / 2f;
         return this.getSpawnPos(this.x, 0.5f) - halfRoad;
     }
 
     public float getSpawnOfY() {
-        return PlotManager.getInstance().getSettings().getMaxHeight() + 2;
+        return PlotManager.getInstance().getMaxTerrainHeight() + 2;
     }
 
     public float getSpawnOfZ() {
@@ -82,7 +81,7 @@ public record PlotID(int x, int z) {
     }
 
     private float getSpawnPos(int id, float inPercentageOfPlot) {
-        int size = PlotManager.getInstance().getSettings().getTotalSize();
+        int size = PlotManager.getInstance().getTotalSize();
 
         return this.getPos(--id) + size * inPercentageOfPlot;
     }

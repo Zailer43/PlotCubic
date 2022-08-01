@@ -1,11 +1,37 @@
 package me.zailer.plotcubic.config;
 
 import me.zailer.plotcubic.plot.PlotChatStyle;
+import me.zailer.plotcubic.plot.ReportReason;
 
-public record Config(General general, Database database, PlotChatStyle[] plotChatStyles, CustomColors customColors) {
+public record Config(int CONFIG_VERSION_DONT_TOUCH_THIS, General general, PlotworldConfig PlotWorld,
+                     Database database, PlotChatStyle[] plotChatStyles, CustomColors customColors,
+                     ReportReason[] reportReasons) {
 
     public static final Config DEFAULT = new Config(
-            new General(true),
+            1,
+            new General(true,
+                    true,
+                    true,
+                    new BlockPos(0, 0, 0),
+                    new String[] { "armor_stand", "arrow", "boat", "chest_minecart", "egg", "end_crystal", "ender_pearl", "experience_bottle", "eye_of_ender", "firework_rocket", "fishing_bobber", "furnace_minecart", "glow_item_frame", "item", "item_frame", "minecart", "painting", "potion", "snowball", "spectral_arrow", "tnt", "trident" },
+                    new String[] { "eye_of_ender", "item" }
+            ),
+            new PlotworldConfig(
+                    8,
+                    200,
+                    -64,
+                    320,
+                    "minecraft:plains",
+                    new BlockConfig("stone_slab", new BlockStateConfig[]{}),
+                    new BlockConfig("deepslate_tile_slab", new BlockStateConfig[]{}),
+                    new BlockConfig("deepslate_tiles", new BlockStateConfig[]{}),
+                    new BlockConfig("white_concrete", new BlockStateConfig[]{}),
+                    new Layer[]{
+                            new Layer(1, new BlockConfig("barrier", new BlockStateConfig[]{})),
+                            new Layer(49, new BlockConfig("stone", new BlockStateConfig[]{})),
+                            new Layer(1, new BlockConfig("grass_block", new BlockStateConfig[]{}))
+                    }
+            ),
             new Database(
                     "mariadb",
                     "localhost",
@@ -48,10 +74,21 @@ public record Config(General general, Database database, PlotChatStyle[] plotCha
                             new Color("p3_green", "67A067"),
                             new Color("p3_blue", "6767A0")
                     }
-            )
+            ),
+            new ReportReason[]{
+                    new ReportReason("griffed", 0, new ItemConfig("lava_bucket", 1, false, false, "")),
+                    new ReportReason("explicit_sexual_content", 0, new ItemConfig("barrier", 18, false, false, "")),
+                    new ReportReason("ip_spam", 0, new ItemConfig("oak_sign", 1, false, false, "")),
+                    new ReportReason("generates_lag", 0, new ItemConfig("redstone", 1, false, false, "")),
+                    new ReportReason("hate_speech", 0, new ItemConfig("player_head", 1, false, false, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzAwMThhNDNjYzQ0OGRmZGU5ZWU0Mjg4ZDZjZTQyMWM5NmU4MTQyZmY4YzE5NWM0NDRlMGUxMTg0ZWNmY2M1NSJ9fX0=")),
+                    new ReportReason("spawn_kill", 0, new ItemConfig("iron_sword", 1, true, false, "")),
+                    new ReportReason("other", 0, new ItemConfig("paper", 1, false, false, ""))
+            }
     );
 
-    public record General(Boolean autoTeleport) {
+    public record General(boolean autoTeleport, boolean warningUseOfPlotChatInEmptyPlot,
+                          boolean logPlotChat, BlockPos defaultPlotSpawn, String[] entityWhitelist,
+                          String[] entityRoadWhitelist) {
     }
 
     public record Database(String type, String host, Integer port, String user, String password,
@@ -81,6 +118,32 @@ public record Config(General general, Database database, PlotChatStyle[] plotCha
     }
 
     public record Color(String name, String color) {
+    }
+
+    public record PlotworldConfig(int roadSize, int plotSize, int minHeight, int maxHeight, String biomeId,
+                                  BlockConfig unclaimedBorderBlock, BlockConfig claimedBorderBlock,
+                                  BlockConfig borderBlock, BlockConfig roadBlock, Layer[] layers) {
+
+    }
+
+    public record BlockConfig(String id, BlockStateConfig[] states) {
+
+    }
+
+    public record BlockStateConfig(String key, String value) {
+
+    }
+
+    public record Layer(int thickness, BlockConfig block) {
+
+    }
+
+    public record BlockPos(int x, int y, int z) {
+
+    }
+
+    public record ItemConfig(String itemId, int count, boolean hideAttributes, boolean glow, String headValue) {
+
     }
 }
 

@@ -14,9 +14,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.LockableContainerBlockEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -130,7 +128,7 @@ public class PlotPermissionsEvents {
         Stimuli.global().listen(BlockUseEvent.EVENT, (player, hand, hitResult) -> {
             ItemStack stack = player.getStackInHand(hand);
 
-            if (SPAWN_ENTITY_ITEMS.contains(stack.getItem()))
+            if (SPAWN_ENTITY_ITEMS.contains(stack.getItem()) || stack.getItem() instanceof SpawnEggItem)
                 return hasPermission(player, hitResult.getBlockPos(), PlotPermission.SPAWN_ENTITIES);
             return ActionResult.PASS;
         });

@@ -7,10 +7,12 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
+import me.zailer.plotcubic.events.ReloadEvent;
 import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import xyz.nucleoid.stimuli.Stimuli;
 
 import java.io.IOException;
 
@@ -36,7 +38,9 @@ public class ReloadCommand extends SubcommandAbstract {
             String translationKey;
             try {
                 PlotCubic.getConfigManager().reload();
-                MessageUtils.reloadColors();
+                try (var invokers = Stimuli.select().at(PlotCubic.getPlotWorldHandle().asWorld(), player.getBlockPos())) {
+                    invokers.get(ReloadEvent.EVENT).onReload(PlotCubic.getConfig());
+                }
                 translationKey = "text.plotcubic.config.reloaded";
             } catch (IOException e) {
                 e.printStackTrace();

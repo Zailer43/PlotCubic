@@ -25,9 +25,8 @@ public class MessageUtils {
         this.append(message, color);
     }
 
-    public static void reloadColors() {
+    public static void reloadColors(Config.CustomColors customColors) {
         String hexColorRegex = "^[A-Fa-f\\d]{6}$";
-        Config.CustomColors customColors = PlotCubic.getConfig().customColors();
         for (var color : customColors.others()) {
             String colorValue = color.color();
             if (colorValue.matches(hexColorRegex))

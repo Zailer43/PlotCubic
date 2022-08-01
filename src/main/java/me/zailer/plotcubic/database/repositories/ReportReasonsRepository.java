@@ -1,5 +1,6 @@
 package me.zailer.plotcubic.database.repositories;
 
+import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.plot.ReportReason;
 
 import java.sql.Connection;
@@ -40,9 +41,10 @@ public class ReportReasonsRepository {
         ResultSet rs = reasonStatement.executeQuery();
 
         Set<ReportReason> reasons = new HashSet<>();
-
-        while (rs.next())
-            reasons.add(ReportReason.REPORT_REASON_HASH_MAP.get(rs.getString("reason_id")));
+        while (rs.next()) {
+            String id = rs.getString("reason_id");
+            reasons.add(ReportReason.byId(id, new ReportReason(id, 0, new Config.ItemConfig("stone", 1, false, false, ""))));
+        }
 
         return reasons;
     }

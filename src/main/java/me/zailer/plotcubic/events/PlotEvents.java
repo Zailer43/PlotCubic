@@ -52,8 +52,6 @@ public class PlotEvents {
         Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> allowAdmin(player));
         Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> protectMinHeight(world, pos));
         Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> protectRoads(pos));
-        Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> protectRoads(pos));
-
 
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> protectRoadOfPiston(world, pos, state, context));
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> allowAdmin(player));
@@ -78,7 +76,7 @@ public class PlotEvents {
 
     private static void registerAvoidEntitiesSpawn() {
         Stimuli.global().listen(EntitySpawnEvent.EVENT, PlotEvents::entityWhitelist);
-        Stimuli.global().listen(EntitySpawnEvent.EVENT, PlotEvents::entityInRoadBlacklist);
+        Stimuli.global().listen(EntitySpawnEvent.EVENT, PlotEvents::entityRoadWhitelist);
     }
 
     private static void registerNewUsers() {
@@ -124,21 +122,12 @@ public class PlotEvents {
     }
 
     private static ActionResult entityWhitelist(Entity entity) {
-        for (var entityType : PlotCubic.getEntityWhitelist()) {
-            if (entityType == entity.getType())
-                return ActionResult.PASS;
-        }
-
-        return ActionResult.FAIL;
+        return PlotCubic.getEntityWhitelist().contains(entity.getType()) ? ActionResult.PASS : ActionResult.FAIL;
     }
 
-    private static ActionResult entityInRoadBlacklist(Entity entity) {
-        for (var entityType : PlotCubic.ENTITY_IN_ROAD_BLACKLIST) {
-            if (entityType == entity.getType() && !PlotManager.getInstance().isPlot(entity.getBlockPos()))
-                return ActionResult.FAIL;
-        }
-
-        return ActionResult.PASS;
+    private static ActionResult entityRoadWhitelist(Entity entity) {
+        return PlotCubic.getEntityRoadWhitelist().contains(entity.getType())
+                || !PlotManager.isOutOfPlot(entity.getBlockPos()) ? ActionResult.PASS : ActionResult.FAIL;
     }
 
     private static void onPlayerJoinInit(ServerPlayNetworkHandler handler, MinecraftServer server) {
@@ -154,7 +143,7 @@ public class PlotEvents {
                 if (uow.usersRepository.exists(username))
                     return;
 
-                handler.player.teleport(PlotCubic.getPlotWorldHandle().asWorld(), 0, PlotManager.getInstance().getSettings().getMaxHeight() + 2, 0, 0, 0);
+                handler.player.teleport(PlotCubic.getPlotWorldHandle().asWorld(), 0, PlotManager.getInstance().getMaxTerrainHeight() + 2, 0, 0, 0);
                 uow.beginTransaction();
                 uow.usersRepository.add(username);
                 uow.commit();
