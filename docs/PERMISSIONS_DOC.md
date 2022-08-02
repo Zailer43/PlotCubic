@@ -156,9 +156,13 @@ Allows you to give permission to another user with ``/plot trust`` to:
 
 ### Bypass
 
-| Permission            | Description                                             |
-|-----------------------|---------------------------------------------------------|
-| plotcubic.bypass.deny | Allows to visit and enter parcels where you were denied |
+| Permission                    | Description                                           |
+|-------------------------------|-------------------------------------------------------|
+| plotcubic.bypass.deny         | Allows to visit and enter plots where you were denied |
+| plotcubic.bypass.plot.build   | Allow building on road                                |
+| plotcubic.bypass.road.build   | Allow building on any plot                            |
+| plotcubic.bypass.plot.destroy | Allow to destroy any plot                             |
+| plotcubic.bypass.road.destroy | Allow to destroy the road                             |
 
 ### Admin commands
 

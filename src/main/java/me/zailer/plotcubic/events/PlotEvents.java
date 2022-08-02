@@ -1,5 +1,6 @@
 package me.zailer.plotcubic.events;
 
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.database.UnitOfWork;
@@ -49,18 +50,18 @@ public class PlotEvents {
     }
 
     private static void registerProtectBlocks() {
-        Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> allowAdmin(player));
+        Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> allowAdmin(player, pos, "destroy"));
         Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> protectMinHeight(world, pos));
         Stimuli.global().listen(BlockBreakEvent.EVENT, (player, world, pos) -> protectRoads(pos));
 
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> protectRoadOfPiston(world, pos, state, context));
-        Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> allowAdmin(player));
+        Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> allowAdmin(player, pos, "build"));
         Stimuli.global().listen(BlockPlaceEvent.BEFORE, (player, world, pos, state, context) -> protectRoads(pos));
 
         Stimuli.global().listen(FluidPlaceEvent.EVENT, (world, pos, player, hitResult) -> {
             if (player == null)
                 return ActionResult.FAIL;
-            return allowAdmin(player);
+            return allowAdmin(player, pos, "build");
         });
         Stimuli.global().listen(FluidPlaceEvent.EVENT, (world, pos, player, hitResult) -> {
             if (player == null)
@@ -95,8 +96,11 @@ public class PlotEvents {
         Stimuli.global().listen(PlayerChatContentEvent.EVENT, PlotEvents::sendChatMessage);
     }
 
-    private static ActionResult allowAdmin(ServerPlayerEntity player) {
-        return player.hasPermissionLevel(4) ? ActionResult.SUCCESS : ActionResult.PASS;
+    private static ActionResult allowAdmin(ServerPlayerEntity player, BlockPos pos, String action) {
+        if (PlotManager.getInstance().isPlot(pos))
+            return Permissions.check(player, "plotcubic.bypass.plot." + action) ? ActionResult.SUCCESS : ActionResult.PASS;
+
+        return Permissions.check(player, "plotcubic.bypass.road." + action) ? ActionResult.SUCCESS : ActionResult.PASS;
     }
 
     private static ActionResult protectMinHeight(ServerWorld world, BlockPos pos) {
