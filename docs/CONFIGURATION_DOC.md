@@ -2,7 +2,7 @@
 
 
 ## Config structure
-```json lines
+```json5
 {
   "CONFIG_VERSION_DONT_TOUCH_THIS": 1,
   
@@ -204,7 +204,7 @@ You can reload the configuration without restarting the server with `/plot admin
 ### Block state
 You can find more information in https://minecraft.fandom.com/wiki/Block_states
 
-```json lines
+```json5
 {
   // Block ID, can contain namespace
   "id": "stone_slab",
@@ -225,7 +225,7 @@ You can find more information in https://minecraft.fandom.com/wiki/Block_states
 ### GUI Item
 
 
-```json lines
+```json5
 {
     
     "itemId": "lava_bucket", // item ID
