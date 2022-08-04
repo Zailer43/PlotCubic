@@ -33,13 +33,11 @@ public record Config(int CONFIG_VERSION_DONT_TOUCH_THIS, General general, Plotwo
                     }
             ),
             new Database(
-                    "mariadb",
-                    "localhost",
-                    3306,
+                    "h2",
                     "root",
                     "123",
-                    "plotcubic",
-                    "p3"),
+                    "plotcubic"
+            ),
             new PlotChatStyle[]{
                     new PlotChatStyle("frozen_berries", "Frozen Berries", "sweet_berries",
                             "<color:#595e60>[<color:#707370>%plot_id%<color:#595e60>] <color:#b0b7c0>%username% <color:#707370>» <color:#b0b7c0>%message%"),
@@ -91,8 +89,7 @@ public record Config(int CONFIG_VERSION_DONT_TOUCH_THIS, General general, Plotwo
                           String[] entityRoadWhitelist) {
     }
 
-    public record Database(String type, String host, Integer port, String user, String password,
-                           String database, String table_name) {
+    public record Database(String type, String user, String password, String database) {
     }
 
     public static final class CustomColors {

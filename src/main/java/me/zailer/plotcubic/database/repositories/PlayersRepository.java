@@ -8,15 +8,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class UsersRepository {
+public class PlayersRepository {
     private final Connection connection;
 
-    public UsersRepository(Connection connection) {
+    public PlayersRepository(Connection connection) {
         this.connection = connection;
     }
 
     public void add(String username) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement("INSERT INTO `users` (`username`, `plot_chat_enabled`) VALUES (?, FALSE)");
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO `players` (`username`) VALUES (?)");
 
         statement.setString(1, username);
 
@@ -24,7 +24,7 @@ public class UsersRepository {
     }
 
     public boolean exists(String username) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement("SELECT * FROM `users` WHERE `username` = ?");
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM `players` WHERE `username` = ?");
 
         statement.setString(1, username);
 
@@ -35,7 +35,7 @@ public class UsersRepository {
 
     @Nullable
     public UserConfig get(String username) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement("SELECT * FROM `users` WHERE `username` = ?");
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM `players` WHERE `username` = ?");
 
         statement.setString(1, username);
 
@@ -51,7 +51,7 @@ public class UsersRepository {
     }
 
     public void updatePlotChat(String username, boolean value) throws SQLException {
-            PreparedStatement statement = connection.prepareStatement("UPDATE `users` SET `plot_chat_enabled` = ? WHERE `username` = ?");
+            PreparedStatement statement = connection.prepareStatement("UPDATE `players` SET `plot_chat_enabled` = ? WHERE `username` = ?");
 
             statement.setBoolean(1, value);
             statement.setString(2, username);

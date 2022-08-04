@@ -94,7 +94,7 @@ public class PlotCubic implements ModInitializer {
                 return;
             }
 
-            databaseManager = new DatabaseManager(config, server);
+            databaseManager = new DatabaseManager(config.database());
         });
 
         PlotCommand.register();
@@ -145,7 +145,7 @@ public class PlotCubic implements ModInitializer {
         String username = player.getName().getString();
         UserConfig userConfig;
         try (var uow = new UnitOfWork()) {
-            userConfig = uow.usersRepository.get(username);
+            userConfig = uow.playersRepository.get(username);
         } catch (Exception ignored) {
             userConfig = null;
             MessageUtils.sendDatabaseConnectionError(player);

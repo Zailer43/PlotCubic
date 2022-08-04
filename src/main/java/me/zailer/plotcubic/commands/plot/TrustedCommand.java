@@ -63,7 +63,7 @@ public class TrustedCommand extends SubcommandAbstract {
 
             TrustedPlayer trustedPlayer;
             try (var uow = new UnitOfWork()) {
-                if (!uow.usersRepository.exists(trustedUsername)) {
+                if (!uow.playersRepository.exists(trustedUsername)) {
                     MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", trustedUsername);
                     return 1;
                 }

@@ -26,7 +26,7 @@ public final class UserConfig {
         try (var uow = new UnitOfWork()) {
             try {
                 uow.beginTransaction();
-                uow.usersRepository.updatePlotChat(this.username, isEnabled);
+                uow.playersRepository.updatePlotChat(this.username, isEnabled);
                 uow.commit();
             } catch (SQLException e) {
                 uow.rollback();

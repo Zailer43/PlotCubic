@@ -81,7 +81,7 @@ public class DenyCommand extends SubcommandAbstract {
 
             try (var uow = new UnitOfWork()) {
                 try {
-                    if (!uow.usersRepository.exists(deniedUsername)) {
+                    if (!uow.playersRepository.exists(deniedUsername)) {
                         MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", deniedUsername);
                         return 1;
                     }

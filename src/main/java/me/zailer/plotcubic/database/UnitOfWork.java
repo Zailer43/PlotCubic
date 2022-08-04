@@ -2,6 +2,7 @@ package me.zailer.plotcubic.database;
 
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.database.repositories.*;
+import me.zailer.plotcubic.database.type.SQLDatabase;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ public class UnitOfWork implements AutoCloseable {
     public ReportReasonsRepository reportReasonsRepository;
     public ReportsRepository reportsRepository;
     public TrustedRepository trustedRepository;
-    public UsersRepository usersRepository;
+    public PlayersRepository playersRepository;
 
     public UnitOfWork() throws SQLException {
         this.context = PlotCubic.getDatabaseManager().getDatabase();
@@ -26,7 +27,7 @@ public class UnitOfWork implements AutoCloseable {
         this.reportReasonsRepository = new ReportReasonsRepository(this.connection);
         this.reportsRepository = new ReportsRepository(this.connection, this);
         this.trustedRepository = new TrustedRepository(this.connection);
-        this.usersRepository = new UsersRepository(this.connection);
+        this.playersRepository = new PlayersRepository(this.connection);
     }
 
     public void beginTransaction() throws SQLException {

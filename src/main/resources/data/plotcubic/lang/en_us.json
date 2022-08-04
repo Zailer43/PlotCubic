@@ -158,7 +158,7 @@
   "text.plotcubic.plot.visit.successful_id": "<p3_normal>Successfully teleported to %s",
   "text.plotcubic.plot.visit.successful_player": "<p3_normal>Successfully teleported to plot %s<p3_normal> of %s",
   "text.plotcubic.plot.you_have_deny": "<p3_normal>You were denied from the plot",
-  "text.plotcubic.report.moderated": "<p3_normal>Changed report to moderated by %s at %s",
+  "text.plotcubic.report.moderated": "<p3_normal>Changed report to moderated by %s <p3_normal>at %s",
   "text.plotcubic.report_reason.explicit_sexual_content.name": "<p3_normal>Explicit sexual content",
   "text.plotcubic.report_reason.generates_lag.name": "<p3_green>Generates lag",
   "text.plotcubic.report_reason.griffed.name": "<p3_green>Griffed",

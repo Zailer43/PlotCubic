@@ -47,9 +47,10 @@ dependencies {
     modImplementation "maven.modrinth:luckperms:5.3.86"
 
     implementation "com.zaxxer:HikariCP:${project.hikaricp_version}"
-    implementation "org.mariadb.jdbc:mariadb-java-client:${project.mariadb_version}"
-    implementation "com.microsoft.sqlserver:mssql-jdbc:${project.ssms_version}"
     implementation "com.github.Marcono1234:gson-record-type-adapter-factory:${project.gson_record_type_adapter_factory_version}"
+    implementation "org.flywaydb:flyway-core:${project.flyway_version}"
+
+    implementation "com.h2database:h2:${project.h2_version}"
 }
 
 processResources {

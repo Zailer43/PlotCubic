@@ -144,12 +144,12 @@ public class PlotEvents {
 
         try (var uow = new UnitOfWork()) {
             try {
-                if (uow.usersRepository.exists(username))
+                if (uow.playersRepository.exists(username))
                     return;
 
                 handler.player.teleport(PlotCubic.getPlotWorldHandle().asWorld(), 0, PlotManager.getInstance().getMaxTerrainHeight() + 2, 0, 0, 0);
                 uow.beginTransaction();
-                uow.usersRepository.add(username);
+                uow.playersRepository.add(username);
                 uow.commit();
             } catch (SQLException e) {
                 uow.rollback();

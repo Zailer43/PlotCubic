@@ -102,14 +102,7 @@
   "database": {
     
     // Database type
-    "type": "mariadb", // mariadb (soon more options)
-    
-    // The host on which the database is hosted
-    // "localhost" for local database
-    "host": "localhost", // string
-    
-    // The port on which the database is hosted
-    "port": 3306, // unsigned short (0-65535)
+    "type": "h2", // h2 (soon more options)
     
     // Username to enter the database
     "user": "root", // string
@@ -120,10 +113,6 @@
     
     // The name of the database
     "database": "plotcubic", // string
-    
-    // The table prefix, for example "p3." for "p3.table"
-    // currently not working
-    "table_name": "p3" // string
   },
 
   // Chat style affects "/plot chat" for everyone within a plot
