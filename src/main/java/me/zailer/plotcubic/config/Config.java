@@ -19,8 +19,6 @@ public record Config(int CONFIG_VERSION_DONT_TOUCH_THIS, General general, Plotwo
             new PlotworldConfig(
                     8,
                     200,
-                    -64,
-                    320,
                     "minecraft:plains",
                     new BlockConfig("stone_slab", new BlockStateConfig[]{}),
                     new BlockConfig("deepslate_tile_slab", new BlockStateConfig[]{}),
@@ -117,7 +115,7 @@ public record Config(int CONFIG_VERSION_DONT_TOUCH_THIS, General general, Plotwo
     public record Color(String name, String color) {
     }
 
-    public record PlotworldConfig(int roadSize, int plotSize, int minHeight, int maxHeight, String biomeId,
+    public record PlotworldConfig(int roadSize, int plotSize, String biomeId,
                                   BlockConfig unclaimedBorderBlock, BlockConfig claimedBorderBlock,
                                   BlockConfig borderBlock, BlockConfig roadBlock, Layer[] layers) {
 

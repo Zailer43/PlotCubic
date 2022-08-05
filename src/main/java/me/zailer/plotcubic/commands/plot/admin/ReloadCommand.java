@@ -2,7 +2,6 @@ package me.zailer.plotcubic.commands.plot.admin;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
@@ -33,22 +32,22 @@ public class ReloadCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
+        String translationKey;
         try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            String translationKey;
-            try {
-                PlotCubic.getConfigManager().reload();
-                try (var invokers = Stimuli.select().at(PlotCubic.getPlotWorldHandle().asWorld(), player.getBlockPos())) {
-                    invokers.get(ReloadEvent.EVENT).onReload(PlotCubic.getConfig());
-                }
-                translationKey = "text.plotcubic.config.reloaded";
-            } catch (IOException e) {
-                e.printStackTrace();
-                translationKey = "error.plotcubic.reloading_config";
+            PlotCubic.getConfigManager().reload();
+            try (var invokers = Stimuli.select().at(PlotCubic.getPlotWorldHandle().asWorld(), player.getBlockPos())) {
+                invokers.get(ReloadEvent.EVENT).onReload(PlotCubic.getConfig());
             }
-            MessageUtils.sendChatMessage(player, translationKey);
-        } catch (CommandSyntaxException ignored) {
+            translationKey = "text.plotcubic.config.reloaded";
+        } catch (IOException e) {
+            e.printStackTrace();
+            translationKey = "error.plotcubic.reloading_config";
         }
+        MessageUtils.sendMessage(player, translationKey);
+
         return 1;
     }
 

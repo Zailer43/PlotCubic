@@ -3,7 +3,6 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.PlotCommand;
@@ -15,6 +14,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 
 public class ChatCommand extends SubcommandAbstract {
     @Override
@@ -37,25 +37,24 @@ public class ChatCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            String message = serverCommandSource.getArgument("MESSAGE", String.class);
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
+        String message = serverCommandSource.getArgument("MESSAGE", String.class);
 
-            PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
-            if (plotId == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-                return 1;
-            }
-            Plot plot = Plot.getLoadedPlot(plotId);
-            if (plot == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-                return 1;
-            }
-
-            plot.sendPlotChatMessage(player, message);
-
-        } catch (CommandSyntaxException ignored) {
+        PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+        if (plotId == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 1;
         }
+        Plot plot = Plot.getLoadedPlot(plotId);
+        if (plot == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 1;
+        }
+
+        plot.sendPlotChatMessage(player, Text.literal(message));
+
         return 1;
     }
 

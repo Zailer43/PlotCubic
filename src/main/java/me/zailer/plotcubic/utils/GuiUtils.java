@@ -6,10 +6,9 @@ import me.zailer.plotcubic.gui.IBooleanOption;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import java.util.List;
 import java.util.Set;
@@ -20,7 +19,7 @@ public class GuiUtils {
         for (int i = index; i != finalSlot; i++) {
             gui.setSlot(i, new GuiElementBuilder()
                     .setItem(Items.GRAY_STAINED_GLASS_PANE)
-                    .setName(LiteralText.EMPTY.copy())
+                    .setName(Text.empty())
             );
         }
     }
@@ -78,7 +77,7 @@ public class GuiUtils {
     }
 
     private static MutableText getBooleanName(boolean value) {
-        return new TranslatableText(value ? "gui.plotcubic.true" : "gui.plotcubic.false").setStyle(Style.EMPTY.withItalic(false));
+        return Text.translatable(value ? "gui.plotcubic.true" : "gui.plotcubic.false").setStyle(Style.EMPTY.withItalic(false));
     }
 
     public static <BooleanOption extends IBooleanOption> void loadPage(SlotHolder gui, int pageIndex, List<BooleanOption> allOptions, Set<BooleanOption> optionsInTrue) {

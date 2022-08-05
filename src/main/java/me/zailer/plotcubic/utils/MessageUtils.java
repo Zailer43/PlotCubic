@@ -1,11 +1,10 @@
 package me.zailer.plotcubic.utils;
 
-import eu.pb4.placeholders.TextParser;
-import eu.pb4.placeholders.util.GeneralUtils;
-import eu.pb4.placeholders.util.TextParserUtils;
+import eu.pb4.placeholders.api.node.parent.ColorNode;
+import eu.pb4.placeholders.api.parsers.TextParserV1;
+import eu.pb4.placeholders.impl.textparser.TextParserImpl;
 import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.config.Config;
-import net.minecraft.network.MessageType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
 
@@ -13,10 +12,10 @@ public class MessageUtils {
     private final MutableText message;
 
     public MessageUtils() {
-        this.message = LiteralText.EMPTY.copy();
+        this.message = Text.empty();
     }
 
-    private MessageUtils(TranslatableText translation) {
+    private MessageUtils(MutableText translation) {
         this.message = translation;
     }
 
@@ -43,14 +42,16 @@ public class MessageUtils {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    private static void registerColor(String identifier, int color) {
-        TextParser.register(
-                identifier,
-                (tag, data, input, handlers, endAt) -> {
-                    GeneralUtils.TextLengthPair out = TextParserUtils.recursiveParsing(input, handlers, endAt);
-                    out.text().fillStyle(Style.EMPTY.withColor(color));
-                    return out;
-                }
+    private static void registerColor(String name, int color) {
+        TextParserV1.registerDefault(
+                TextParserV1.TextTag.of(
+                        name,
+                        "color",
+                        (tag, data, input, tags, endAt) -> {
+                            var out = TextParserImpl.recursiveParsing(input, tags, endAt);
+                            return new TextParserV1.TagNodeValue(new ColorNode(out.nodes(), TextColor.fromRgb(color)), out.length());
+                        }
+                )
         );
     }
 
@@ -60,7 +61,7 @@ public class MessageUtils {
     }
 
     public void append(String message, int color) {
-        this.append(new LiteralText(message).setStyle(Style.EMPTY.withColor(color)));
+        this.append(Text.literal(message).setStyle(Style.EMPTY.withColor(color)));
     }
 
     public MessageUtils append(String key, String info) {
@@ -69,7 +70,7 @@ public class MessageUtils {
     }
 
     public MessageUtils appendTranslations(String key, String key2) {
-        MutableText translation = new TranslatableText(key).append(new TranslatableText(key2)
+        MutableText translation = Text.translatable(key).append(Text.translatable(key2)
                 .setStyle(Style.EMPTY.withColor(getHighlight())));
         this.message.append("\n").append(translation);
         return this;
@@ -85,53 +86,40 @@ public class MessageUtils {
     }
 
     public static MessageUtils getTranslation(String key) {
-        return new MessageUtils(new TranslatableText(key));
+        return new MessageUtils(Text.translatable(key));
     }
 
-    public static void sendChatMessage(ServerPlayerEntity player, MutableText text) {
-        player.sendMessage(text, MessageType.CHAT, player.getUuid());
+    public static void sendMessage(ServerPlayerEntity player, String translationKey) {
+        player.sendMessage(Text.translatable(translationKey));
     }
 
-    public static void sendChatMessage(ServerPlayerEntity player, TranslatableText text) {
-        sendChatMessage(player, text.getKey(), text.getArgs());
-    }
-
-    public static void sendChatMessage(ServerPlayerEntity player, String translationKey) {
-        player.sendMessage(new TranslatableText(translationKey), MessageType.CHAT, player.getUuid());
-    }
-
-    public static void sendChatMessage(ServerPlayerEntity player, String key, Object... args) {
-        player.sendMessage(formatArgs(key, args), MessageType.CHAT, player.getUuid());
+    public static void sendMessage(ServerPlayerEntity player, String translationKey, Object... args) {
+        player.sendMessage(formatArgs(translationKey, args));
     }
 
     public static void sendDatabaseConnectionError(ServerPlayerEntity player) {
         PlotCubic.log("[PlotCubic] Failed to get database connection");
-        sendChatMessage(player, "error.plotcubic.database.connection");
+        player.sendMessage(getTranslation("error.plotcubic.database.connection").get());
     }
 
-    public static TranslatableText getMissingPermissionMsg(String translationKey) {
-        return MessageUtils.formatArgs("error.plotcubic.not_have_permission", new TranslatableText(translationKey));
+    public static MutableText getMissingPermissionMsg(String translationKey) {
+        return MessageUtils.formatArgs("error.plotcubic.not_have_permission", Text.translatable(translationKey));
     }
 
     public static void sendMissingPermissionMessage(ServerPlayerEntity player, String translationKey) {
-        sendChatMessage(player, getMissingPermissionMsg(translationKey));
+        player.sendMessage(getMissingPermissionMsg(translationKey));
     }
 
-    public static TranslatableText formatArgs(String key, Object... args) {
+    public static MutableText formatArgs(String key, Object... args) {
         Object[] textArgs = new Text[args.length];
 
         for (int i = 0; i != args.length; i++) {
-            Text text;
+            Text text = args[i] instanceof Text textArg ? textArg : Text.literal(args[i].toString());
 
-            if (args[i] instanceof Text textArg)
-                text = textArg;
-            else
-                text = new LiteralText(args[i].toString());
-
-            textArgs[i] = text.copy().setStyle(Style.EMPTY.withColor(getHighlight()));
+            textArgs[i] = text.copyContentOnly().setStyle(Style.EMPTY.withColor(getHighlight()));
         }
 
-        return new TranslatableText(key, textArgs);
+        return Text.translatable(key, textArgs);
     }
 
     public static int getHighlight() {

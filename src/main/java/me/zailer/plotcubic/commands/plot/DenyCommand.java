@@ -3,7 +3,6 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
@@ -48,69 +47,68 @@ public class DenyCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            String deniedUsername = serverCommandSource.getArgument("PLAYER", String.class);
-            String reason = Utils.getArg(serverCommandSource, String.class, "REASON");
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
+        String deniedUsername = serverCommandSource.getArgument("PLAYER", String.class);
+        String reason = Utils.getArg(serverCommandSource, String.class, "REASON");
 
-            if (deniedUsername.equalsIgnoreCase(player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.yourself");
-                return 1;
-            }
+        if (deniedUsername.equalsIgnoreCase(player.getName().getString())) {
+            MessageUtils.sendMessage(player, "error.plotcubic.plot.deny.yourself");
+            return 1;
+        }
 
-            PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
-            if (plotId == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-                return 1;
-            }
+        PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+        if (plotId == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 1;
+        }
 
-            if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
-                return 1;
-            }
+        if (!Plot.isOwner(player, plotId)) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot_owner");
+            return 1;
+        }
 
-            if (reason != null && !Permissions.check(player, "plotcubic.command.deny.add_reason")) {
-                MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.deny.add_reason");
-                return 1;
-            }
+        if (reason != null && !Permissions.check(player, "plotcubic.command.deny.add_reason")) {
+            MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.deny.add_reason");
+            return 1;
+        }
 
-            if (reason != null && reason.length() > 64) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.reason_length");
-                return 1;
-            }
+        if (reason != null && reason.length() > 64) {
+            MessageUtils.sendMessage(player, "error.plotcubic.plot.deny.reason_length");
+            return 1;
+        }
 
-            try (var uow = new UnitOfWork()) {
-                try {
-                    if (!uow.playersRepository.exists(deniedUsername)) {
-                        MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", deniedUsername);
-                        return 1;
-                    }
-
-                    uow.beginTransaction();
-
-                    if (uow.deniedRepository.exists(plotId, deniedUsername)) {
-                        String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], deniedUsername);
-                        MessageUtils.sendChatMessage(player, "error.plotcubic.plot.deny.already_has_deny", removeCommand);
-                        return 1;
-                    }
-
-                    uow.trustedRepository.update(new TrustedPlayer(deniedUsername, Set.of(), plotId));
-                    uow.deniedRepository.add(plotId, deniedUsername, reason);
-                    uow.commit();
-
-                    DeniedPlayer deniedPlayer = new DeniedPlayer(deniedUsername, reason);
-                    MessageUtils.sendChatMessage(player, "text.plotcubic.plot.deny_successful", deniedUsername, deniedPlayer.reason());
-                    Plot plot = Plot.getLoadedPlot(plotId);
-                    if (plot != null)
-                        plot.addDenied(deniedPlayer);
-                } catch (SQLException e) {
-                    uow.rollback();
-                    MessageUtils.sendChatMessage(player, "error.plotcubic.database.deny");
+        try (var uow = new UnitOfWork()) {
+            try {
+                if (!uow.playersRepository.exists(deniedUsername)) {
+                    MessageUtils.sendMessage(player, "error.plotcubic.player_does_not_exist", deniedUsername);
+                    return 1;
                 }
-            } catch (Exception ignored) {
-                MessageUtils.sendDatabaseConnectionError(player);
+
+                uow.beginTransaction();
+
+                if (uow.deniedRepository.exists(plotId, deniedUsername)) {
+                    String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], deniedUsername);
+                    MessageUtils.sendMessage(player, "error.plotcubic.plot.deny.already_has_deny", removeCommand);
+                    return 1;
+                }
+
+                uow.trustedRepository.update(new TrustedPlayer(deniedUsername, Set.of(), plotId));
+                uow.deniedRepository.add(plotId, deniedUsername, reason);
+                uow.commit();
+
+                DeniedPlayer deniedPlayer = new DeniedPlayer(deniedUsername, reason);
+                MessageUtils.sendMessage(player, "text.plotcubic.plot.deny_successful", deniedUsername, deniedPlayer.reason());
+                Plot plot = Plot.getLoadedPlot(plotId);
+                if (plot != null)
+                    plot.addDenied(deniedPlayer);
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendMessage(player, "error.plotcubic.database.deny");
             }
-        } catch (CommandSyntaxException ignored) {
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(player);
         }
         return 1;
     }

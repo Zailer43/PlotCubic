@@ -1,9 +1,9 @@
 package me.zailer.plotcubic.events;
 
 import me.zailer.plotcubic.PlotCubic;
-import me.zailer.plotcubic.plot.PlotPermission;
 import me.zailer.plotcubic.plot.Plot;
 import me.zailer.plotcubic.plot.PlotID;
+import me.zailer.plotcubic.plot.PlotPermission;
 import me.zailer.plotcubic.plot.TrustedPlayer;
 import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.Block;
@@ -14,7 +14,10 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.LockableContainerBlockEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.*;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.SpawnEggItem;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;

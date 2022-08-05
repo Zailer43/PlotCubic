@@ -23,12 +23,12 @@ public class ToggleChatCommand extends AbstractToggleableCommand {
         UserConfig userConfig = PlotCubic.getUser(player);
 
         if (userConfig == null) {
-            MessageUtils.sendChatMessage(player, "error.plotcubic.null_user_config");
+            MessageUtils.sendMessage(player, "error.plotcubic.null_user_config");
             return 1;
         }
 
         userConfig.setPlotChat(isEnabled);
-        MessageUtils.sendChatMessage(player, this.getToggleTranslationKey(isEnabled));
+        MessageUtils.sendMessage(player, this.getToggleTranslationKey(isEnabled));
 
         return 0;
     }
@@ -38,7 +38,7 @@ public class ToggleChatCommand extends AbstractToggleableCommand {
         UserConfig userConfig = PlotCubic.getUser(player);
 
         if (userConfig == null) {
-            MessageUtils.sendChatMessage(player, "error.plotcubic.null_user_config");
+            MessageUtils.sendMessage(player, "error.plotcubic.null_user_config");
             return false;
         }
 

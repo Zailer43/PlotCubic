@@ -40,6 +40,8 @@ public class CommandSuggestions {
         List<String> usernamesList = new ArrayList<>();
 
         ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player == null)
+            return CompletableFuture.completedFuture(builder.build());
         PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
         if (plotId == null)
             return CompletableFuture.completedFuture(builder.build());
@@ -64,7 +66,7 @@ public class CommandSuggestions {
     public static final SuggestionProvider<ServerCommandSource> GAME_MODE_SUGGESTION = ((context, builder) -> {
         List<String> gameModeList = new ArrayList<>();
         String usernameInput = builder.getRemainingLowerCase();
-        ServerPlayerEntity player = context.getSource().getPlayer();
+        ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
 
         for (var gameMode : GameMode.values()) {
             if (Permissions.check(player,"plotcubic.command.gamemode." + gameMode.getName()))

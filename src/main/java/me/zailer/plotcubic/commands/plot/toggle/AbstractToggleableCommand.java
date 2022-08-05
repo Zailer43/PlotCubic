@@ -2,7 +2,6 @@ package me.zailer.plotcubic.commands.plot.toggle;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
@@ -20,24 +19,23 @@ public abstract class AbstractToggleableCommand extends SubcommandAbstract {
                         .executes(this::execute)
                         .then(
                                 CommandManager.literal("true")
-                                        .executes(context -> this.execute(context, context.getSource().getPlayer(), true))
+                                        .executes(context -> this.execute(context, context.getSource().getPlayerOrThrow(), true))
                         ).then(
                                 CommandManager.literal("false")
-                                        .executes(context -> this.execute(context, context.getSource().getPlayer(), false))
+                                        .executes(context -> this.execute(context, context.getSource().getPlayerOrThrow(), false))
                         )
         );
     }
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
 
-            boolean isToggled = this.isToggled(serverCommandSource, player);
-            this.execute(serverCommandSource, player, !isToggled);
+        boolean isToggled = this.isToggled(serverCommandSource, player);
+        this.execute(serverCommandSource, player, !isToggled);
 
-        } catch (CommandSyntaxException ignored) {
-        }
         return 1;
     }
 

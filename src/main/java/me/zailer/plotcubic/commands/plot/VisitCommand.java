@@ -4,7 +4,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.*;
 import me.zailer.plotcubic.database.UnitOfWork;
@@ -16,7 +15,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import java.util.List;
 
@@ -33,9 +32,9 @@ public class VisitCommand extends SubcommandAbstract {
                 CommandManager.literal(alias)
                         .requires(Permissions.require(this.getCommandPermission()))
                         .executes(this::executeValidUsages)
-                        .then(CommandManager.argument("PLOT ID", new PlotIdArgumentType())
-                                        .executes(this::execute)
-                        )
+//                        .then(CommandManager.argument("PLOT ID", new PlotIdArgumentType())
+//                                        .executes(this::execute)
+//                        )
                         .then(CommandManager.argument("OWNER", StringArgumentType.word())
                                         .suggests(CommandSuggestions.ONLINE_PLAYER_SUGGESTION)
                                         .executes(this::execute)
@@ -48,15 +47,11 @@ public class VisitCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        ServerPlayerEntity player;
-        try {
-            player = serverCommandSource.getSource().getPlayer();
-        } catch (CommandSyntaxException e) {
-            e.printStackTrace();
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
             return 0;
-        }
 
-        TranslatableText message = new TranslatableText("error.plotcubic.unexpected");
+        MutableText message = Text.translatable("error.plotcubic.unexpected");
 
         PlotID plotId = Utils.getArg(serverCommandSource, PlotID.class, "PLOT ID");
         String playerToVisit = Utils.getArg(serverCommandSource, String.class, "OWNER");
@@ -74,13 +69,13 @@ public class VisitCommand extends SubcommandAbstract {
             }
         }
 
-        MessageUtils.sendChatMessage(player, message);
+        player.sendMessage(message);
         return 1;
     }
 
-    public TranslatableText visit(ServerPlayerEntity player, PlotID plotId) {
+    public MutableText visit(ServerPlayerEntity player, PlotID plotId) {
         Plot plot = Plot.getPlot(plotId);
-        TranslatableText message = this.getSuccessfulMsg(plotId);
+        MutableText message = this.getSuccessfulMsg(plotId);
 
         if (plot == null && Permissions.check(player, "plotcubic.command.visit.plot_id.unclaimed"))
             message = MessageUtils.getMissingPermissionMsg("permission.plotcubic.command.visit.plot_id.unclaimed");
@@ -90,9 +85,9 @@ public class VisitCommand extends SubcommandAbstract {
         return message;
     }
 
-    public TranslatableText visit(ServerPlayerEntity player, String playerToVisit, int index) {
+    public MutableText visit(ServerPlayerEntity player, String playerToVisit, int index) {
         List<Plot> plotList;
-        TranslatableText message;
+        MutableText message;
         try (var uow = new UnitOfWork()) {
             plotList = uow.plotsRepository.getAllPlots(playerToVisit);
 
@@ -110,29 +105,29 @@ public class VisitCommand extends SubcommandAbstract {
 
         } catch (Exception ignored) {
             MessageUtils.sendDatabaseConnectionError(player);
-            return new TranslatableText("error.plotcubic.database.connection");
+            return Text.translatable("error.plotcubic.database.connection");
         }
         return message;
     }
 
-    public TranslatableText getSuccessfulMsg(PlotID plotId) {
-        return new TranslatableText("text.plotcubic.plot.visit.successful_id", plotId.toString());
+    public MutableText getSuccessfulMsg(PlotID plotId) {
+        return Text.translatable("text.plotcubic.plot.visit.successful_id", plotId.toString());
     }
 
-    public TranslatableText getSuccessfulMsg(String player, int index, int plotAmount) {
-        return new TranslatableText("text.plotcubic.plot.visit.successful_player", index + "/" + plotAmount, player);
+    public MutableText getSuccessfulMsg(String player, int index, int plotAmount) {
+        return Text.translatable("text.plotcubic.plot.visit.successful_player", index + "/" + plotAmount, player);
     }
 
-    public TranslatableText getOutBoundsErrorMsg(int plotCount) {
-        return new TranslatableText("error.plotcubic.plot.visit.out_bounds", plotCount);
+    public MutableText getOutBoundsErrorMsg(int plotCount) {
+        return Text.translatable("error.plotcubic.plot.visit.out_bounds", plotCount);
     }
 
-    public TranslatableText getDenyMessage() {
-        return new TranslatableText("text.plotcubic.plot.you_have_deny");
+    public MutableText getDenyMessage() {
+        return Text.translatable("text.plotcubic.plot.you_have_deny");
     }
 
-    public TranslatableText getThereAreNoPlotsMsg() {
-        return new TranslatableText("error.plotcubic.plot.visit.has_no_plots");
+    public MutableText getThereAreNoPlotsMsg() {
+        return Text.translatable("error.plotcubic.plot.visit.has_no_plots");
     }
 
     @Override

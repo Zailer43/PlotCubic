@@ -46,16 +46,6 @@
     // Plot size between borders, border is not counted
     "plotSize": 200, // int
     
-    // Minimum height of the world
-    // It only modifies the real height of the world when generating it for the first time
-    // Modifying this will then cause the plots to change their height
-    
-    "minHeight": -64, // int
-    
-    // Maximum height of the world
-    // It only modifies the real height of the world when generating it for the first time
-    "maxHeight": 320, // int
-    
     // ID of the biome to use, if not found plains is used
     // It only changes when the server is restarted
     "biomeId": "minecraft:plains",

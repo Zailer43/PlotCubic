@@ -5,9 +5,9 @@ import eu.pb4.sgui.api.elements.GuiElementBuilder;
 import eu.pb4.sgui.api.gui.layered.Layer;
 import eu.pb4.sgui.api.gui.layered.LayerView;
 import eu.pb4.sgui.api.gui.layered.LayeredGui;
-import me.zailer.plotcubic.plot.PlotPermission;
 import me.zailer.plotcubic.plot.DeniedPlayer;
 import me.zailer.plotcubic.plot.Plot;
+import me.zailer.plotcubic.plot.PlotPermission;
 import me.zailer.plotcubic.plot.TrustedPlayer;
 import me.zailer.plotcubic.utils.GuiUtils;
 import me.zailer.plotcubic.utils.MessageUtils;
@@ -17,7 +17,7 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.TranslatableTextContent;
 import net.minecraft.world.GameMode;
 
 import java.text.SimpleDateFormat;
@@ -29,54 +29,54 @@ public class PlotInfoGui {
         LayeredGui gui = new LayeredGui(ScreenHandlerType.GENERIC_9X6, player, false);
         Layer mainLayer = new Layer(6, 9);
 
-        gui.setTitle(new TranslatableText("gui.plotcubic.info.title"));
+        gui.setTitle(Text.translatable("gui.plotcubic.info.title"));
 
         GuiElementBuilder ownerItem = new GuiElementBuilder()
                 .setItem(Items.PLAYER_HEAD)
                 .setSkullOwner(new GameProfile(UUID.randomUUID(), plot.getOwnerUsername()), player.getServer())
-                .setName(new TranslatableText("gui.plotcubic.info.owner.title"))
+                .setName(Text.translatable("gui.plotcubic.info.owner.title"))
                 .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.owner.value", plot.getOwnerUsername()));
 //                .addLoreLine(new MessageUtils("Plot ? of ?", GuiColors.GREEN).get());
 
         GuiElementBuilder plotIdItem = new GuiElementBuilder()
                 .setItem(Items.PAPER)
-                .setName(new TranslatableText("gui.plotcubic.info.id.title"))
+                .setName(Text.translatable("gui.plotcubic.info.id.title"))
                 .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.id.value", plot.getPlotID().toString()));
 
         GuiElementBuilder claimedDateItem = new GuiElementBuilder()
                 .setItem(Items.CLOCK)
-                .setName(new TranslatableText("gui.plotcubic.info.claimed_date.title"))
+                .setName(Text.translatable("gui.plotcubic.info.claimed_date.title"))
                 .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.claimed_date.value", this.getDateFormatted(plot)));
 
         GuiElementBuilder trustedItem = new GuiElementBuilder()
                 .setItem(Items.TRIPWIRE_HOOK)
-                .setName(new TranslatableText("gui.plotcubic.info.trusted.title"))
+                .setName(Text.translatable("gui.plotcubic.info.trusted.title"))
                 .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.trusted.count", String.valueOf(plot.getTrusted().size())))
-                .addLoreLine(new TranslatableText("gui.plotcubic.click_for_details"))
+                .addLoreLine(Text.translatable("gui.plotcubic.click_for_details"))
                 .setCallback((index, type, action) -> this.addPermissionsLayer(gui, plot.getTrusted()));
 
         GuiElementBuilder deniedItem = new GuiElementBuilder()
                 .setItem(Items.BARRIER)
-                .setName(new TranslatableText("gui.plotcubic.info.denied.title"))
+                .setName(Text.translatable("gui.plotcubic.info.denied.title"))
                 .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.denied.count", String.valueOf(plot.getDeniedPlayers().size())))
-                .addLoreLine(new TranslatableText("gui.plotcubic.click_for_details"))
+                .addLoreLine(Text.translatable("gui.plotcubic.click_for_details"))
                 .setCallback((index, type, action) -> this.addDeniedLayer(gui, plot.getDeniedPlayers(), player.getServer()));
 
         GameMode gameMode = plot.getGameMode();
-        Text gameModeMsg = gameMode == null ? new TranslatableText("gui.plotcubic.info.game_mode.default") : gameMode.getTranslatableName();
+        Text gameModeMsg = gameMode == null ? Text.translatable("gui.plotcubic.info.game_mode.default") : gameMode.getTranslatableName();
         GuiElementBuilder gameModeItem = new GuiElementBuilder()
                 .setItem(Items.CRAFTING_TABLE)
-                .setName(new TranslatableText("gui.plotcubic.info.game_mode.title"))
+                .setName(Text.translatable("gui.plotcubic.info.game_mode.title"))
                 .addLoreLine(gameModeMsg);
 
         GuiElementBuilder closeItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.cancel"))
+                .setName(Text.translatable("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         GuiElementBuilder viewInChatItem = new GuiElementBuilder()
                 .setItem(Items.PAPER)
-                .setName(new TranslatableText("gui.plotcubic.info.view_in_chat"))
+                .setName(Text.translatable("gui.plotcubic.info.view_in_chat"))
                 .setCallback((index, type, action) -> {
                     this.viewInChat(player, plot);
                     gui.close();
@@ -99,7 +99,7 @@ public class PlotInfoGui {
 
     public void viewInChat(ServerPlayerEntity player, Plot plot) {
         GameMode gameMode = plot.getGameMode();
-        String gameModeTranslationKey = gameMode == null ? "gui.plotcubic.info.game_mode.default" : ((TranslatableText) gameMode.getTranslatableName()).getKey();
+        String gameModeTranslationKey = gameMode == null ? "gui.plotcubic.info.game_mode.default" : ((TranslatableTextContent) gameMode.getTranslatableName()).getKey();
         MessageUtils messageUtils = MessageUtils.getTranslation("text.plotcubic.info.claimed_title")
                 .append("text.plotcubic.info.plot_id", plot.getPlotID().toString())
                 .append("text.plotcubic.info.claimed_date", this.getDateFormatted(plot))
@@ -108,7 +108,7 @@ public class PlotInfoGui {
                 .append("text.plotcubic.info.denied", String.join(", ", plot.getDeniedPlayers().stream().map(DeniedPlayer::username).toList()))
                 .appendTranslations("text.plotcubic.info.game_mode", gameModeTranslationKey);
 
-        MessageUtils.sendChatMessage(player, messageUtils.get());
+        player.sendMessage(messageUtils.get());
     }
 
     public String getDateFormatted(Plot plot) {
@@ -121,7 +121,7 @@ public class PlotInfoGui {
 
         GuiElementBuilder backItem = new GuiElementBuilder()
                 .setItem(Items.ARROW)
-                .setName(new TranslatableText("gui.plotcubic.back"))
+                .setName(Text.translatable("gui.plotcubic.back"))
                 .setCallback((index, type, action) -> gui.removeLayer(layerView));
 
         for (int i = 0; i != 54; i++)
@@ -197,7 +197,7 @@ public class PlotInfoGui {
 
         GuiElementBuilder backItem = new GuiElementBuilder()
                 .setItem(Items.ARROW)
-                .setName(new TranslatableText("gui.plotcubic.back"))
+                .setName(Text.translatable("gui.plotcubic.back"))
                 .setCallback((index, type, action) -> gui.removeLayer(layerView));
 
         for (int i = 0; i != 54; i++)
@@ -210,7 +210,7 @@ public class PlotInfoGui {
 
             GuiElementBuilder deniedHeadItem = new GuiElementBuilder()
                     .setItem(Items.PLAYER_HEAD)
-                    .setName(new TranslatableText("gui.plotcubic.info.denied.name", deniedPlayer.username()))
+                    .setName(Text.translatable("gui.plotcubic.info.denied.name", deniedPlayer.username()))
                     .setSkullOwner(new GameProfile(UUID.randomUUID(), deniedPlayer.username()), server)
                     .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.info.denied.reason", deniedPlayer.reason()));
 

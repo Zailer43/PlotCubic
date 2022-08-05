@@ -20,7 +20,7 @@ public class DeleteCommand extends ClearCommand {
     @Override
     public void execute(ServerPlayerEntity player, PlotID plotId) {
         new ConfirmationGui().open(player, "gui.plotcubic.confirmation.delete.title", List.of("gui.plotcubic.confirmation.delete.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
-            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.delete.deleting");
+            MessageUtils.sendMessage(player, "text.plotcubic.plot.delete.deleting");
             Plot plot = new Plot(player, plotId);
             plot.delete();
             this.deletePlot(player, plotId);
@@ -35,10 +35,10 @@ public class DeleteCommand extends ClearCommand {
                 uow.commit();
                 Plot.unloadPlot(player, Plot.getLoadedPlot(plotId));
                 TickTracker.updatePlot(plotId, null);
-                MessageUtils.sendChatMessage(player, "text.plotcubic.plot.delete.successful");
+                MessageUtils.sendMessage(player, "text.plotcubic.plot.delete.successful");
             } catch (SQLException e) {
                 uow.rollback();
-                MessageUtils.sendChatMessage(player, "error.plotcubic.database.plot.delete");
+                MessageUtils.sendMessage(player, "error.plotcubic.database.plot.delete");
             }
         } catch (Exception ignored) {
             MessageUtils.sendDatabaseConnectionError(player);

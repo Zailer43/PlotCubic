@@ -3,7 +3,6 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
@@ -41,49 +40,49 @@ public class TrustedCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            String trustedUsername = serverCommandSource.getArgument("PLAYER", String.class);
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
+        String trustedUsername = serverCommandSource.getArgument("PLAYER", String.class);
 
-            if (trustedUsername.equalsIgnoreCase(player.getName().getString())) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.trust.yourself");
-                return 1;
-            }
-
-            PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
-            if (plotId == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-                return 1;
-            }
-
-            if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
-                return 1;
-            }
-
-            TrustedPlayer trustedPlayer;
-            try (var uow = new UnitOfWork()) {
-                if (!uow.playersRepository.exists(trustedUsername)) {
-                    MessageUtils.sendChatMessage(player, "error.plotcubic.player_does_not_exist", trustedUsername);
-                    return 1;
-                }
-
-                if (uow.deniedRepository.exists(plotId, trustedUsername)) {
-                    String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], trustedUsername);
-                    MessageUtils.sendChatMessage(player, "error.plotcubic.plot.trust.has_deny", removeCommand);
-                    return 1;
-                }
-
-                trustedPlayer = uow.trustedRepository.get(plotId, trustedUsername);
-
-            } catch (Exception ignored) {
-                MessageUtils.sendDatabaseConnectionError(player);
-                return 1;
-            }
-
-            new PermissionsGui().open(player, trustedPlayer);
-        } catch (CommandSyntaxException ignored) {
+        if (trustedUsername.equalsIgnoreCase(player.getName().getString())) {
+            MessageUtils.sendMessage(player, "error.plotcubic.plot.trust.yourself");
+            return 1;
         }
+
+        PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+        if (plotId == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 1;
+        }
+
+        if (!Plot.isOwner(player, plotId)) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot_owner");
+            return 1;
+        }
+
+        TrustedPlayer trustedPlayer;
+        try (var uow = new UnitOfWork()) {
+            if (!uow.playersRepository.exists(trustedUsername)) {
+                MessageUtils.sendMessage(player, "error.plotcubic.player_does_not_exist", trustedUsername);
+                return 1;
+            }
+
+            if (uow.deniedRepository.exists(plotId, trustedUsername)) {
+                String removeCommand = String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new RemoveCommand().getAlias()[0], trustedUsername);
+                MessageUtils.sendMessage(player, "error.plotcubic.plot.trust.has_deny", removeCommand);
+                return 1;
+            }
+
+            trustedPlayer = uow.trustedRepository.get(plotId, trustedUsername);
+
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(player);
+            return 1;
+        }
+
+        new PermissionsGui().open(player, trustedPlayer);
+
         return 1;
     }
 

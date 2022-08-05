@@ -2,7 +2,6 @@ package me.zailer.plotcubic.commands.plot;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
@@ -33,12 +32,25 @@ public class InfoCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            this.execute(player);
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
 
-        } catch (CommandSyntaxException ignored) {
+        PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+
+        if (plotID == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 0;
         }
+
+        Plot plot = Plot.getPlot(plotID);
+
+        if (plot == null)
+            player.sendMessage(this.getUnclaimedMessage(plotID));
+        else if (!plot.isOwner(player) && !Permissions.check(player, "plotcubic.command.info.use_without_owner"))
+            MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.info.use_without_owner");
+        else
+            new PlotInfoGui().open(player, plot);
 
         return 1;
     }
@@ -51,24 +63,6 @@ public class InfoCommand extends SubcommandAbstract {
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.GENERAL;
-    }
-
-    public void execute(ServerPlayerEntity player) {
-        PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
-
-        if (plotID == null) {
-            MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-            return;
-        }
-
-        Plot plot = Plot.getPlot(plotID);
-
-        if (plot == null)
-            MessageUtils.sendChatMessage(player, this.getUnclaimedMessage(plotID));
-        else if (!plot.isOwner(player) && !Permissions.check(player, "plotcubic.command.info.use_without_owner"))
-            MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.info.use_without_owner");
-        else
-            new PlotInfoGui().open(player, plot);
     }
 
     public MutableText getUnclaimedMessage(PlotID plotID) {

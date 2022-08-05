@@ -1,6 +1,6 @@
 package me.zailer.plotcubic.mixin.translations;
 
-import eu.pb4.placeholders.TextParser;
+import eu.pb4.placeholders.api.TextParserUtils;
 import fr.catcore.server.translations.api.text.LocalizedTextVisitor;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
@@ -20,7 +20,7 @@ public interface LocalizedTextVisitorMixin {
      */
     @Overwrite
     default void acceptLiteral(String string, Style style) {
-        MutableText text = (MutableText) TextParser.parse(string);
+        MutableText text = (MutableText) TextParserUtils.formatText(string);
         this.accept(text.fillStyle(style));
     }
 }

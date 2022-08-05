@@ -2,7 +2,9 @@ package me.zailer.plotcubic.generator;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.PlotManager;
+import net.minecraft.SharedConstants;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.structure.StructureSet;
@@ -17,11 +19,14 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.GenerationSettings;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.FixedBiomeSource;
-import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.StructureAccessor;
-import net.minecraft.world.gen.chunk.*;
+import net.minecraft.world.gen.chunk.Blender;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.chunk.VerticalBlockSample;
+import net.minecraft.world.gen.noise.NoiseConfig;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,31 +35,39 @@ import java.util.concurrent.Executor;
 
 public class PlotworldGenerator extends ChunkGenerator {
     public static final Codec<PlotworldGenerator> CODEC = RecordCodecBuilder.create((instance) ->
-            method_41042(instance)
+            createStructureSetRegistryGetter(instance)
                     .and(RegistryOps.createRegistryCodec(Registry.BIOME_KEY).forGetter((generator) -> generator.biomeRegistry))
+                    .and(RegistryOps.createRegistryCodec(Registry.DIMENSION_TYPE_KEY).forGetter((generator) -> generator.registryDimensionType))
                     .apply(instance, instance.stable(PlotworldGenerator::new)));
 
     private final Registry<Biome> biomeRegistry;
+    private final Registry<DimensionType> registryDimensionType;
     private final PlotManager plotManager;
 
-    public PlotworldGenerator(Registry<Biome> biomeRegistry, Biome biome) {
+    public PlotworldGenerator(Registry<Biome> biomeRegistry, Biome biome, Registry<DimensionType> registryDimensionType) {
         super(getEmptyStructureRegistry(),
                 Optional.empty(),
-                new FixedBiomeSource(clearStructuresFromBiome(biome)),
-                new FixedBiomeSource(biomeRegistry.getOrCreateEntry(biomeRegistry.getKey(biome).isPresent() ? biomeRegistry.getKey(biome).get()  : BiomeKeys.PLAINS)),
-                0L);
+                getBiomeSource(biomeRegistry, biome),
+                biomeRegistryEntry -> new GenerationSettings.Builder().build()
+        );
         this.biomeRegistry = biomeRegistry;
         this.plotManager = PlotManager.getInstance();
+        this.registryDimensionType = registryDimensionType;
+
+        DimensionType dimensionType = this.registryDimensionType.get(PlotCubic.PLOTWORLD_DIMENSION_TYPE);
+        if (dimensionType != null)
+            this.plotManager.setHeight(dimensionType.minY(), dimensionType.height());
     }
 
-    public PlotworldGenerator(Registry<StructureSet> structureSets, Registry<Biome> biomeRegistry) {
-        this(biomeRegistry, PlotManager.getInstance().getBiome());
+    public static FixedBiomeSource getBiomeSource(Registry<Biome> biomeRegistry, Biome biome) {
+        Optional<RegistryKey<Biome>> registryKey = biomeRegistry.getKey(biome);
+        RegistryEntry<Biome> registryEntry = biomeRegistry.getOrCreateEntry(registryKey.orElse(BiomeKeys.PLAINS));
+
+        return new FixedBiomeSource(registryEntry);
     }
 
-    public static RegistryEntry<Biome> clearStructuresFromBiome(Biome biome) {
-        GenerationSettings.Builder builder = new GenerationSettings.Builder();
-
-        return RegistryEntry.of(Biome.Builder.copy(biome).generationSettings(builder.build()).build());
+    public PlotworldGenerator(Registry<StructureSet> structureSets, Registry<Biome> biomeRegistry, Registry<DimensionType> registryDimensionType) {
+        this(biomeRegistry, PlotManager.getInstance().getBiome(), registryDimensionType);
     }
 
     @SuppressWarnings("unchecked")
@@ -70,33 +83,21 @@ public class PlotworldGenerator extends ChunkGenerator {
     }
 
     @Override
-    public ChunkGenerator withSeed(long seed) {
-        return this;
-    }
-
-    @Override
-    public MultiNoiseUtil.MultiNoiseSampler getMultiNoiseSampler() {
-        // Mirror what Vanilla does in the debug chunk generator
-        return MultiNoiseUtil.method_40443();
-    }
-
-    @Override
-    public void carve(ChunkRegion chunkRegion, long l, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk, GenerationStep.Carver carver) {
-    }
-
-    @Override
-    public void buildSurface(ChunkRegion region, StructureAccessor structureAccessor, Chunk chunk) {
-        for (int x = 0; x != 16; x++) {
-            for (int z = 0; z != 16; z++) {
+    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk, GenerationStep.Carver carverStep) {
+        for (int x = 0; x != SharedConstants.CHUNK_WIDTH; x++) {
+            for (int z = 0; z != SharedConstants.CHUNK_WIDTH; z++) {
                 this.regen(chunk, x, z);
             }
         }
     }
 
+    @Override
+    public void buildSurface(ChunkRegion region, StructureAccessor structures, NoiseConfig noiseConfig, Chunk chunk) {
+    }
+
     public void regen(Chunk chunk, int x, int z) {
         for (int y = this.getMinimumY(); y != this.getWorldHeight(); y++) {
             BlockState block = this.plotManager.getBlock(chunk.getPos().getBlockPos(x, y, z));
-
             chunk.setBlockState(new BlockPos(x, y, z), block, false);
         }
     }
@@ -106,13 +107,13 @@ public class PlotworldGenerator extends ChunkGenerator {
     }
 
     @Override
-    public CompletableFuture<Chunk> populateNoise(Executor executor, Blender blender, StructureAccessor structureAccessor, Chunk chunk) {
+    public CompletableFuture<Chunk> populateNoise(Executor executor, Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
         return CompletableFuture.completedFuture(chunk);
     }
 
     @Override
     public int getSeaLevel() {
-        return this.plotManager.getMinHeight();
+        return this.getMinimumY();
     }
 
     @Override
@@ -126,21 +127,25 @@ public class PlotworldGenerator extends ChunkGenerator {
     }
 
     @Override
-    public int getHeight(int x, int z, Heightmap.Type heightmapType, HeightLimitView heightLimitView) {
-        return 0;
+    public int getHeight(int x, int z, Heightmap.Type heightmap, HeightLimitView world, NoiseConfig noiseConfig) {
+        return this.plotManager.getMaxTerrainHeight();
     }
 
     @Override
-    public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView heightLimitView) {
+    public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView world, NoiseConfig noiseConfig) {
         return new VerticalBlockSample(this.getMinimumY(), new BlockState[0]);
     }
 
     @Override
-    public void getDebugHudText(List<String> list, BlockPos blockPos) {
+    public void getDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
+
     }
 
     public static PlotworldGenerator createPlotGenerator(MinecraftServer server) {
-        Registry<Biome> biomeRegistry = server.getRegistryManager().get(Registry.BIOME_KEY);
-        return new PlotworldGenerator(biomeRegistry, PlotManager.getInstance().getBiome());
+        DynamicRegistryManager registryManager = server.getRegistryManager();
+        return new PlotworldGenerator(registryManager.get(Registry.BIOME_KEY),
+                PlotManager.getInstance().getBiome(),
+                registryManager.get(Registry.DIMENSION_TYPE_KEY)
+        );
     }
 }

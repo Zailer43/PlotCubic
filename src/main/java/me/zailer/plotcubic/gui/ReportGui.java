@@ -15,9 +15,8 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -27,11 +26,11 @@ public class ReportGui {
         SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X6, reportingPlayer, false);
         Set<ReportReason> reportReasonsInTrue = new HashSet<>();
 
-        gui.setTitle(new TranslatableText("gui.plotcubic.report.title", reportedPlot.getOwnerUsername()));
+        gui.setTitle(Text.translatable("gui.plotcubic.report.title", reportedPlot.getOwnerUsername()));
 
         GuiElementBuilder acceptItem = new GuiElementBuilder()
                 .setItem(Items.EMERALD_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.accept"))
+                .setName(Text.translatable("gui.plotcubic.accept"))
                 .setCallback((index, type, action) -> {
                             gui.close();
                             this.saveReport(reportingPlayer, reportedPlot, reportReasonsInTrue);
@@ -40,7 +39,7 @@ public class ReportGui {
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.cancel"))
+                .setName(Text.translatable("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         GuiUtils.setGlass(gui, 0, 9);
@@ -56,7 +55,7 @@ public class ReportGui {
 
     private void saveReport(ServerPlayerEntity reportingPlayer, Plot reportedPlot, Set<ReportReason> reportReasonsInTrue) {
         if (reportReasonsInTrue.isEmpty()) {
-            MessageUtils.sendChatMessage(reportingPlayer, "error.plotcubic.plot.report.no_reason");
+            MessageUtils.sendMessage(reportingPlayer, "error.plotcubic.plot.report.no_reason");
             return;
         }
 
@@ -65,10 +64,10 @@ public class ReportGui {
                 uow.beginTransaction();
                 uow.reportsRepository.add(reportedPlot.getPlotID(), reportingPlayer.getName().getString(), reportReasonsInTrue);
                 uow.commit();
-                MessageUtils.sendChatMessage(reportingPlayer, "text.plotcubic.plot.report.successful");
+                MessageUtils.sendMessage(reportingPlayer, "text.plotcubic.plot.report.successful");
             } catch (SQLException e) {
                 uow.rollback();
-                MessageUtils.sendChatMessage(reportingPlayer, "error.plotcubic.database.report.add");
+                MessageUtils.sendMessage(reportingPlayer, "error.plotcubic.database.report.add");
             }
         } catch (Exception ignored) {
             MessageUtils.sendDatabaseConnectionError(reportingPlayer);
@@ -79,11 +78,11 @@ public class ReportGui {
         SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X6, player, false);
 
 
-        gui.setTitle(new TranslatableText("gui.plotcubic.view_reports.title"));
+        gui.setTitle(Text.translatable("gui.plotcubic.view_reports.title"));
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.cancel"))
+                .setName(Text.translatable("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         List<ReportedPlot> reportedPlots = new ArrayList<>();
@@ -103,17 +102,17 @@ public class ReportGui {
             GuiElementBuilder reportItem = new GuiElementBuilder()
                     .setItem(Items.PLAYER_HEAD)
                     .setSkullOwner(new GameProfile(UUID.randomUUID(), plotOwner), player.getServer())
-                    .setName(new TranslatableText("gui.plotcubic.view_reports.reported", plotOwner, plotId.toString()).setStyle(Style.EMPTY.withColor(MessageUtils.getHighlight())))
-                    .addLoreLine(new TranslatableText("gui.plotcubic.view_reports.reasons"))
+                    .setName(Text.translatable("gui.plotcubic.view_reports.reported", plotOwner, plotId.toString()).setStyle(Style.EMPTY.withColor(MessageUtils.getHighlight())))
+                    .addLoreLine(Text.translatable("gui.plotcubic.view_reports.reasons"))
                     .setCallback((index, type, action) -> this.reportItemCallback(type, player, plotId, report));
 
             for (var reportReason : report.reasons())
                 reportItem.addLoreLine(reportReason.getDisplayName());
 
-            reportItem.addLoreLine(LiteralText.EMPTY.copy())
+            reportItem.addLoreLine(Text.empty())
                     .addLoreLine(MessageUtils.formatArgs("gui.plotcubic.view_reports.reporting_player", report.reportingUser()))
-                    .addLoreLine(new TranslatableText("gui.plotcubic.view_reports.left_click"))
-                    .addLoreLine(new TranslatableText("gui.plotcubic.view_reports.right_click"));
+                    .addLoreLine(Text.translatable("gui.plotcubic.view_reports.left_click"))
+                    .addLoreLine(Text.translatable("gui.plotcubic.view_reports.right_click"));
 
             gui.setSlot(i, reportItem);
         }
@@ -131,7 +130,7 @@ public class ReportGui {
             Plot plot = Plot.getPlot(plotId);
 
             if (plot == null)
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.visit.unclaimed");
+                MessageUtils.sendMessage(player, "error.plotcubic.plot.visit.unclaimed");
             else
                 plot.visit(player);
 
@@ -148,10 +147,10 @@ public class ReportGui {
                 uow.reportsRepository.setModerated(report, admin);
                 uow.commit();
 
-                MessageUtils.sendChatMessage(admin, "text.plotcubic.report.moderated", admin.getName().getString(), new Date());
+                MessageUtils.sendMessage(admin, "text.plotcubic.report.moderated", admin.getName().getString(), new Date());
             } catch (SQLException e) {
                 uow.rollback();
-                MessageUtils.sendChatMessage(admin, "error.plotcubic.database.report.moderated");
+                MessageUtils.sendMessage(admin, "error.plotcubic.database.report.moderated");
             }
         } catch (Exception ignored) {
             MessageUtils.sendDatabaseConnectionError(admin);

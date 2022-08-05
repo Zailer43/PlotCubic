@@ -2,10 +2,11 @@ package me.zailer.plotcubic.mixin;
 
 
 import me.zailer.plotcubic.PlotCubic;
+import me.zailer.plotcubic.PlotManager;
 import me.zailer.plotcubic.plot.PlotID;
-import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.gen.feature.TreeFeature;
 import net.minecraft.world.gen.feature.TreeFeatureConfig;
@@ -17,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
-import java.util.Random;
 import java.util.Set;
 
 @Mixin(TreeFeature.class)
@@ -34,6 +34,7 @@ public class TreeFeatureMixin {
                            Random random,
                            BlockPos origin,
                            TreeFeatureConfig treeFeatureConfig,
+                           Set<BlockPos> rootPositions,
                            Set<BlockPos> logPositions,
                            Set<BlockPos> leavesPositions,
                            Set<BlockPos> decorationPositions) {
@@ -42,19 +43,21 @@ public class TreeFeatureMixin {
 
         if (handle != null) {
             ServerWorld world = handle.asWorld();
+            PlotManager plotManager = PlotManager.getInstance();
 
             PlotID originPlotId = PlotID.ofBlockPos(origin.getX(), origin.getZ());
-            this.removeBlocksOutOfPlot(decorationPositions, originPlotId, world);
-            this.removeBlocksOutOfPlot(leavesPositions, originPlotId, world);
-            this.removeBlocksOutOfPlot(logPositions, originPlotId, world);
+            this.removeBlocksOutOfPlot(plotManager, decorationPositions, originPlotId, world);
+            this.removeBlocksOutOfPlot(plotManager, rootPositions, originPlotId, world);
+            this.removeBlocksOutOfPlot(plotManager, logPositions, originPlotId, world);
+            this.removeBlocksOutOfPlot(plotManager, leavesPositions, originPlotId, world);
         }
     }
 
-    public void removeBlocksOutOfPlot(Set<BlockPos> blockPosSet, PlotID originPlotId, ServerWorld world) {
+    public void removeBlocksOutOfPlot(PlotManager plotManager, Set<BlockPos> blockPosSet, PlotID originPlotId, ServerWorld world) {
         //TODO: remove blocks from the tree before they are placed
         for (var pos : blockPosSet) {
             if (PlotID.isDifferentPlot(originPlotId, pos.getX(), pos.getZ()))
-                world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                world.setBlockState(pos, plotManager.getBlock(pos));
         }
     }
 }

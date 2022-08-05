@@ -3,9 +3,7 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import me.zailer.plotcubic.PlotCubic;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
 import me.zailer.plotcubic.commands.PlotCommand;
@@ -46,57 +44,55 @@ public class GameModeCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            GameMode gameMode = GameMode.byName(serverCommandSource.getArgument("GAMEMODE", String.class), null);
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
+        GameMode gameMode = GameMode.byName(serverCommandSource.getArgument("GAMEMODE", String.class), null);
 
-            if (gameMode == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.invalid_game_mode");
-                return 1;
-            }
-
-            if (!Permissions.check(player, "plotcubic.command.gamemode." + gameMode.getName())) {
-                MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.gamemode.game_mode");
-                return 1;
-            }
-
-            PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
-
-            if (plotId == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-                return 1;
-            }
-
-            if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
-                return 1;
-            }
-
-            Plot plot = Plot.getLoadedPlot(plotId);
-            if (plot == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.not_loaded");
-                return 1;
-            }
-
-            try (var uow = new UnitOfWork()) {
-                try {
-                    uow.beginTransaction();
-                    uow.plotsRepository.updateGameMode(plotId, gameMode);
-                    uow.commit();
-
-                    plot.setGameMode(gameMode);
-                    MessageUtils.sendChatMessage(player, "text.plotcubic.plot.game_mode.successful");
-                } catch (SQLException e) {
-                    uow.rollback();
-                    MessageUtils.sendChatMessage(player, "error.plotcubic.database.game_mode");
-                }
-            } catch (Exception ignored) {
-                MessageUtils.sendDatabaseConnectionError(player);
-            }
-
-        } catch (CommandSyntaxException e) {
-            e.printStackTrace();
+        if (gameMode == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.invalid_game_mode");
+            return 1;
         }
+
+        if (!Permissions.check(player, "plotcubic.command.gamemode." + gameMode.getName())) {
+            MessageUtils.sendMissingPermissionMessage(player, "permission.plotcubic.command.gamemode.game_mode");
+            return 1;
+        }
+
+        PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+
+        if (plotId == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 1;
+        }
+
+        if (!Plot.isOwner(player, plotId)) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot_owner");
+            return 1;
+        }
+
+        Plot plot = Plot.getLoadedPlot(plotId);
+        if (plot == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.plot.not_loaded");
+            return 1;
+        }
+
+        try (var uow = new UnitOfWork()) {
+            try {
+                uow.beginTransaction();
+                uow.plotsRepository.updateGameMode(plotId, gameMode);
+                uow.commit();
+
+                plot.setGameMode(gameMode);
+                MessageUtils.sendMessage(player, "text.plotcubic.plot.game_mode.successful");
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendMessage(player, "error.plotcubic.database.game_mode");
+            }
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(player);
+        }
+
         return 1;
     }
 

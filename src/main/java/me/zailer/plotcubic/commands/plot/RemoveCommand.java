@@ -3,7 +3,6 @@ package me.zailer.plotcubic.commands.plot;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.CommandSuggestions;
@@ -41,62 +40,61 @@ public class RemoveCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            String removedPlayer = serverCommandSource.getArgument("PLAYER", String.class);
-            PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
+        String removedPlayer = serverCommandSource.getArgument("PLAYER", String.class);
+        PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
-            if (plotId == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-                return 1;
-            }
-
-            if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
-                return 1;
-            }
-
-            Plot plot = Plot.getLoadedPlot(plotId);
-            if (plot == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.plot.not_loaded");
-                return 1;
-            }
-
-            boolean denyRemoved = plot.removeDeny(removedPlayer);
-            boolean trustRemoved = plot.removeTrust(removedPlayer);
-
-            try (var uow = new UnitOfWork()) {
-                try {
-                    uow.beginTransaction();
-                    if (uow.deniedRepository.exists(plotId, removedPlayer))
-                        uow.deniedRepository.delete(plotId, removedPlayer);
-
-                    uow.trustedRepository.delete(plotId, removedPlayer);
-                    uow.commit();
-                } catch (SQLException e) {
-                    uow.rollback();
-                    MessageUtils.sendChatMessage(player, "error.plotcubic.database.remove");
-                    return 1;
-                }
-            } catch (Exception ignored) {
-                MessageUtils.sendDatabaseConnectionError(player);
-                return 1;
-            }
-
-            String translationKey = "text.plotcubic.plot.remove.";
-            if (denyRemoved && trustRemoved)
-                translationKey += "deny_and_trust";
-            else if (denyRemoved)
-                translationKey += "deny";
-            else if (trustRemoved)
-                translationKey += "trust";
-            else
-                translationKey += "nothing";
-
-            MessageUtils.sendChatMessage(player, translationKey, removedPlayer);
-
-        } catch (CommandSyntaxException ignored) {
+        if (plotId == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 1;
         }
+
+        if (!Plot.isOwner(player, plotId)) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot_owner");
+            return 1;
+        }
+
+        Plot plot = Plot.getLoadedPlot(plotId);
+        if (plot == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.plot.not_loaded");
+            return 1;
+        }
+
+        boolean denyRemoved = plot.removeDeny(removedPlayer);
+        boolean trustRemoved = plot.removeTrust(removedPlayer);
+
+        try (var uow = new UnitOfWork()) {
+            try {
+                uow.beginTransaction();
+                if (uow.deniedRepository.exists(plotId, removedPlayer))
+                    uow.deniedRepository.delete(plotId, removedPlayer);
+
+                uow.trustedRepository.delete(plotId, removedPlayer);
+                uow.commit();
+            } catch (SQLException e) {
+                uow.rollback();
+                MessageUtils.sendMessage(player, "error.plotcubic.database.remove");
+                return 1;
+            }
+        } catch (Exception ignored) {
+            MessageUtils.sendDatabaseConnectionError(player);
+            return 1;
+        }
+
+        String translationKey = "text.plotcubic.plot.remove.";
+        if (denyRemoved && trustRemoved)
+            translationKey += "deny_and_trust";
+        else if (denyRemoved)
+            translationKey += "deny";
+        else if (trustRemoved)
+            translationKey += "trust";
+        else
+            translationKey += "nothing";
+
+        MessageUtils.sendMessage(player, translationKey, removedPlayer);
+
         return 1;
     }
 

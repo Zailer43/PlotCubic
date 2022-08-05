@@ -38,19 +38,19 @@ public class ClaimCommand extends SubcommandAbstract {
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
         try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+            ServerPlayerEntity player = serverCommandSource.getSource().getPlayerOrThrow();
 
             PlotID plotID = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
             if (plotID == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
+                MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
                 return 1;
             }
 
             try (var uow = new UnitOfWork()) {
                 try {
                     if (uow.plotsRepository.exists(plotID)) {
-                        MessageUtils.sendChatMessage(player, "error.plotcubic.plot.already_claimed");
+                        MessageUtils.sendMessage(player, "error.plotcubic.plot.already_claimed");
                         return 1;
                     }
 
@@ -63,10 +63,10 @@ public class ClaimCommand extends SubcommandAbstract {
                         throw new SQLException("Plot just saved in the database has returned null");
 
                     Plot.claim(player, plot);
-                    MessageUtils.sendChatMessage(player, "text.plotcubic.plot.claimed");
+                    MessageUtils.sendMessage(player, "text.plotcubic.plot.claimed");
                 } catch (SQLException e) {
                     uow.rollback();
-                    MessageUtils.sendChatMessage(player, "error.plotcubic.database.plot.claim");
+                    MessageUtils.sendMessage(player, "error.plotcubic.database.plot.claim");
                 }
             } catch (Exception ignored) {
                 MessageUtils.sendDatabaseConnectionError(player);

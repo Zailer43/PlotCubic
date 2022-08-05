@@ -14,8 +14,6 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -40,13 +38,11 @@ public class HelpCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
 
-            MessageUtils.sendChatMessage(player, this.getValidUsage());
-        } catch (CommandSyntaxException e) {
-            e.printStackTrace();
-        }
+        player.sendMessage(this.getValidUsage());
         return 1;
     }
 
@@ -62,7 +58,7 @@ public class HelpCommand extends SubcommandAbstract {
 
     private int sendHelpMessage(CommandContext<ServerCommandSource> serverCommandSource) {
         try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+            ServerPlayerEntity player = serverCommandSource.getSource().getPlayerOrThrow();
             String subcommandSelected = serverCommandSource.getArgument("subcommand", String.class);
 
             for (var subcommand : PlotCommand.SUB_COMMANDS) {
@@ -74,7 +70,7 @@ public class HelpCommand extends SubcommandAbstract {
                 }
             }
 
-            MessageUtils.sendChatMessage(player, "error.plotcubic.invalid_subcommand");
+            MessageUtils.sendMessage(player, "error.plotcubic.invalid_subcommand");
         } catch (CommandSyntaxException e) {
             e.printStackTrace();
         }
@@ -82,7 +78,7 @@ public class HelpCommand extends SubcommandAbstract {
     }
 
     public void sendHelpMessage(SubcommandAbstract subcommand, ServerPlayerEntity player) {
-        MessageUtils.sendChatMessage(player, subcommand.getHelpMessage());
+        player.sendMessage(subcommand.getHelpMessage());
     }
 
     private static CompletableFuture<Suggestions> getSubCommandsSuggestion(CommandContext<ServerCommandSource> source, SuggestionsBuilder builder) {

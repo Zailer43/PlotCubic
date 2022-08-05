@@ -5,7 +5,6 @@ import me.zailer.plotcubic.config.Config;
 import me.zailer.plotcubic.gui.IBooleanOption;
 import net.minecraft.item.Item;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +22,7 @@ public record ReportReason(String id, int descriptionCount, Config.ItemConfig it
 
     @Override
     public Text getDisplayName() {
-        return new TranslatableText(BASIC_TRANSLATION_KEY + this.id + ".name");
+        return Text.translatable(BASIC_TRANSLATION_KEY + this.id + ".name");
     }
 
     @Override
@@ -31,7 +30,7 @@ public record ReportReason(String id, int descriptionCount, Config.ItemConfig it
         List<Text> descriptionList = new ArrayList<>();
 
         for (int i = 0; i != this.descriptionCount; i++)
-            descriptionList.add(new TranslatableText(BASIC_TRANSLATION_KEY + this.id + ".description." + i));
+            descriptionList.add(Text.translatable(BASIC_TRANSLATION_KEY + this.id + ".description." + i));
 
         return descriptionList;
     }

@@ -6,7 +6,7 @@ import eu.pb4.sgui.api.gui.SimpleGui;
 import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import java.util.List;
 
@@ -15,12 +15,12 @@ public class ConfirmationGui {
     public void open(ServerPlayerEntity player, String titleTranslationKey, List<String> infoTranslationList, Runnable accept) {
         SimpleGui gui = new SimpleGui(ScreenHandlerType.GENERIC_9X3, player, false);
 
-        gui.setTitle(new TranslatableText(titleTranslationKey));
+        gui.setTitle(Text.translatable(titleTranslationKey));
 
         GuiElementBuilder acceptItem = new GuiElementBuilder()
                 .setItem(Items.EMERALD_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.accept"))
-                .addLoreLine(new TranslatableText("gui.plotcubic.confirmation.shift_right_click"))
+                .setName(Text.translatable("gui.plotcubic.accept"))
+                .addLoreLine(Text.translatable("gui.plotcubic.confirmation.shift_right_click"))
                 .setCallback((index, type, action) -> {
                             if (type == ClickType.MOUSE_RIGHT_SHIFT) {
                                 accept.run();
@@ -31,15 +31,15 @@ public class ConfirmationGui {
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.cancel"))
+                .setName(Text.translatable("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         GuiElementBuilder infoItem = new GuiElementBuilder()
                 .setItem(Items.PAPER)
-                .setName(new TranslatableText("gui.plotcubic.confirmation.info"));
+                .setName(Text.translatable("gui.plotcubic.confirmation.info"));
 
         for (var translationKey : infoTranslationList)
-            infoItem.addLoreLine(new TranslatableText(translationKey));
+            infoItem.addLoreLine(Text.translatable(translationKey));
 
         gui.setSlot(11, acceptItem);
         gui.setSlot(13, infoItem);

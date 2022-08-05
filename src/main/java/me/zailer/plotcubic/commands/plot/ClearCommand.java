@@ -2,7 +2,6 @@ package me.zailer.plotcubic.commands.plot;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
@@ -14,7 +13,6 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-import java.util.Date;
 import java.util.List;
 
 public class ClearCommand extends SubcommandAbstract {
@@ -34,29 +32,28 @@ public class ClearCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
+        PlotID plotId = PlotID.ofBlockPos(player.getBlockX(), player.getBlockZ());
 
-            if (plotId == null) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot");
-                return 1;
-            }
-
-            if (!Plot.isOwner(player, plotId)) {
-                MessageUtils.sendChatMessage(player, "error.plotcubic.requires.plot_owner");
-                return 1;
-            }
-
-            this.execute(player, plotId);
-        } catch (CommandSyntaxException ignored) {
+        if (plotId == null) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot");
+            return 1;
         }
+
+        if (!Plot.isOwner(player, plotId)) {
+            MessageUtils.sendMessage(player, "error.plotcubic.requires.plot_owner");
+            return 1;
+        }
+
+        this.execute(player, plotId);
         return 1;
     }
 
     public void execute(ServerPlayerEntity player, PlotID plotId) {
         new ConfirmationGui().open(player, "gui.plotcubic.confirmation.clear.title", List.of("gui.plotcubic.confirmation.clear.info", "gui.plotcubic.confirmation.cant_undone_warning"), () -> {
-            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.cleaning");
+            MessageUtils.sendMessage(player, "text.plotcubic.plot.clear.cleaning");
             Plot plot = new Plot(player, plotId);
             plot.clearPlot(player);
         });

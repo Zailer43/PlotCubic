@@ -12,7 +12,7 @@ import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,11 +27,11 @@ public class PermissionsGui {
         this.trustedPlayer = trustedPlayer;
         this.ownerPlayer = ownerPlayer;
 
-        gui.setTitle(new TranslatableText("gui.plotcubic.permissions.title", this.trustedPlayer.username()));
+        gui.setTitle(Text.translatable("gui.plotcubic.permissions.title", this.trustedPlayer.username()));
 
         GuiElementBuilder acceptItem = new GuiElementBuilder()
                 .setItem(Items.EMERALD_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.accept"))
+                .setName(Text.translatable("gui.plotcubic.accept"))
                 .setCallback((index, type, action) -> {
                             gui.close();
                             this.save();
@@ -40,7 +40,7 @@ public class PermissionsGui {
 
         GuiElementBuilder cancelItem = new GuiElementBuilder()
                 .setItem(Items.REDSTONE_BLOCK)
-                .setName(new TranslatableText("gui.plotcubic.cancel"))
+                .setName(Text.translatable("gui.plotcubic.cancel"))
                 .setCallback((index, type, action) -> gui.close());
 
         GuiUtils.setGlass(gui, 0, 9);
@@ -74,10 +74,10 @@ public class PermissionsGui {
 
                 this.updateLoadedPlot();
 
-                MessageUtils.sendChatMessage(this.ownerPlayer, "text.plotcubic.plot.permission.successful");
+                MessageUtils.sendMessage(this.ownerPlayer, "text.plotcubic.plot.permission.successful");
             } catch (SQLException e) {
                 uow.rollback();
-                MessageUtils.sendChatMessage(this.ownerPlayer, "error.plotcubic.database.trust");
+                MessageUtils.sendMessage(this.ownerPlayer, "error.plotcubic.database.trust");
             }
         } catch (Exception ignored) {
             MessageUtils.sendDatabaseConnectionError(this.ownerPlayer);

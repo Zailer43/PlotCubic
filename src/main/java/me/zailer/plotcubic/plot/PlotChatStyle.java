@@ -1,51 +1,35 @@
 package me.zailer.plotcubic.plot;
 
-import eu.pb4.placeholders.PlaceholderAPI;
-import eu.pb4.placeholders.TextParser;
-import eu.pb4.placeholders.util.TextParserUtils;
+import eu.pb4.placeholders.api.Placeholders;
+import eu.pb4.placeholders.api.TextParserUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.PlotCubic;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 import java.util.Map;
-import java.util.regex.Matcher;
 
 public record PlotChatStyle(String id, String name, String itemId, String message) {
     private static final String PLOT_ID_PLACEHOLDER = "plot_id";
     private static final String USERNAME_PLACEHOLDER = "username";
     private static final String MESSAGE_PLACEHOLDER = "message";
 
-    public MutableText getMessage(PlotID plotId, ServerPlayerEntity player, String message) {
+    public Text getMessage(PlotID plotId, ServerPlayerEntity player, Text message) {
         return this.getMessage(plotId, player.getName().getString(), message);
     }
 
-    public MutableText getMessage(PlotID plotId, String username, String message) {
-        message = this.escapeFormatting(message);
-
+    public Text getMessage(PlotID plotId, String username, Text message) {
         Map<String, Text> placeHolders = Map.of(
-                PLOT_ID_PLACEHOLDER, new LiteralText(plotId.toString()),
-                USERNAME_PLACEHOLDER, new LiteralText(username),
-                MESSAGE_PLACEHOLDER, new LiteralText(message)
+                PLOT_ID_PLACEHOLDER, Text.literal(plotId.toString()),
+                USERNAME_PLACEHOLDER, Text.literal(username),
+                MESSAGE_PLACEHOLDER, message
         );
 
-        return (MutableText) PlaceholderAPI.parsePredefinedText(TextParser.parse(this.message), PlaceholderAPI.PLACEHOLDER_PATTERN_CUSTOM, placeHolders);
+        return Placeholders.parseText(TextParserUtils.formatText(this.message), Placeholders.PLACEHOLDER_PATTERN_CUSTOM, placeHolders);
     }
 
-    @SuppressWarnings("UnstableApiUsage")
-    public String escapeFormatting(String message) {
-        Matcher matcher = TextParserUtils.STARTING_PATTERN.matcher(message);
-
-        while (matcher.find()) {
-            String match = matcher.group(0);
-            String replace = match.replace("\\", "");
-            replace = replace.replace(">", "\\>");
-            message = message.replace(match, replace);
-        }
-
-        return message;
+    public Text getExample(PlotID plotId, String username) {
+        return this.getMessage(plotId, username, Text.literal("Hello world!"));
     }
 
     public boolean isId(String id) {

@@ -44,21 +44,23 @@ public class PlotManager {
     }
 
     public void setSettings(Config.PlotworldConfig settings, MinecraftServer server) {
-        this.maxTerrainHeight = settings.minHeight() - 1;
-        for (var layer : settings.layers())
-            this.maxTerrainHeight += layer.thickness();
-
         this.plotSize = settings.plotSize();
         this.roadSize = settings.roadSize();
         this.totalSize = settings.plotSize() + settings.roadSize() + 2;
-        this.minHeight = settings.minHeight();
-        this.maxHeight = settings.maxHeight();
         this.biome = server.getRegistryManager().get(Registry.BIOME_KEY).get(new Identifier(settings.biomeId()));
         this.unclaimedBorderBlock = this.getBlock(settings.unclaimedBorderBlock());
         this.claimedBorderBlock = this.getBlock(settings.claimedBorderBlock());
         this.borderBlock = this.getBlock(settings.borderBlock());
         this.roadBlock = this.getBlock(settings.roadBlock());
         this.layers = Arrays.stream(settings.layers()).map(layer -> new Layer(layer.thickness(), this.getBlock(layer.block()))).toList();
+    }
+
+    public void setHeight(int minHeight, int height) {
+        this.minHeight = minHeight;
+        this.maxHeight = height + Math.abs(minHeight);
+        this.maxTerrainHeight = minHeight - 1;
+        for (var layer : this.layers)
+            this.maxTerrainHeight += layer.thickness();
     }
 
     public BlockState getBlock(BlockPos pos) {

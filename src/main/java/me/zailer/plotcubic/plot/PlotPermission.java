@@ -4,7 +4,6 @@ import me.zailer.plotcubic.gui.IBooleanOption;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -53,7 +52,7 @@ public class PlotPermission implements IBooleanOption {
 
     @Override
     public Text getDisplayName() {
-        return new TranslatableText(BASE_TRANSLATION_KEY + this.id);
+        return Text.translatable(BASE_TRANSLATION_KEY + this.id);
     }
 
     @Override

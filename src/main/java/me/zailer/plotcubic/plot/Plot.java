@@ -19,7 +19,7 @@ import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.GameMode;
@@ -96,7 +96,7 @@ public class Plot {
 
         if (player != null) {
             long timeTaken = new Date().getTime() - startTime;
-            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.clear.successful", String.valueOf(timeTaken));
+            MessageUtils.sendMessage(player, "text.plotcubic.plot.clear.successful", String.valueOf(timeTaken));
         }
     }
 
@@ -326,26 +326,26 @@ public class Plot {
         return this.players.size();
     }
 
-    public void sendPlotChatMessage(ServerPlayerEntity sender, String message) {
-        MutableText messageText = this.chatStyle.getMessage(this.plotID, sender, message);
+    public void sendPlotChatMessage(ServerPlayerEntity sender, Text message) {
+        Text text = this.chatStyle.getMessage(this.plotID, sender, message);
         Config.General config = PlotCubic.getConfig().general();
 
         if (config.warningUseOfPlotChatInEmptyPlot() && this.players.size() <= 1) {
-            TranslatableText tooltipMessage = new TranslatableText("text.plotcubic.chat_style.warning_empty_plot.tooltip",
+            MutableText tooltipMessage = Text.translatable("text.plotcubic.chat_style.warning_empty_plot.tooltip",
                     String.format("/%s %s %s", PlotCommand.COMMAND_ALIAS[0], new ToggleCommand().getAlias()[0], new ToggleChatCommand().getAlias()[0])
             );
 
-            messageText = MessageUtils.getTranslation("text.plotcubic.chat_style.warning_empty_plot.chat")
-                    .append(messageText)
+            text = MessageUtils.getTranslation("text.plotcubic.chat_style.warning_empty_plot.chat")
+                    .append(text)
                     .setTooltipMessage(tooltipMessage)
                     .get();
         }
 
         for (var player : this.players)
-            MessageUtils.sendChatMessage(player, messageText);
+            player.sendMessage(text);
 
         if (config.logPlotChat())
-            PlotCubic.log(messageText.getString());
+            PlotCubic.log(text.getString());
     }
 
     public void setChatStyle(PlotChatStyle chatStyle) {

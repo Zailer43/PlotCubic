@@ -18,11 +18,13 @@ import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.network.message.MessageType;
+import net.minecraft.network.message.SignedMessage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -31,7 +33,7 @@ import net.minecraft.world.explosion.Explosion;
 import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.block.*;
 import xyz.nucleoid.stimuli.event.entity.EntitySpawnEvent;
-import xyz.nucleoid.stimuli.event.player.PlayerChatContentEvent;
+import xyz.nucleoid.stimuli.event.player.PlayerChatEvent;
 import xyz.nucleoid.stimuli.event.world.ExplosionDetonatedEvent;
 import xyz.nucleoid.stimuli.event.world.FluidFlowEvent;
 
@@ -93,7 +95,7 @@ public class PlotEvents {
     }
 
     private static void registerChatEvents() {
-        Stimuli.global().listen(PlayerChatContentEvent.EVENT, PlotEvents::sendChatMessage);
+        Stimuli.global().listen(PlayerChatEvent.EVENT, PlotEvents::sendChatMessage);
     }
 
     private static ActionResult allowAdmin(ServerPlayerEntity player, BlockPos pos, String action) {
@@ -136,7 +138,7 @@ public class PlotEvents {
 
     private static void onPlayerJoinInit(ServerPlayNetworkHandler handler, MinecraftServer server) {
         if (!PlotCubic.isModReady()) {
-            handler.disconnect(new TranslatableText("error.plotcubic.kick.generating_world"));
+            handler.disconnect(Text.translatable("error.plotcubic.kick.generating_world"));
             return;
         }
 
@@ -153,7 +155,7 @@ public class PlotEvents {
                 uow.commit();
             } catch (SQLException e) {
                 uow.rollback();
-                MessageUtils.sendChatMessage(handler.player, "error.plotcubic.database.new_user");
+                MessageUtils.sendMessage(handler.player, "error.plotcubic.database.new_user");
             }
         } catch (Exception ignored) {
             MessageUtils.sendDatabaseConnectionError(handler.player);
@@ -165,7 +167,7 @@ public class PlotEvents {
             return;
 
         if (plot.hasDeny(player)) {
-            MessageUtils.sendChatMessage(player, "text.plotcubic.plot.you_have_deny");
+            MessageUtils.sendMessage(player, "text.plotcubic.plot.you_have_deny");
             BlockPos spawn = PlotManager.getInstance().getPlotworldSpawn();
             player.teleport(player.getWorld(), spawn.getX(), spawn.getY(), spawn.getZ(), 0, 0);
         }
@@ -249,7 +251,7 @@ public class PlotEvents {
             player.changeGameMode(server.getDefaultGameMode());
     }
 
-    private static ActionResult sendChatMessage(ServerPlayerEntity sender, PlayerChatContentEvent.MutableMessage message) {
+    private static ActionResult sendChatMessage(ServerPlayerEntity sender, SignedMessage message, MessageType.Parameters parameters) {
         PlotID plotId = PlotID.ofBlockPos(sender.getBlockX(), sender.getBlockZ());
 
         if (plotId == null)
@@ -265,7 +267,7 @@ public class PlotEvents {
         if (userConfig == null || !userConfig.isPlotChatEnabled())
             return ActionResult.PASS;
 
-        plot.sendPlotChatMessage(sender, message.getRaw());
+        plot.sendPlotChatMessage(sender, message.getContent());
 
         return ActionResult.FAIL;
     }

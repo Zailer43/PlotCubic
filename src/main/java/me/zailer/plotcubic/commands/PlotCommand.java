@@ -2,7 +2,7 @@ package me.zailer.plotcubic.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.zailer.plotcubic.commands.plot.*;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
 
 import static net.minecraft.server.command.CommandManager.literal;
@@ -38,7 +38,10 @@ public class PlotCommand {
             for (var subCommand : SUB_COMMANDS)
                 subCommand.apply(command);
 
-            CommandRegistrationCallback.EVENT.register((dispatcher, isDedicated) -> dispatcher.register(command));
+            CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+                if (environment.dedicated)
+                    dispatcher.register(command);
+            });
 
         }
     }

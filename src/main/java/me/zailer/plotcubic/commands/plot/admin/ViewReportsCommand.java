@@ -2,7 +2,6 @@ package me.zailer.plotcubic.commands.plot.admin;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
@@ -28,12 +27,12 @@ public class ViewReportsCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
 
-            new ReportGui().openViewReports(player);
-        } catch (CommandSyntaxException ignored) {
-        }
+        new ReportGui().openViewReports(player);
+
         return 1;
     }
 

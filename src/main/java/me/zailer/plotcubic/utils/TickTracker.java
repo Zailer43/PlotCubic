@@ -13,7 +13,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import xyz.nucleoid.stimuli.Stimuli;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 
 public class TickTracker {
     private static int tickCount = 0;

@@ -1,7 +1,5 @@
 package me.zailer.plotcubic.plot;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import java.util.HashSet;
 import java.util.Set;
 

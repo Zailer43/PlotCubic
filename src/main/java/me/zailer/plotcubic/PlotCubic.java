@@ -29,6 +29,8 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
@@ -46,6 +48,7 @@ import java.util.Set;
 
 public class PlotCubic implements ModInitializer {
     public static final String MOD_ID = "plotcubic";
+    public static final RegistryKey<DimensionType> PLOTWORLD_DIMENSION_TYPE = RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MOD_ID, "plotworld"));
     private static Set<EntityType<?>> ENTITY_WHITELIST = Set.of();
     private static Set<EntityType<?>> ENTITY_ROAD_WHITELIST = Set.of();
     private static Set<EntityType<?>> ENTITY_ROAD_BLACKLIST = Set.of();
@@ -157,7 +160,7 @@ public class PlotCubic implements ModInitializer {
         PlotworldGenerator generator = PlotworldGenerator.createPlotGenerator(server);
 
         RuntimeWorldConfig worldConfig = new RuntimeWorldConfig()
-                .setDimensionType(DimensionType.OVERWORLD_REGISTRY_KEY)
+                .setDimensionType(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, PLOTWORLD_DIMENSION_TYPE.getValue()))
                 .setDifficulty(Difficulty.PEACEFUL)
                 .setGameRule(GameRules.DO_WEATHER_CYCLE, false)
                 .setGenerator(generator);

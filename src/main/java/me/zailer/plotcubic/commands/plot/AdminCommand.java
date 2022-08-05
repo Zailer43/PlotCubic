@@ -2,7 +2,6 @@ package me.zailer.plotcubic.commands.plot;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.zailer.plotcubic.commands.CommandCategory;
 import me.zailer.plotcubic.commands.SubcommandAbstract;
@@ -10,7 +9,6 @@ import me.zailer.plotcubic.commands.plot.admin.AdminClearCommand;
 import me.zailer.plotcubic.commands.plot.admin.AdminDeleteCommand;
 import me.zailer.plotcubic.commands.plot.admin.ReloadCommand;
 import me.zailer.plotcubic.commands.plot.admin.ViewReportsCommand;
-import me.zailer.plotcubic.utils.MessageUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -42,13 +40,12 @@ public class AdminCommand extends SubcommandAbstract {
 
     @Override
     public int execute(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
 
-            MessageUtils.sendChatMessage(player, this.getValidUsage());
-        } catch (CommandSyntaxException e) {
-            e.printStackTrace();
-        }
+        player.sendMessage(this.getValidUsage());
+
         return 1;
     }
 

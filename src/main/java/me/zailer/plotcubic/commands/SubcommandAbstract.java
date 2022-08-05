@@ -36,13 +36,12 @@ public abstract class SubcommandAbstract {
     public abstract CommandCategory getCategory();
 
     public int executeValidUsages(CommandContext<ServerCommandSource> serverCommandSource) {
-        try {
-            ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
-            MessageUtils.sendChatMessage(player, this.getValidUsage());
+        ServerPlayerEntity player = serverCommandSource.getSource().getPlayer();
+        if (player == null)
+            return 0;
 
-        } catch (CommandSyntaxException e) {
-            e.printStackTrace();
-        }
+        player.sendMessage(this.getValidUsage());
+
         return 0;
     }
 
