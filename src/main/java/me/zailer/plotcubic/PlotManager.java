@@ -26,6 +26,7 @@ public class PlotManager {
     private int totalSize;
     private int minHeight;
     private int maxHeight;
+    private int height;
     private Biome biome;
     private BlockState unclaimedBorderBlock;
     private BlockState claimedBorderBlock;
@@ -57,7 +58,8 @@ public class PlotManager {
 
     public void setHeight(int minHeight, int height) {
         this.minHeight = minHeight;
-        this.maxHeight = height + Math.abs(minHeight);
+        this.maxHeight = height - Math.abs(minHeight);
+        this.height = height;
         this.maxTerrainHeight = minHeight - 1;
         for (var layer : this.layers)
             this.maxTerrainHeight += layer.thickness();
@@ -193,6 +195,10 @@ public class PlotManager {
 
     public int getMinHeight() {
         return this.minHeight;
+    }
+
+    public int getHeight() {
+        return this.height;
     }
 
     public BlockState getClaimedBorderBlock() {

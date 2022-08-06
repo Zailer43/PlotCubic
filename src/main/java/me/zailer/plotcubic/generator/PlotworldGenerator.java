@@ -96,7 +96,7 @@ public class PlotworldGenerator extends ChunkGenerator {
     }
 
     public void regen(Chunk chunk, int x, int z) {
-        for (int y = this.getMinimumY(); y != this.getWorldHeight(); y++) {
+        for (int y = this.getMinimumY(); y != this.getMaxHeight(); y++) {
             BlockState block = this.plotManager.getBlock(chunk.getPos().getBlockPos(x, y, z));
             chunk.setBlockState(new BlockPos(x, y, z), block, false);
         }
@@ -118,7 +118,11 @@ public class PlotworldGenerator extends ChunkGenerator {
 
     @Override
     public int getWorldHeight() {
-        return this.plotManager.getMaxHeight() - this.getMinimumY();
+        return this.plotManager.getHeight();
+    }
+
+    public int getMaxHeight() {
+        return this.plotManager.getMaxHeight();
     }
 
     @Override

@@ -113,7 +113,7 @@ public class Plot {
         //Note: this will break if for some reason the plots are not square
         int xChunk = ChunkSectionPos.getSectionCoord(xPos);
         int zChunk = ChunkSectionPos.getSectionCoord(zPos);
-        int oppositeCornerXChunk =  ChunkSectionPos.getSectionCoord(xPos + plotSizeWithBorder);
+        int oppositeCornerXChunk = ChunkSectionPos.getSectionCoord(xPos + plotSizeWithBorder);
 
         int plotChunkSize = oppositeCornerXChunk - xChunk;
 
