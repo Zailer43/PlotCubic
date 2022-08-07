@@ -107,41 +107,57 @@ public class Plot {
         int plotSizeWithBorder = PlotManager.getInstance().getPlotSize() + 2;
         int xPos = this.plotID.getXPos();
         int zPos = this.plotID.getZPos();
+        int xPosOppositeCorner = xPos + plotSizeWithBorder;
+        int zPosOppositeCorner = zPos + plotSizeWithBorder;
 
-        Set<Chunk> chunkList = new HashSet<>();
-
-        //Note: this will break if for some reason the plots are not square
-        int xChunk = ChunkSectionPos.getSectionCoord(xPos);
-        int zChunk = ChunkSectionPos.getSectionCoord(zPos);
-        int oppositeCornerXChunk = ChunkSectionPos.getSectionCoord(xPos + plotSizeWithBorder);
-
-        int plotChunkSize = oppositeCornerXChunk - xChunk;
-
-        //Add all the chunks of the plot to a set
-        for (int x = 0; x <= plotChunkSize; x++) {
-            for (int z = 0; z <= plotChunkSize; z++) {
-                chunkList.add(world.getChunk(xChunk + x, zChunk + z));
-            }
-        }
+        Set<Chunk> chunkList = this.getPlotChunks(world);
 
         //Go through all the chunks and regenerate them one at a time
         for (var chunk : chunkList) {
             ChunkPos chunkPos = chunk.getPos();
             for (int x = 0; x != CHUNK_WIDTH; x++) {
+                xPos = chunkPos.getOffsetX(x);
+                // Taking into account that the opposite corner is in positive x or z and that beyond it the plot ends,
+                // it is not necessary to follow the for
+                if (xPos > xPosOppositeCorner)
+                    break;
                 for (int z = 0; z != CHUNK_WIDTH; z++) {
-                    xPos = chunkPos.getOffsetX(x);
                     zPos = chunkPos.getOffsetZ(z);
-                    if (PlotID.isDifferentPlot(this.plotID, xPos, zPos))
-                        continue;
+                    if (zPos > zPosOppositeCorner)
+                        break;
 
                     //FIXME: at no time is the light taken into account, preferably it has to be recalculated
                     // after finishing generating the chunks so that there are no unnecessary updates
-                    plotworldGenerator.regen(chunk, x, z);
+                    if (!PlotID.isDifferentPlot(this.plotID, xPos, zPos))
+                        plotworldGenerator.regen(chunk, x, z);
                 }
             }
             //Send the chunk to nearby players
             playerManager.sendToAround(null, xPos, 0, zPos, 512, world.getRegistryKey(), new ChunkDataS2CPacket(world.getChunk(chunkPos.x, chunkPos.z), world.getLightingProvider(), null, null, true));
         }
+    }
+
+    private Set<Chunk> getPlotChunks(ServerWorld world) {
+        int xPos = this.plotID.getXPos();
+        int zPos = this.plotID.getZPos();
+        int plotSizeWithBorder = PlotManager.getInstance().getPlotSize() + 2;
+        int xChunk = ChunkSectionPos.getSectionCoord(xPos);
+        int zChunk = ChunkSectionPos.getSectionCoord(zPos);
+        int oppositeCornerXChunk = ChunkSectionPos.getSectionCoord(xPos + plotSizeWithBorder);
+        int oppositeCornerZChunk = ChunkSectionPos.getSectionCoord(zPos + plotSizeWithBorder);
+
+        // There are occasions in which the plot measures different distances in x and z as it is not a multiple of a chunk
+        int plotChunkSizeInX = oppositeCornerXChunk - xChunk;
+        int plotChunkSizeInZ = oppositeCornerZChunk - zChunk;
+        int plotChunkSize = Math.max(plotChunkSizeInX, plotChunkSizeInZ);
+
+        Set<Chunk> chunkList = new HashSet<>();
+        for (int x = 0; x <= plotChunkSize; x++) {
+            for (int z = 0; z <= plotChunkSize; z++) {
+                chunkList.add(world.getChunk(xChunk + x, zChunk + z));
+            }
+        }
+        return chunkList;
     }
 
     public boolean isId(@NotNull PlotID id) {
