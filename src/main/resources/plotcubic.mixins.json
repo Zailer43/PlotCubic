@@ -4,8 +4,6 @@
   "package": "me.zailer.plotcubic.mixin",
   "compatibilityLevel": "JAVA_17",
   "server": [
-    "ArgumentTypesMixin",
-    "CommandTreeS2CPacketMixin",
     "EndPortalBlockMixin",
     "ExplosionAccessor",
     "MinecraftServerAccessor",

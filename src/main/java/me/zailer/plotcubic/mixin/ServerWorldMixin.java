@@ -27,19 +27,4 @@ public abstract class ServerWorldMixin {
     private boolean isSpawnProtected(MinecraftServer instance, ServerWorld world, BlockPos pos, PlayerEntity player) {
         return false;
     }
-
-    @Redirect(
-            method = "tickWeather",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/network/Packet;)V"
-            )
-
-    )
-    private void dontSendRainPacketsToAllWorlds(PlayerManager instance, Packet<?> packet) {
-        // Vanilla sends rain packets to all players when rain starts in a world,
-        // even if they are not in it, meaning that if it is possible to rain in the world they are in,
-        // the rain effect will remain until the player changes dimension or reconnects.
-        instance.sendToDimension(packet, this.getChunkManager().getWorld().getRegistryKey());
-    }
 }
