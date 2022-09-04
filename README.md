@@ -1,4 +1,6 @@
 # PlotCubic (WIP)
+[![Discord invite](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge&logo=appveyor)](https://discord.com/invite/y3GcaUNgCr)
+
 A Fabric Server Side mod for managing plots in a plot world.
 
 ### Info
